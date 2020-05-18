@@ -1,0 +1,2 @@
+local files:
+    Developer Command Prompt for VS 2019 - for accessing c compiler in vscode
