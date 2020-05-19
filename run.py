@@ -19,15 +19,15 @@
 # exospecies, numba knows about numpy so if you use numpy and then write your code in a specific way that is documented on the numba website you can get LARGE performance gains that will run in parallel and vectorize
 
 import pygame, sys, time, os
+import game
 
 os.environ['SDL_VIDEO_CENTERED'] = '1'
 pygame.init()
-size = 800, 640
-screen = pygame.display.set_mode(size)
 pygame.display.set_caption('ElmAI')
+size = 800, 640
+game = game.Game(pygame, size)
 
 # after pygame.init()
-import draw
 
 running = True
 while running:
@@ -39,4 +39,6 @@ while running:
         #elif event.type == pygame.MOUSEBUTTONUP:
         #    mouse.buttonup(event, game)
 
-    draw.draw(screen)
+    game.draw.draw(game)
+
+

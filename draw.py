@@ -1,9 +1,12 @@
 import pygame
-import colors, gui
 
-def draw(screen):
-    screen.fill(colors.skyblue)
+def draw(game):
+    game.screen.fill(game.colors.skyblue)
 
-    gui.label(screen, 'Welcome to AI', 10, 10)
+    game.gui.label(game, 'Welcome to AI', 10, 10)
 
-    pygame.display.flip()
+    game.pygame.display.flip()
+
+
+def drawlev(game, lev):
+    pass

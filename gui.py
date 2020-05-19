@@ -1,12 +1,10 @@
 import pygame
 
-font = pygame.font.SysFont("monospace", 18)
-
-def label(screen, text, x=0, y=0, color=(0,0,0)):
+def label(game, text, x=0, y=0, color=(0,0,0)):
     "Text without box"
     text = str(text)
-    output = font.render(text, 1, color)
-    screen.blit(output, (x, y))
+    output = game.font.render(text, 1, color)
+    game.screen.blit(output, (x, y))
 
 def message(text, x=None, y=None, line=0, color=None):
     "Text inside box"
