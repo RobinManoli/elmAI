@@ -3,9 +3,9 @@ import draw, gui, colors
 class Game:
     def __init__(self, pygame, size):
         # init pygame
+        self.pygame = pygame
         self.size = self.width, self.height = size
         self.screen = pygame.display.set_mode(self.size)
-        self.pygame = pygame
         self.fullscreen = False
         # initialize font; must be called after 'pygame.init()' to avoid 'Font not Initialized' error
         self.font = pygame.font.SysFont("monospace", 18)
