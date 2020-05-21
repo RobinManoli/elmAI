@@ -1,8 +1,9 @@
 import level
 
-def draw(game):
+def draw(game, elmaphys):
     game.screen.fill(game.colors.skyblue)
     drawlev(game)
+    drawbike(game, elmaphys)
 
     game.gui.label(game, 'Welcome to AI', 10, 10)
 
@@ -15,16 +16,37 @@ def draw(game):
         mx = game.width - 110 if mx > game.width - 110 else mx
         my = game.height - 20 if my > game.height - 20 else my
         game.gui.label(game, '%d x %d' % (levx, levy), mx+15, my)
+    
 
     # todo: optimize display using .update or whatnot (opengl?) https://www.pygame.org/docs/ref/display.html#pygame.display.flip
     game.pygame.display.flip()
 
+def drawbike(game, elmaphys):
+    phys = elmaphys.next_frame()
+    #print( phys ) # segmentation fault after pygame.init()
+    headx = phys['headLocation']['x'] * zoom + xoffset
+    heady = -phys['headLocation']['y'] * zoom + yoffset
+    bodyx = phys['body']['location']['x'] * zoom + xoffset
+    bodyy = -phys['body']['location']['y'] * zoom + yoffset
+    lwx = phys['leftWheel']['location']['x'] * zoom + xoffset
+    lwy = -phys['leftWheel']['location']['y'] * zoom + yoffset
+    rwx = phys['rightWheel']['location']['x'] * zoom + xoffset
+    rwy = -phys['rightWheel']['location']['y'] * zoom + yoffset
+
+    print( "body: %d %d" % (bodyx, bodyy) )
+    game.pygame.draw.circle(game.screen, game.colors.yellow, (int(headx), int(heady)), 4)
+    game.pygame.draw.circle(game.screen, game.colors.yellow, (int(bodyx), int(bodyy)), 4)
+    game.pygame.draw.circle(game.screen, game.colors.green, (int(lwx), int(lwy)), 4)
+    game.pygame.draw.circle(game.screen, game.colors.green, (int(rwx), int(rwy)), 4)
+
 lev = None
 zoom = 1
+xoffset = 0
+yoffset = 0
 zoomed_polygons = []
 zoomed_objects = []
 def drawlev(game):
-    global lev, zoom, zoomed_polygons, zoomed_objects
+    global lev, zoom, xoffset, yoffset, zoomed_polygons, zoomed_objects
     if not lev:
         # do lev stuff once, not on every tick
         lev = level.Level()
@@ -56,6 +78,8 @@ def drawlev(game):
             y = obj.y*zoom + yoffset
             color = colors[obj.type]
             zoomed_objects.append(( int(x), int(y), color ))
+            if obj.type == 4:
+                print('Lev start position: %d, %d' % (obj.x, obj.y))
 
     for obj in zoomed_objects:
         #print(obj)

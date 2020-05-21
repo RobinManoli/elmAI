@@ -126,7 +126,7 @@ cdef extern from "smibu_phys/Point2D.cpp":
     pass
 cdef extern from "smibu_phys/Point2D.h" namespace "phys":
     #pass
-    struct Point2D:
+    cdef struct Point2D:
         double x, y
     #cdef cppclass Point2D:
     #    Point2D() except +
@@ -137,15 +137,18 @@ cdef extern from "smibu_phys/Point2D.h" namespace "phys":
 cdef extern from "smibu_phys/BodyPart.cpp":
     pass
 cdef extern from "smibu_phys/BodyPart.h" namespace "phys":
-    struct BodyPart:
+    cdef struct BodyPart:
         double rotation
         Point2D location
 
 cdef extern from "smibu_phys/KuskiState.cpp":
     pass
 cdef extern from "smibu_phys/KuskiState.h" namespace "phys":
-    struct KuskiState:
+    cdef struct KuskiState:
         BodyPart body
+        BodyPart leftWheel
+        BodyPart rightWheel
+        Point2D headLocation
     #pass
     #cdef cppclass KuskiState:
     #    pass

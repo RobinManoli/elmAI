@@ -28,18 +28,20 @@ size = 800, 640
 game = game.Game(pygame, size)
 
 # after pygame.init()
+import elmaphys # must be imported after pygame.init()
 
-running = False
+running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         #elif event.type == pygame.KEYUP:
-        #    running = keys.keyup(event, game)
+            #running = keys.keyup(event, game)
+            #if event.key == pygame.K_RETURN or event.key == pygame.K_SPACE: #Just a key to toggle fullscreen
         #elif event.type == pygame.MOUSEBUTTONUP:
         #    mouse.buttonup(event, game)
+        game.draw.draw(game, elmaphys)
 
-    game.draw.draw(game)
-
-import elmaphys
-elmaphys.run()
+    #print( elmaphys.next_frame() ) # segmentation fault after pygame.init()
+    #print("drew")
+    #time.sleep(1)

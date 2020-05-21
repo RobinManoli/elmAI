@@ -1126,7 +1126,6 @@ int __pyx_module_is_main_elmaphys = 0;
 static const char __pyx_k_x[] = "x";
 static const char __pyx_k_y[] = "y";
 static const char __pyx_k_end[] = "end";
-static const char __pyx_k_run[] = "run";
 static const char __pyx_k_body[] = "body";
 static const char __pyx_k_file[] = "file";
 static const char __pyx_k_main[] = "__main__";
@@ -1136,149 +1135,92 @@ static const char __pyx_k_print[] = "print";
 static const char __pyx_k_elmaphys[] = "elmaphys";
 static const char __pyx_k_location[] = "location";
 static const char __pyx_k_rotation[] = "rotation";
+static const char __pyx_k_leftWheel[] = "leftWheel";
+static const char __pyx_k_next_frame[] = "next_frame";
+static const char __pyx_k_rightWheel[] = "rightWheel";
 static const char __pyx_k_elmaphys_pyx[] = "elmaphys.pyx";
-static const char __pyx_k_body_location_x[] = "body_location_x";
-static const char __pyx_k_body_location_x_s[] = "body_location_x % s";
+static const char __pyx_k_headLocation[] = "headLocation";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_elmaphys_pyx_loaded[] = "elmaphys.pyx loaded...";
 static PyObject *__pyx_n_s_body;
-static PyObject *__pyx_n_s_body_location_x;
-static PyObject *__pyx_kp_s_body_location_x_s;
 static PyObject *__pyx_n_s_cline_in_traceback;
 static PyObject *__pyx_n_s_elmaphys;
 static PyObject *__pyx_kp_s_elmaphys_pyx;
 static PyObject *__pyx_kp_s_elmaphys_pyx_loaded;
 static PyObject *__pyx_n_s_end;
 static PyObject *__pyx_n_s_file;
+static PyObject *__pyx_n_s_headLocation;
+static PyObject *__pyx_n_s_leftWheel;
 static PyObject *__pyx_n_s_location;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_name;
+static PyObject *__pyx_n_s_next_frame;
 static PyObject *__pyx_n_s_print;
+static PyObject *__pyx_n_s_rightWheel;
 static PyObject *__pyx_n_s_rotation;
-static PyObject *__pyx_n_s_run;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_n_s_x;
 static PyObject *__pyx_n_s_y;
-static PyObject *__pyx_pf_8elmaphys_run(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
-static PyObject *__pyx_tuple_;
-static PyObject *__pyx_codeobj__2;
+static PyObject *__pyx_pf_8elmaphys_next_frame(CYTHON_UNUSED PyObject *__pyx_self); /* proto */
+static PyObject *__pyx_codeobj_;
 /* Late includes */
 
 /* "elmaphys.pyx":8
  * print("elmaphys.pyx loaded...")
  * 
- * def run():             # <<<<<<<<<<<<<<
- *     #main()
- *     body_location_x = nextFrameKuski().body
+ * def next_frame():             # <<<<<<<<<<<<<<
+ *     return nextFrameKuski()
+ *     #return dict( **nextFrameKuski() )
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_8elmaphys_1run(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyMethodDef __pyx_mdef_8elmaphys_1run = {"run", (PyCFunction)__pyx_pw_8elmaphys_1run, METH_NOARGS, 0};
-static PyObject *__pyx_pw_8elmaphys_1run(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_8elmaphys_1next_frame(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyMethodDef __pyx_mdef_8elmaphys_1next_frame = {"next_frame", (PyCFunction)__pyx_pw_8elmaphys_1next_frame, METH_NOARGS, 0};
+static PyObject *__pyx_pw_8elmaphys_1next_frame(PyObject *__pyx_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("run (wrapper)", 0);
-  __pyx_r = __pyx_pf_8elmaphys_run(__pyx_self);
+  __Pyx_RefNannySetupContext("next_frame (wrapper)", 0);
+  __pyx_r = __pyx_pf_8elmaphys_next_frame(__pyx_self);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_8elmaphys_run(CYTHON_UNUSED PyObject *__pyx_self) {
-  PyObject *__pyx_v_body_location_x = NULL;
+static PyObject *__pyx_pf_8elmaphys_next_frame(CYTHON_UNUSED PyObject *__pyx_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
-  __Pyx_RefNannySetupContext("run", 0);
+  __Pyx_RefNannySetupContext("next_frame", 0);
 
-  /* "elmaphys.pyx":10
- * def run():
+  /* "elmaphys.pyx":9
+ * 
+ * def next_frame():
+ *     return nextFrameKuski()             # <<<<<<<<<<<<<<
+ *     #return dict( **nextFrameKuski() )
  *     #main()
- *     body_location_x = nextFrameKuski().body             # <<<<<<<<<<<<<<
- *     print( "body_location_x % s" % body_location_x )
- *     body_location_x = nextFrameKuski()
  */
-  __pyx_t_1 = __pyx_convert__to_py_struct__phys_3a__3a_BodyPart(nextFrameKuski().body); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __pyx_convert__to_py_struct__phys_3a__3a_KuskiState(nextFrameKuski()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 9, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_v_body_location_x = __pyx_t_1;
+  __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
-
-  /* "elmaphys.pyx":11
- *     #main()
- *     body_location_x = nextFrameKuski().body
- *     print( "body_location_x % s" % body_location_x )             # <<<<<<<<<<<<<<
- *     body_location_x = nextFrameKuski()
- *     print( "body_location_x % s" % body_location_x )
- */
-  __pyx_t_1 = __Pyx_PyString_FormatSafe(__pyx_kp_s_body_location_x_s, __pyx_v_body_location_x); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 11, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (__Pyx_PrintOne(0, __pyx_t_1) < 0) __PYX_ERR(0, 11, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "elmaphys.pyx":12
- *     body_location_x = nextFrameKuski().body
- *     print( "body_location_x % s" % body_location_x )
- *     body_location_x = nextFrameKuski()             # <<<<<<<<<<<<<<
- *     print( "body_location_x % s" % body_location_x )
- *     body_location_x = nextFrameKuski()
- */
-  __pyx_t_1 = __pyx_convert__to_py_struct__phys_3a__3a_KuskiState(nextFrameKuski()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 12, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF_SET(__pyx_v_body_location_x, __pyx_t_1);
-  __pyx_t_1 = 0;
-
-  /* "elmaphys.pyx":13
- *     print( "body_location_x % s" % body_location_x )
- *     body_location_x = nextFrameKuski()
- *     print( "body_location_x % s" % body_location_x )             # <<<<<<<<<<<<<<
- *     body_location_x = nextFrameKuski()
- *     print( "body_location_x % s" % body_location_x )
- */
-  __pyx_t_1 = __Pyx_PyString_FormatSafe(__pyx_kp_s_body_location_x_s, __pyx_v_body_location_x); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 13, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (__Pyx_PrintOne(0, __pyx_t_1) < 0) __PYX_ERR(0, 13, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-
-  /* "elmaphys.pyx":14
- *     body_location_x = nextFrameKuski()
- *     print( "body_location_x % s" % body_location_x )
- *     body_location_x = nextFrameKuski()             # <<<<<<<<<<<<<<
- *     print( "body_location_x % s" % body_location_x )
- */
-  __pyx_t_1 = __pyx_convert__to_py_struct__phys_3a__3a_KuskiState(nextFrameKuski()); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 14, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF_SET(__pyx_v_body_location_x, __pyx_t_1);
-  __pyx_t_1 = 0;
-
-  /* "elmaphys.pyx":15
- *     print( "body_location_x % s" % body_location_x )
- *     body_location_x = nextFrameKuski()
- *     print( "body_location_x % s" % body_location_x )             # <<<<<<<<<<<<<<
- */
-  __pyx_t_1 = __Pyx_PyString_FormatSafe(__pyx_kp_s_body_location_x_s, __pyx_v_body_location_x); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 15, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_1);
-  if (__Pyx_PrintOne(0, __pyx_t_1) < 0) __PYX_ERR(0, 15, __pyx_L1_error)
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+  goto __pyx_L0;
 
   /* "elmaphys.pyx":8
  * print("elmaphys.pyx loaded...")
  * 
- * def run():             # <<<<<<<<<<<<<<
- *     #main()
- *     body_location_x = nextFrameKuski().body
+ * def next_frame():             # <<<<<<<<<<<<<<
+ *     return nextFrameKuski()
+ *     #return dict( **nextFrameKuski() )
  */
 
   /* function exit code */
-  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
-  goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("elmaphys.run", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("elmaphys.next_frame", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
-  __Pyx_XDECREF(__pyx_v_body_location_x);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
@@ -1331,20 +1273,21 @@ static struct PyModuleDef __pyx_moduledef = {
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_body, __pyx_k_body, sizeof(__pyx_k_body), 0, 0, 1, 1},
-  {&__pyx_n_s_body_location_x, __pyx_k_body_location_x, sizeof(__pyx_k_body_location_x), 0, 0, 1, 1},
-  {&__pyx_kp_s_body_location_x_s, __pyx_k_body_location_x_s, sizeof(__pyx_k_body_location_x_s), 0, 0, 1, 0},
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
   {&__pyx_n_s_elmaphys, __pyx_k_elmaphys, sizeof(__pyx_k_elmaphys), 0, 0, 1, 1},
   {&__pyx_kp_s_elmaphys_pyx, __pyx_k_elmaphys_pyx, sizeof(__pyx_k_elmaphys_pyx), 0, 0, 1, 0},
   {&__pyx_kp_s_elmaphys_pyx_loaded, __pyx_k_elmaphys_pyx_loaded, sizeof(__pyx_k_elmaphys_pyx_loaded), 0, 0, 1, 0},
   {&__pyx_n_s_end, __pyx_k_end, sizeof(__pyx_k_end), 0, 0, 1, 1},
   {&__pyx_n_s_file, __pyx_k_file, sizeof(__pyx_k_file), 0, 0, 1, 1},
+  {&__pyx_n_s_headLocation, __pyx_k_headLocation, sizeof(__pyx_k_headLocation), 0, 0, 1, 1},
+  {&__pyx_n_s_leftWheel, __pyx_k_leftWheel, sizeof(__pyx_k_leftWheel), 0, 0, 1, 1},
   {&__pyx_n_s_location, __pyx_k_location, sizeof(__pyx_k_location), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_name, __pyx_k_name, sizeof(__pyx_k_name), 0, 0, 1, 1},
+  {&__pyx_n_s_next_frame, __pyx_k_next_frame, sizeof(__pyx_k_next_frame), 0, 0, 1, 1},
   {&__pyx_n_s_print, __pyx_k_print, sizeof(__pyx_k_print), 0, 0, 1, 1},
+  {&__pyx_n_s_rightWheel, __pyx_k_rightWheel, sizeof(__pyx_k_rightWheel), 0, 0, 1, 1},
   {&__pyx_n_s_rotation, __pyx_k_rotation, sizeof(__pyx_k_rotation), 0, 0, 1, 1},
-  {&__pyx_n_s_run, __pyx_k_run, sizeof(__pyx_k_run), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {&__pyx_n_s_x, __pyx_k_x, sizeof(__pyx_k_x), 0, 0, 1, 1},
   {&__pyx_n_s_y, __pyx_k_y, sizeof(__pyx_k_y), 0, 0, 1, 1},
@@ -1361,14 +1304,11 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   /* "elmaphys.pyx":8
  * print("elmaphys.pyx loaded...")
  * 
- * def run():             # <<<<<<<<<<<<<<
- *     #main()
- *     body_location_x = nextFrameKuski().body
+ * def next_frame():             # <<<<<<<<<<<<<<
+ *     return nextFrameKuski()
+ *     #return dict( **nextFrameKuski() )
  */
-  __pyx_tuple_ = PyTuple_Pack(1, __pyx_n_s_body_location_x); if (unlikely(!__pyx_tuple_)) __PYX_ERR(0, 8, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple_);
-  __Pyx_GIVEREF(__pyx_tuple_);
-  __pyx_codeobj__2 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple_, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_elmaphys_pyx, __pyx_n_s_run, 8, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__2)) __PYX_ERR(0, 8, __pyx_L1_error)
+  __pyx_codeobj_ = (PyObject*)__Pyx_PyCode_New(0, 0, 0, 0, CO_OPTIMIZED|CO_NEWLOCALS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_elmaphys_pyx, __pyx_n_s_next_frame, 8, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj_)) __PYX_ERR(0, 8, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -1649,20 +1589,20 @@ if (!__Pyx_RefNanny) {
  * 
  * print("elmaphys.pyx loaded...")             # <<<<<<<<<<<<<<
  * 
- * def run():
+ * def next_frame():
  */
   if (__Pyx_PrintOne(0, __pyx_kp_s_elmaphys_pyx_loaded) < 0) __PYX_ERR(0, 6, __pyx_L1_error)
 
   /* "elmaphys.pyx":8
  * print("elmaphys.pyx loaded...")
  * 
- * def run():             # <<<<<<<<<<<<<<
- *     #main()
- *     body_location_x = nextFrameKuski().body
+ * def next_frame():             # <<<<<<<<<<<<<<
+ *     return nextFrameKuski()
+ *     #return dict( **nextFrameKuski() )
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_8elmaphys_1run, NULL, __pyx_n_s_elmaphys); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 8, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_8elmaphys_1next_frame, NULL, __pyx_n_s_elmaphys); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 8, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_run, __pyx_t_1) < 0) __PYX_ERR(0, 8, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_next_frame, __pyx_t_1) < 0) __PYX_ERR(0, 8, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
   /* "elmaphys.pyx":1
@@ -2129,9 +2069,18 @@ static PyObject* __pyx_convert__to_py_struct__phys_3a__3a_BodyPart(struct phys::
 static PyObject* __pyx_convert__to_py_struct__phys_3a__3a_KuskiState(struct phys::KuskiState s) {
   PyObject* res;
   PyObject* member;
-  res = __Pyx_PyDict_NewPresized(1); if (unlikely(!res)) return NULL;
+  res = __Pyx_PyDict_NewPresized(4); if (unlikely(!res)) return NULL;
   member = __pyx_convert__to_py_struct__phys_3a__3a_BodyPart(s.body); if (unlikely(!member)) goto bad;
   if (unlikely(PyDict_SetItem(res, __pyx_n_s_body, member) < 0)) goto bad;
+  Py_DECREF(member);
+  member = __pyx_convert__to_py_struct__phys_3a__3a_BodyPart(s.leftWheel); if (unlikely(!member)) goto bad;
+  if (unlikely(PyDict_SetItem(res, __pyx_n_s_leftWheel, member) < 0)) goto bad;
+  Py_DECREF(member);
+  member = __pyx_convert__to_py_struct__phys_3a__3a_BodyPart(s.rightWheel); if (unlikely(!member)) goto bad;
+  if (unlikely(PyDict_SetItem(res, __pyx_n_s_rightWheel, member) < 0)) goto bad;
+  Py_DECREF(member);
+  member = __pyx_convert__to_py_struct__phys_3a__3a_Point2D(s.headLocation); if (unlikely(!member)) goto bad;
+  if (unlikely(PyDict_SetItem(res, __pyx_n_s_headLocation, member) < 0)) goto bad;
   Py_DECREF(member);
   return res;
   bad:
