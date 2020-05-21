@@ -29,7 +29,7 @@ game = game.Game(pygame, size)
 
 # after pygame.init()
 
-running = True
+running = False
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -41,4 +41,5 @@ while running:
 
     game.draw.draw(game)
 
-
+import elmaphys
+elmaphys.run()
