@@ -19,28 +19,39 @@
 # exospecies, numba knows about numpy so if you use numpy and then write your code in a specific way that is documented on the numba website you can get LARGE performance gains that will run in parallel and vectorize
 
 import pygame, sys, time, os
-import game
+import game, keys
 
 os.environ['SDL_VIDEO_CENTERED'] = '1'
 pygame.init()
 pygame.display.set_caption('ElmAI')
+# pygame.event.set_blocked([pygame.KEYDOWN, pygame.KEYUP]) # block keydown that crashes phys? still crashing on keypress
 size = 800, 640
 game = game.Game(pygame, size)
 
+#lev.read(r"C:\Users\Sara\Desktop\robin\elma\lev" ,"0lp31.lev")
+#lev.read(r"C:\Users\Sara\Desktop\robin\elma\lev" ,"1dg54.lev")
+game.levpath = r"C:\Users\Sara\Desktop\robin\elma\lev"
+game.levfilename = "qwquu002.lev"
+
 # after pygame.init()
 import elmaphys # must be imported after pygame.init()
+#elmaphys.init(game.levpath + '\\' + game.levfilename)
 
 running = True
+elmainput = [0, 0, 0, 0, 0, 0]
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        #elif event.type == pygame.KEYUP:
-            #running = keys.keyup(event, game)
-            #if event.key == pygame.K_RETURN or event.key == pygame.K_SPACE: #Just a key to toggle fullscreen
-        #elif event.type == pygame.MOUSEBUTTONUP:
-        #    mouse.buttonup(event, game)
-        game.draw.draw(game, elmaphys)
+        # pygame crashes after keydown, if elmaphys is called any time after
+        elif event.type == pygame.KEYDOWN:
+            print('keydown')
+        # input starts on mouse down and ends on mouseup; sustain input in between
+        elif event.type in (game.pygame.MOUSEBUTTONDOWN, game.pygame.MOUSEBUTTONUP):
+            elmainput = keys.elmainput(game, event)
+
+        #game.draw.draw(game, event, elmaphys) # proceed drawing only on events, eg when mouse moves
+    game.draw.draw(game, event, elmainput, elmaphys)
 
     #print( elmaphys.next_frame() ) # segmentation fault after pygame.init()
     #print("drew")

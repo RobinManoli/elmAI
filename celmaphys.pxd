@@ -149,6 +149,7 @@ cdef extern from "smibu_phys/KuskiState.h" namespace "phys":
         BodyPart leftWheel
         BodyPart rightWheel
         Point2D headLocation
+        int direction
     #pass
     #cdef cppclass KuskiState:
     #    pass
@@ -158,5 +159,7 @@ cdef extern from "smibu_phys/KuskiState.h" namespace "phys":
 
 cdef extern from "smibu_phys/ElmaPhys.cpp":
     #Engine init()
-    KuskiState nextFrameKuski()
-    int main()
+    # phys::KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt)
+    #void cinit()
+    KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt, double timestep, double time)
+    #int main()

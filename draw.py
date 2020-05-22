@@ -1,9 +1,20 @@
 import level
 
-def draw(game, elmaphys):
+def draw(game, event, elmainput, elmaphys):
+    # todo: remove event and keys from here, since there seems to be possible to have multiple events per loop
+    #timestep = 0.005 # fast play
+    #timestep = 0.001 # slow play
+    timestep = 0.002
+    time = 0.009
+    params = elmainput + [timestep, time]
+    phys = elmaphys.next_frame( *params )
+    #if event.type != game.pygame.KEYDOWN:
+    #    print('keydown')
+    #    return
+
     game.screen.fill(game.colors.skyblue)
     drawlev(game)
-    drawbike(game, elmaphys)
+    drawbike(game, phys)
 
     game.gui.label(game, 'Welcome to AI', 10, 10)
 
@@ -21,8 +32,7 @@ def draw(game, elmaphys):
     # todo: optimize display using .update or whatnot (opengl?) https://www.pygame.org/docs/ref/display.html#pygame.display.flip
     game.pygame.display.flip()
 
-def drawbike(game, elmaphys):
-    phys = elmaphys.next_frame()
+def drawbike(game, phys):
     #print( phys ) # segmentation fault after pygame.init()
     headx = phys['headLocation']['x'] * zoom + xoffset
     heady = -phys['headLocation']['y'] * zoom + yoffset
@@ -33,11 +43,18 @@ def drawbike(game, elmaphys):
     rwx = phys['rightWheel']['location']['x'] * zoom + xoffset
     rwy = -phys['rightWheel']['location']['y'] * zoom + yoffset
 
-    print( "body: %d %d" % (bodyx, bodyy) )
+    #print( "body: %d %d" % (bodyx, bodyy) )
+    body_thickness = 2
+    if phys['direction'] == 0:
+        body_polygon = (bodyx - 8, bodyy), (bodyx + 8, bodyy + 4), (bodyx + 8, bodyy - 4)
+        body_color = game.colors.yellow
+    else:
+        body_polygon = (bodyx + 8, bodyy), (bodyx - 8, bodyy + 4), (bodyx - 8, bodyy - 4)
+        body_color = game.colors.blue
     game.pygame.draw.circle(game.screen, game.colors.yellow, (int(headx), int(heady)), 4)
-    game.pygame.draw.circle(game.screen, game.colors.yellow, (int(bodyx), int(bodyy)), 4)
-    game.pygame.draw.circle(game.screen, game.colors.green, (int(lwx), int(lwy)), 4)
-    game.pygame.draw.circle(game.screen, game.colors.green, (int(rwx), int(rwy)), 4)
+    game.pygame.draw.polygon(game.screen, body_color, body_polygon, body_thickness)
+    game.pygame.draw.circle(game.screen, game.colors.green, (int(lwx), int(lwy)), 5)
+    game.pygame.draw.circle(game.screen, game.colors.green, (int(rwx), int(rwy)), 5)
 
 lev = None
 zoom = 1
@@ -50,7 +67,7 @@ def drawlev(game):
     if not lev:
         # do lev stuff once, not on every tick
         lev = level.Level()
-        lev.read(r"C:\Users\Sara\Desktop\robin\elma\lev" ,"0lp31.lev")
+        lev.read(game.levpath, game.levfilename)
         print("xmin %d, xmax %d, ymin %d, ymax %d, width %d, height %d" % (lev.xmin, lev.xmax, lev.ymin, lev.ymax, lev.width, lev.height))
         xratio = game.width / lev.width
         yratio = game.height / lev.height
