@@ -7,3 +7,5 @@ build
 *.c
 *.cpp
 *.lnk
+
+!ElmaPhysHardLink.cpp
