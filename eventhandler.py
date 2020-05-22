@@ -8,11 +8,21 @@ def elmainput(game, event):
     accelerate = brake = left = right = turn = supervolt = 0 # random.choice([0,1])
     # not working since cython code makes pygame crasch on any keypress
     # also not working because this function is only called on mousebutton
-    #if event.type == game.pygame.KEYDOWN:
-    #    if event.key == game.pygame.K_RETURN or event.key == game.pygame.K_SPACE:
-    #        pass
-    #        #supervolt = 1
-    if event.type == game.pygame.MOUSEBUTTONDOWN:
+    if event.type == game.pygame.KEYDOWN:
+        #if event.key == game.pygame.K_RETURN or event.key == game.pygame.K_SPACE:
+        if event.key in (game.pygame.K_LSHIFT, ):
+            accelerate = 1
+        if event.key in (game.pygame.K_LCTRL, game.pygame.K_SPACE):
+            turn = 1
+        if event.key in (game.pygame.K_DOWN, ):
+            brake = 1
+        if event.key in (game.pygame.K_LEFT, ):
+            left = 1
+        if event.key in (game.pygame.K_RIGHT, ):
+            right = 1
+        if event.key in (game.pygame.K_UP, ):
+            supervolt = 1
+    elif event.type == game.pygame.MOUSEBUTTONDOWN:
         dblclick = False
         if not dblclock or dblclock.tick() > DOUBLECLICKTIME:
             dblclock = game.pygame.time.Clock()
@@ -35,6 +45,6 @@ def elmainput(game, event):
                 right = 1
             else:
                 brake = 1
-    print("acc: %d, brake: %d, left: %d, right: %d, turn: %d, supervolt: %d" % (accelerate, brake, left, right, turn, supervolt))
+    #print("acc: %d, brake: %d, left: %d, right: %d, turn: %d, supervolt: %d" % (accelerate, brake, left, right, turn, supervolt))
     return [accelerate, brake, left, right, turn, supervolt]
 

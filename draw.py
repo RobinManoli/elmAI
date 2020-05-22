@@ -1,22 +1,14 @@
 import level
 
-def draw(game, event, elmainput, elmaphys):
-    # todo: remove event and keys from here, since there seems to be possible to have multiple events per loop
-    #timestep = 0.005 # fast play
-    #timestep = 0.001 # slow play
-    timestep = 0.002
-    time = 0.009
-    params = elmainput + [timestep, time]
-    phys = elmaphys.next_frame( *params )
-    #if event.type != game.pygame.KEYDOWN:
-    #    print('keydown')
-    #    return
-
+def draw(game, event):
     game.screen.fill(game.colors.skyblue)
     drawlev(game)
-    drawbike(game, phys)
+    drawbike(game)
 
-    game.gui.label(game, 'Welcome to AI', 10, 10)
+    game.gui.label(game, 'Welcome to LassElma AI', 10, 10)
+    game.gui.label(game, '%.2f' % game.levtime, game.width-70, 10)
+    if game.lev_lasttime:
+        game.gui.label(game, 'prev: %.2f' % game.lev_lasttime, game.width-210, 10)
 
     # draw lev coords
     mx, my = game.pygame.mouse.get_pos()
@@ -32,20 +24,21 @@ def draw(game, event, elmainput, elmaphys):
     # todo: optimize display using .update or whatnot (opengl?) https://www.pygame.org/docs/ref/display.html#pygame.display.flip
     game.pygame.display.flip()
 
-def drawbike(game, phys):
-    #print( phys ) # segmentation fault after pygame.init()
-    headx = phys['headLocation']['x'] * zoom + xoffset
-    heady = -phys['headLocation']['y'] * zoom + yoffset
-    bodyx = phys['body']['location']['x'] * zoom + xoffset
-    bodyy = -phys['body']['location']['y'] * zoom + yoffset
-    lwx = phys['leftWheel']['location']['x'] * zoom + xoffset
-    lwy = -phys['leftWheel']['location']['y'] * zoom + yoffset
-    rwx = phys['rightWheel']['location']['x'] * zoom + xoffset
-    rwy = -phys['rightWheel']['location']['y'] * zoom + yoffset
+def drawbike(game):
+    #print( game.kuski_state ) # segmentation fault after pygame.init()
+    headx = game.kuski_state['headLocation']['x'] * zoom + xoffset
+    heady = -game.kuski_state['headLocation']['y'] * zoom + yoffset
+    bodyx = game.kuski_state['body']['location']['x'] * zoom + xoffset
+    bodyy = -game.kuski_state['body']['location']['y'] * zoom + yoffset
+    lwx = game.kuski_state['leftWheel']['location']['x'] * zoom + xoffset
+    lwy = -game.kuski_state['leftWheel']['location']['y'] * zoom + yoffset
+    rwx = game.kuski_state['rightWheel']['location']['x'] * zoom + xoffset
+    rwy = -game.kuski_state['rightWheel']['location']['y'] * zoom + yoffset
 
-    #print( "body: %d %d" % (bodyx, bodyy) )
+    if game.kuski_state['finishedTime']:
+        print("body: %d %d %d" % ( bodyx, bodyy, game.kuski_state['finishedTime'] ))
     body_thickness = 2
-    if phys['direction'] == 0:
+    if game.kuski_state['direction'] == 0:
         body_polygon = (bodyx - 8, bodyy), (bodyx + 8, bodyy + 4), (bodyx + 8, bodyy - 4)
         body_color = game.colors.yellow
     else:

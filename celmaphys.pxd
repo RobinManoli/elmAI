@@ -150,6 +150,8 @@ cdef extern from "smibu_phys/KuskiState.h" namespace "phys":
         BodyPart rightWheel
         Point2D headLocation
         int direction
+        int finishedTime # 0 until level finished, also 0 if died
+        bool isDead
     #pass
     #cdef cppclass KuskiState:
     #    pass

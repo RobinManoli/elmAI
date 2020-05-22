@@ -19,7 +19,7 @@
 # exospecies, numba knows about numpy so if you use numpy and then write your code in a specific way that is documented on the numba website you can get LARGE performance gains that will run in parallel and vectorize
 
 import pygame, sys, time, os
-import game, keys
+import game, eventhandler
 
 os.environ['SDL_VIDEO_CENTERED'] = '1'
 pygame.init()
@@ -32,27 +32,42 @@ game = game.Game(pygame, size)
 #lev.read(r"C:\Users\Sara\Desktop\robin\elma\lev" ,"1dg54.lev")
 game.levpath = r"C:\Users\Sara\Desktop\robin\elma\lev"
 game.levfilename = "qwquu002.lev"
+game.levtime = 0.0
+game.lev_lasttime = None
+
+#timestep = 0.015 # ultra fast play, makes elma crash
+#timestep = 0.01 # very fast play, makes elma unstable and wheels going everywhere
+#timestep = 0.005 # fast play
+#timestep = 0.001 # slow play
+game.timestep = 0.002 # oke speed play
 
 # after pygame.init()
 import elmaphys # must be imported after pygame.init()
 #elmaphys.init(game.levpath + '\\' + game.levfilename)
 
+
 running = True
-elmainput = [0, 0, 0, 0, 0, 0]
+game.input = [0, 0, 0, 0, 0, 0]
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        # pygame crashes after keydown, if elmaphys is called any time after
-        elif event.type == pygame.KEYDOWN:
-            print('keydown')
+        # pygame often crashes after keydown, if elmaphys is called any time after
         # input starts on mouse down and ends on mouseup; sustain input in between
-        elif event.type in (game.pygame.MOUSEBUTTONDOWN, game.pygame.MOUSEBUTTONUP):
-            elmainput = keys.elmainput(game, event)
+        elif event.type in (game.pygame.MOUSEBUTTONDOWN, game.pygame.MOUSEBUTTONUP, pygame.KEYDOWN, pygame.KEYUP):
+            game.input = eventhandler.elmainput(game, event)
+            #game.draw.draw(game, event, game.input, elmaphys) # draw only on game.input
 
         #game.draw.draw(game, event, elmaphys) # proceed drawing only on events, eg when mouse moves
-    game.draw.draw(game, event, elmainput, elmaphys)
+    params = game.input + [game.timestep, game.levtime]
+    game.kuski_state = elmaphys.next_frame( *params ) # get kuski state before drawing first time
+    if game.kuski_state['isDead']:
+        print('kusku died: .2%f' % game.levtime)
+        game.lev_lasttime = game.levtime
+        game.levtime = 0
 
+    game.draw.draw(game, event)
+    game.levtime += game.timestep
     #print( elmaphys.next_frame() ) # segmentation fault after pygame.init()
     #print("drew")
     #time.sleep(1)
