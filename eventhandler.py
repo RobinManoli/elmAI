@@ -10,6 +10,9 @@ def elmainput(game, event):
     # also not working because this function is only called on mousebutton
     if event.type == game.pygame.KEYDOWN:
         #if event.key == game.pygame.K_RETURN or event.key == game.pygame.K_SPACE:
+        if event.key in (game.pygame.K_ESCAPE, ):
+            game.running = False
+            #print('game running: %s' % game.running )
         if event.key in (game.pygame.K_LSHIFT, ):
             accelerate = 1
         if event.key in (game.pygame.K_LCTRL, game.pygame.K_SPACE):

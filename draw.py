@@ -35,8 +35,6 @@ def drawbike(game):
     rwx = game.kuski_state['rightWheel']['location']['x'] * zoom + xoffset
     rwy = -game.kuski_state['rightWheel']['location']['y'] * zoom + yoffset
 
-    if game.kuski_state['finishedTime']:
-        print("body: %d %d %d" % ( bodyx, bodyy, game.kuski_state['finishedTime'] ))
     body_thickness = 2
     if game.kuski_state['direction'] == 0:
         body_polygon = (bodyx - 8, bodyy), (bodyx + 8, bodyy + 4), (bodyx + 8, bodyy - 4)

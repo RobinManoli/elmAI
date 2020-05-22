@@ -46,12 +46,12 @@ import elmaphys # must be imported after pygame.init()
 #elmaphys.init(game.levpath + '\\' + game.levfilename)
 
 
-running = True
+game.running = True
 game.input = [0, 0, 0, 0, 0, 0]
-while running:
+while game.running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            game.running = False
         # pygame often crashes after keydown, if elmaphys is called any time after
         # input starts on mouse down and ends on mouseup; sustain input in between
         elif event.type in (game.pygame.MOUSEBUTTONDOWN, game.pygame.MOUSEBUTTONUP, pygame.KEYDOWN, pygame.KEYUP):
@@ -61,13 +61,16 @@ while running:
         #game.draw.draw(game, event, elmaphys) # proceed drawing only on events, eg when mouse moves
     params = game.input + [game.timestep, game.levtime]
     game.kuski_state = elmaphys.next_frame( *params ) # get kuski state before drawing first time
-    if game.kuski_state['isDead']:
-        print('kusku died: .2%f' % game.levtime)
+    if game.kuski_state['isDead'] or game.kuski_state['finishedTime']:
+        if game.kuski_state['isDead']:
+            print('kusku died: %.2f' % game.levtime)
+        else:
+            print('lev complete: %.2f' % game.levtime)
         game.lev_lasttime = game.levtime
         game.levtime = 0
 
     game.draw.draw(game, event)
     game.levtime += game.timestep
     #print( elmaphys.next_frame() ) # segmentation fault after pygame.init()
-    #print("drew")
+    #print('game running: %s' % game.running )
     #time.sleep(1)

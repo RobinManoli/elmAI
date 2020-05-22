@@ -56,7 +56,7 @@ phys::KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, 
     //std::cout << "\nBefore engine.nextFrame: " << engine.getPlayer(0).body.location.x << ' ' << engine.getPlayer(0).body.location.y; // working
     //return engine.nextFrameKuski(inputKeysArray, 0.01, 0.01); // working, so no need to use ribot made function engine.nextFrameKuski
     // int nextFrame(const std::vector<InputKeys*> p1keys, double timeStep, double time);
-    if (engine.getPlayer(0).isDead) engine.initPhysicsEngine(lev); // revive AFTER having sent kuskiState.isDead
+    if (engine.getPlayer(0).isDead || engine.getPlayer(0).finishedTime) engine.initPhysicsEngine(lev); // revive AFTER having sent kuskiState.isDead or .finishedTime
     engine.nextFrame(inputKeysArray, timestep, time);
     //std::cout << "\nAfter engine.nextFrame: " << engine.getPlayer(0).body.location.x << ' ' << engine.getPlayer(0).body.location.y; // working
     //if (engine.getPlayer(0).isDead) engine.resetPlayers(); // working but doesn't reset player to correct position
