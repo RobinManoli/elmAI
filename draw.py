@@ -6,9 +6,10 @@ def draw(game, event):
     drawbike(game)
 
     game.gui.label(game, 'Welcome to LassElma AI', 10, 10)
-    game.gui.label(game, '%.2f' % game.levtime, game.width-70, 10)
-    if game.lev_lasttime:
-        game.gui.label(game, 'prev: %.2f' % game.lev_lasttime, game.width-210, 10)
+    game.gui.label(game, '%.2f' % (game.timesteptotal * game.realtimecoeff), game.width-70, 10)
+    if game.lasttime:
+        game.gui.label(game, 'prev: %.2f' % game.lasttime, game.width-210, 10)
+        #game.gui.label(game, 'total: %.2f' % game.elmatimetotal, game.width-350, 10)
 
     # draw lev coords
     mx, my = game.pygame.mouse.get_pos()

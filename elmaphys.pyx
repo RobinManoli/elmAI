@@ -8,7 +8,7 @@ print("elmaphys.pyx loaded...")
 def init(levpathfilename):
     # makes pygame crash: parachute segmentation fault
     levpathfilename = bytes( levpathfilename, 'utf-8' )
-    print(b"init: " + levpathfilename)
+    #print(b"init: " + levpathfilename)
     cinit(levpathfilename)
     #cinit()
     #pass
@@ -30,4 +30,4 @@ def save_replay(rec_filename, lev_filename):
     rec_filename = bytes( rec_filename, 'utf-8' )
     lev_filename = bytes( lev_filename, 'utf-8' )
     saveReplay(rec_filename, lev_filename)
-    print("replay saved")
+    print(b"replay saved: " % rec_filename )

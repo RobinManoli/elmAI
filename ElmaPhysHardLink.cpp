@@ -25,7 +25,7 @@ void cinit(std::string pathfilename)
 
     //phys::Engine engine;
     engine = new phys::Engine();
-    std::cout << "initPhysicsEngine: ";
+    std::cout << "initPhysicsEngine:\n";
     engine->initPhysicsEngine(lev); //initPhysicsEngine(phys::Level& lev); // also resets players
     engineInitialized = true;
     //return engine;
