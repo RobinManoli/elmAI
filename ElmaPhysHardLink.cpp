@@ -10,25 +10,31 @@
 
 // init engine globally, so that cython doesn't have to declare phys::Engine
 phys::Level lev;
+phys::Engine *engine; // use a pointer because otherwise the class is initialized with default level
+bool engineInitialized = false;
 
-phys::Engine cinit(std::string path = "C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\1dg54.lev")
+//phys::Engine cinit(std::string path = "C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\1dg54.lev")
+void cinit(std::string pathfilename)
 {
-    std::cout << "hi\n" << "loading lev: " << path << "\n";
+    std::cout << "hi\n" << "loading lev: " << pathfilename << "\n";
     // Engine params currentLev(NULL), levelData(NULL), screenScrollDelay(0.5), turnAnimDelay(0.35), isSinglePlayer(1), flagTagMode(0)
     //lev.loadFromPath("C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\0lp31.lev");
-    lev.loadFromPath(path);
+    lev.loadFromPath(pathfilename);
     //lev.loadFromPath("C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\qwquu002.lev"); // erroneous levhash - replays for this level become corrupt
     //inputKeys.InputKeys();
 
-    phys::Engine engine;
+    //phys::Engine engine;
+    engine = new phys::Engine();
     std::cout << "initPhysicsEngine: ";
-    engine.initPhysicsEngine(lev); //initPhysicsEngine(phys::Level& lev); // also resets players
-    return engine;
+    engine->initPhysicsEngine(lev); //initPhysicsEngine(phys::Level& lev); // also resets players
+    engineInitialized = true;
+    //return engine;
 }
 
 // redundant because this is called from python, but required because otherwise there is a parachute segmentation fault in pygame
-phys::Engine engine = cinit();
+//phys::Engine engine = cinit();
 
+// cinit must intialize engine before running nextFrameKuski
 //nextFrameKuski( inputKeys, timestep, time)
 phys::KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt, double timestep, double time)
 {
@@ -57,19 +63,19 @@ phys::KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, 
     //std::cout << "\nBefore engine.nextFrame: " << engine.getPlayer(0).body.location.x << ' ' << engine.getPlayer(0).body.location.y; // working
     //return engine.nextFrameKuski(inputKeysArray, 0.01, 0.01); // working, so no need to use ribot made function engine.nextFrameKuski
     // int nextFrame(const std::vector<InputKeys*> p1keys, double timeStep, double time);
-    if (engine.getPlayer(0).isDead || engine.getPlayer(0).finishedTime) engine.initPhysicsEngine(lev); // revive AFTER having sent kuskiState.isDead or .finishedTime
-    engine.nextFrame(inputKeysArray, timestep, time);
+    if (engine->getPlayer(0).isDead || engine->getPlayer(0).finishedTime) engine->initPhysicsEngine(lev); // revive AFTER having sent kuskiState.isDead or .finishedTime
+    engine->nextFrame(inputKeysArray, timestep, time);
     //std::cout << "\nAfter engine.nextFrame: " << engine.getPlayer(0).body.location.x << ' ' << engine.getPlayer(0).body.location.y; // working
     //if (engine.getPlayer(0).isDead) engine.resetPlayers(); // working but doesn't reset player to correct position
     //if (engine.getPlayer(0).isDead) engine.setPlayMode(1, 0); // same as above
-    return engine.getPlayer(0);
+    return engine->getPlayer(0);
 }
 
 // todo: receive filenames or have temp file names
-void saveReplay(){
+void saveReplay(std::string recFilenmae, std::string levFilename){
     //void saveReplay(const std::string& recFileName, const std::string& levFileName){
     //void phys::Engine::saveReplay(const std::string& recFileName, const std::string& levFileName)
-    engine.saveReplay("02lasse.rec", "1dg54.lev"); // working
+    engine->saveReplay(recFilenmae, levFilename); // working
     //std::cout << "exiting saveReplay";
 }
 

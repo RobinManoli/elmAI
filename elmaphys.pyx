@@ -26,7 +26,8 @@ def next_frame(accelerate, brake, left, right, turn, supervolt, timestep, time):
     #body_location_x = nextFrameKuski()
     #print( "body_location_x % s" % body_location_x )
 
-def save_replay():
-    print("saving replay...")
-    saveReplay()
-    #print("done saving replay")
+def save_replay(rec_filename, lev_filename):
+    rec_filename = bytes( rec_filename, 'utf-8' )
+    lev_filename = bytes( lev_filename, 'utf-8' )
+    saveReplay(rec_filename, lev_filename)
+    print("replay saved")

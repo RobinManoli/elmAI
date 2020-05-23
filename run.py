@@ -54,7 +54,7 @@ while game.running:
             print('lev complete: %.2f' % game.levtime)
         game.lev_lasttime = game.levtime
         game.levtime = 0
-        elmaphys.save_replay()
+        #elmaphys.save_replay("test.rec", game.levfilename) # working
 
     game.draw.draw(game, event)
     game.levtime += game.timestep
