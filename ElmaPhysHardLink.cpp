@@ -11,13 +11,13 @@
 // init engine globally, so that cython doesn't have to declare phys::Engine
 phys::Level lev;
 
-phys::Engine cinit()
+phys::Engine cinit(std::string path = "C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\1dg54.lev")
 {
-    std::cout << "hi\n";
+    std::cout << "hi\n" << "loading lev: " << path << "\n";
     // Engine params currentLev(NULL), levelData(NULL), screenScrollDelay(0.5), turnAnimDelay(0.35), isSinglePlayer(1), flagTagMode(0)
     //lev.loadFromPath("C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\0lp31.lev");
-    //lev.loadFromPath("C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\1dg54.lev");
-    lev.loadFromPath("C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\qwquu002.lev");
+    lev.loadFromPath(path);
+    //lev.loadFromPath("C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\qwquu002.lev"); // erroneous levhash - replays for this level become corrupt
     //inputKeys.InputKeys();
 
     phys::Engine engine;
@@ -26,6 +26,7 @@ phys::Engine cinit()
     return engine;
 }
 
+// redundant because this is called from python, but required because otherwise there is a parachute segmentation fault in pygame
 phys::Engine engine = cinit();
 
 //nextFrameKuski( inputKeys, timestep, time)
@@ -64,6 +65,13 @@ phys::KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, 
     return engine.getPlayer(0);
 }
 
+// todo: receive filenames or have temp file names
+void saveReplay(){
+    //void saveReplay(const std::string& recFileName, const std::string& levFileName){
+    //void phys::Engine::saveReplay(const std::string& recFileName, const std::string& levFileName)
+    engine.saveReplay("02lasse.rec", "1dg54.lev"); // working
+    //std::cout << "exiting saveReplay";
+}
 
 int main()
 {
@@ -72,6 +80,7 @@ int main()
         nextFrameKuski(1, 0, 0, 0, 0, 0, 0.01, 0.01);
     }
 
+    //saveReplay();
     std::cout << "\n\nProgram completed.";
     return 0;
 }

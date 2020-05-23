@@ -1,15 +1,17 @@
 # distutils: language = c++
 
-from celmaphys cimport nextFrameKuski
+from celmaphys cimport nextFrameKuski, saveReplay, cinit
 #from celmaphys cimport cinit
 
 print("elmaphys.pyx loaded...")
 
-def init():
-    pass
+def init(levpathfilename):
     # makes pygame crash: parachute segmentation fault
-    #cinit(bytes( levpathfilename, 'utf-8' ))
+    levpathfilename = bytes( levpathfilename, 'utf-8' )
+    print(b"init: " + levpathfilename)
+    cinit(levpathfilename)
     #cinit()
+    #pass
 
 def next_frame(accelerate, brake, left, right, turn, supervolt, timestep, time):
     # int accelerate, int brake, int left, int right, int turn, int supervolt
@@ -23,3 +25,8 @@ def next_frame(accelerate, brake, left, right, turn, supervolt, timestep, time):
     #print( "body_location_x % s" % body_location_x )
     #body_location_x = nextFrameKuski()
     #print( "body_location_x % s" % body_location_x )
+
+def save_replay():
+    print("saving replay...")
+    saveReplay()
+    #print("done saving replay")

@@ -8,4 +8,7 @@ build
 *.cpp
 *.lnk
 
+# ignore for now
+rec
+
 !ElmaPhysHardLink.cpp

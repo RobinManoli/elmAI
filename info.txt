@@ -1,2 +1,66 @@
 local files:
-    Developer Command Prompt for VS 2019 - for accessing c compiler in vscode
+    run Developer Command Prompt for VS 2019, then "code ." - for accessing c compiler in vscode
+
+About implementing machine learning:
+    phase 1:
+        use cross entropy, as that is what stini used successfully
+        use hard targets, ie this is a cat, (rather than soft targets, ie 60% sure it is a cat, 40% sure it is a dog)
+            or use multi label, ie not select one class -- use sigmoid_cross_entropy_with_logits (or v2?) despite having multiple output units
+
+About machine learning:
+    # https://towardsdatascience.com/teach-your-ai-how-to-walk-5ad55fce8bca
+    # https://github.com/shivaverma/OpenAIGym/tree/master/bipedal-walker
+    # https://www.reddit.com/r/reinforcementlearning/comments/9tkk52/have_anyone_solved_bipedalwalkerhardcore/
+
+    # https://mopolauta.moposite.com/viewtopic.php?p=264925#p264925 - stini's method
+    # https://towardsdatascience.com/cross-entropy-method-for-reinforcement-learning-2b6de2a4f3a0
+    # https://stackoverflow.com/questions/47034888/how-to-choose-cross-entropy-loss-in-tensorflow
+    # In case of multinomial classification, sigmoid allows to deal with non-exclusive labels (a.k.a. multi-labels),
+    # while softmax deals with exclusive classes (see below).
+    # https://stackoverflow.com/questions/44674847/what-are-the-differences-between-all-these-cross-entropy-losses-in-keras-and-ten
+    # There is just one cross (Shannon) entropy, all the tf alternatives are different ways to represent:
+    # P the actual (ground truth) distribution, and Q the predicted distribution
+                                  outcomes     what is in Q    targets in P
+    -------------------------------------------------------------------------------
+    binary CE                                2      probability         any
+    categorical CE                          >2      probability         soft
+    sparse categorical CE                   >2      probability         hard
+    sigmoid CE with logits                   2      score               any
+    softmax CE with logits                  >2      score               soft
+    sparse softmax CE with logits           >2      score               hard
+    https://github.com/udacity/deep-reinforcement-learning/blob/master/cross-entropy/CEM.ipynb <-- simplistic implementation example
+    https://www.machinecurve.com/index.php/2019/10/22/how-to-use-binary-categorical-crossentropy-with-keras/# <-- implementations
+
+    # https://stable-baselines.readthedocs.io/en/master/guide/rl_tips.html
+    # https://spinningup.openai.com/en/latest/spinningup/rl_intro.html <----- great reinforcement learning source for non-educated
+
+    # tardis uses monte carlo simulation to create data for which its c++ code that is used - uses cython
+    # http://numba.pydata.org/ - fast machine code
+    # https://dask.org/ using gpu?
+
+    # https://pathmind.com/wiki/deep-reinforcement-learning <-- beginner's guide
+
+    # kosh 09:42:24 before numba I would look at numpy or even tensorflow
+    # if you have really large arrays and you are doing large numbers of vector type operations you can do them in tensorflow
+    # numba is useful but you use it AFTER you have already done the stuff in numpy
+    # partically because if your stuff is not in numpy then numba will not accelerate it much
+    # exospecies, numba knows about numpy so if you use numpy and then write your code in a specific way that is documented on the numba website you can get LARGE performance gains that will run in parallel and vectorize
+
+About elma physics (jon speaking):
+    smibu code is missing timing loop iirc
+    u can lok at phys/timer.c in my gode
+    in original game theres this retartet loop
+    thers main loop then physics loop inside main lop
+    at >80fps phys loop only iterate once
+    below 80 twice
+    below 38.3 thre time
+    so u can determine >80fps timeStep value with ez calc but need retart loop if vant go below that
+    then thers also elmatime conversion factor 2.2893772893772893772893772893773
+    one 1000fps frame would be timeStep == 1/1000/2.2893772893772893772893772893773
+    (timeStump never gos above 0.0055 cuz physics explode, thats why iterate at <80fps)
+    79fps u get first iteration 0.0055 delta then next som low value 0.000x
+    so its 0.0055 0.0001 0.0055 0.0001 etc
+    for example if u put 79fps u have to galkulate 138 frames per real second
+
+    so what is timestep for 80 fps?
+    1/80/2.2893772893772893772893772893773 = 0.0055
