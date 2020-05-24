@@ -1,6 +1,6 @@
 import level
 
-def draw(game, event):
+def draw(game):
     game.screen.fill(game.colors.skyblue)
     drawlev(game)
     drawbike(game)
