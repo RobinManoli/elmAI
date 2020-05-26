@@ -1,4 +1,5 @@
-import time
+import time, random
+import numpy as np 
 
 class Game:
     def __init__(self):
@@ -10,8 +11,15 @@ class Game:
         self.timesteptotal = 0.0 # total timesteps current run
         self.lasttime = None # how much time in seconds last run will be in the .rec file
         self.elmatimetotal = 0 # how much elma time that would have been spent if this session would have been play in real time in elma
-        self.starttime = time.time() # now, when this session started
+        self.starttime = None # start from when training starts # time.time() # now, when this session started
         self.input = [0, 0, 0, 0, 0, 0]
+        self.score_delta = 0 # score of last frame
+        self.score = 0 # total score gathered this run
+        self.last_score = 0 # total score gathered last run
+        self.hiscore = 0 # highest score this session
+        self.lowscore = 0 # lowest score this session
+        self.batch_hiscore = 0 # highest score this batch
+        self.batch_lowscore = 0 # lowest score this batch
 
     def init_pygame(self):
         import os, pygame, eventhandler, draw, gui, colors
@@ -32,48 +40,109 @@ class Game:
         #gui.game = self
         #draw.game = self
 
+    def has_ended(self):
+        return self.kuski_state['isDead'] or self.kuski_state['finishedTime']
+    
+    def end(self):
+        #print("Ended level programatically")
+        self.elmaphys.restart_level()
 
-    def restart(self):
-        if self.kuski_state['isDead']:
-            pass
-            #print('kusku died: %.2f' % self.timesteptotal)
-        else:
-            print('lev complete: %.2f' % self.timesteptotal)
+    def restart(self, save_rec=False):
         self.lasttime = self.timesteptotal * self.realtimecoeff
+        #print('time: %.2f, score: %.2f, timesteptotal: %.2f' % (self.lasttime, self.score, self.timesteptotal))
         self.elmatimetotal += self.lasttime
         self.timesteptotal = 0
+        if self.kuski_state['isDead']:
+            #print('kuski died, time: %.2f, score: %.2f' % (self.lasttime, self.score))
+            pass
+        elif self.kuski_state['finishedTime']:
+            print('lev completed, time: %.2f, score: %.2f' % (self.lasttime, self.score))
         filenametime = "%.02f" % self.lasttime
         filenametime = filenametime.replace('.', '') # remove dot from filename, because elma can't handle it
-        #elmaphys.save_replay("00x%s.rec" % filenametime, self.levfilename) # working
+        if save_rec:
+            #self.elmaphys.save_replay("00x%s_%d_%s.rec" % (filenametime, self.score, random.randint(10,99)), self.level.filename) # working
+            self.elmaphys.save_replay("00x%s_%d.rec" % (filenametime, self.score), self.level.filename) # working
         if self.maxplaytime and time.time() - self.starttime > self.maxplaytime:
             self.running = False
+        self.last_score = self.score
+        self.score_delta = 0
+        self.score = 0
+        self.kuski_state = self.initial_kuski_state
+        self.last_kuski_state = self.initial_kuski_state
+        if not self.has_ended():
+            # if game ended programatically, eg because level max time is up
+            # must run after saving rec
+            self.end()
+        #print('restarted')
 
 
-    def render(self, arg_man):
+    def handle_input(self):
         for event in self.pygame.event.get():
             if event.type == self.pygame.QUIT:
                 self.running = False
             # pygame often crashes after keydown, if elmaphys is called any time after
             # input starts on mouse down and ends on mouseup; sustain input in between
-            elif arg_man and event.type in (self.pygame.MOUSEBUTTONDOWN, self.pygame.MOUSEBUTTONUP, self.pygame.KEYDOWN, self.pygame.KEYUP):
+            elif self.arg_man and event.type in (self.pygame.MOUSEBUTTONDOWN, self.pygame.MOUSEBUTTONUP, self.pygame.KEYDOWN, self.pygame.KEYUP):
                 self.input = self.eventhandler.elmainput(self, event)
                 #self.draw.draw(game, event, self.input, elmaphys) # draw only on self.input
             #self.draw.draw(game, event, elmaphys) # proceed drawing only on events, eg when mouse moves
 
+    def loop(self, actions=None, save_rec=False):
+        "run the game loop, return true if done"
+        self.prev_kuski_state = self.kuski_state
 
-    def action_space():
+        if self.arg_render:
+            self.handle_input()
+
+        done = self.act(actions)
+
+        #print(self.level.reward())
+
+        if self.arg_render:
+            self.draw.draw(self)
+        #print( elmaphys.next_frame() ) # segmentation fault after pygame.init()
+        #print('game running: %s' % self.running )
+        #time.sleep(1)
+        if not done:
+            # if game hasn't quit level by max playtime, check if died/finished
+            done = self.has_ended()
+        if self.has_ended() and self.arg_man:
+            self.restart()
+        return done
+
+    def act(self, actions=None):
+        "perform actions with elma physics, return true if done"
+        if actions is None:
+            actions = self.input
+        # make it possible to use fewer than all actions, and in that case fill actions with 0s
+        while len(actions) < len(self.input):
+            actions.append(0)
+        params = actions + [self.timestep, self.timesteptotal]
+        self.kuski_state = self.elmaphys.next_frame( *params )
+        #print(self.kuski_state)
+        #if self.has_ended():    
+        #    self.restart()
+        self.timesteptotal += self.timestep
+        self.score_delta = self.level.reward()
+        self.score += self.score_delta
+        if not self.arg_man and self.level.maxplaytime and self.timesteptotal * self.realtimecoeff > self.level.maxplaytime:
+            #print('max play time over')
+            return True
+        return False
+
+    def action_space(self):
         # accelerate = brake = left = right = turn = supervolt = 0
         actions = []
-        # simplistic
+        # simplistic, game.action_space()[:2] or game.action_space()[:4]
         actions.append(0) # 00 do nothing
         actions.append(0) # 01 accelerate
         actions.append(0) # 02 brake
         actions.append(0) # 03 turn
-        # elma
+        # elma, game.action_space()[:6] or game.action_space()[:7]
         actions.append(0) # 04 left
         actions.append(0) # 05 right
         actions.append(0) # 06 supervolt
-        # precise
+        # precise, game.action_space() -- 13
         actions.append(0) # 07 accelerate + left
         actions.append(0) # 08 accelerate + right
         actions.append(0) # 09 accelerate + supervolt
@@ -81,6 +150,8 @@ class Game:
         actions.append(0) # 11 brake + right
         actions.append(0) # 12 brake + supervolt
         # super precise turn + other keys, brake + acc
+        return actions
+
 
     def observation(self):
         # BodyPart body
@@ -88,6 +159,8 @@ class Game:
         # BodyPart rightWheel
         # Point2D headLocation
         # Point2D headCenterLocation
+
+        # basic, game.observation()[:19]
         body_x = self.kuski_state['body']['location']['x']
         body_y = self.kuski_state['body']['location']['y']
         body_r = self.kuski_state['body']['rotation']
@@ -107,6 +180,8 @@ class Game:
         numTakenApples = self.kuski_state['numTakenApples'] + 0.0 # int
         changeDirPressedLast = self.kuski_state['changeDirPressedLast'] + 0.0 # int
         lastRotationTime = self.kuski_state['lastRotationTime'] # double
+
+        # full, game.observation() -- 33
         # unnamed
         pad4_x = self.kuski_state['pad4']['x']
         pad4_y = self.kuski_state['pad4']['y']
@@ -125,5 +200,5 @@ class Game:
         # not used
         #char isThrottling
         #BikeState bikeState # contains animation, not sure if necessary
-        return (body_x, body_y, body_r, lwx, lwy, lwr, rwx, rwy, rwr, head_x, head_y, head_cx, head_cy, direction, gravityScrollDirection,
-        gravityDir, numTakenApples, changeDirPressedLast, lastRotationTime, pad4_x, pad4_y, pad, asd4, asd5, asdunk5, padz1, padz2, asd6, asd7, asd3, asd8, asdunk1, asdunk2)
+        return np.array([body_x, body_y, body_r, lwx, lwy, lwr, rwx, rwy, rwr, head_x, head_y, head_cx, head_cy, direction, gravityScrollDirection,
+        gravityDir, numTakenApples, changeDirPressedLast, lastRotationTime, pad4_x, pad4_y, pad, asd4, asd5, asdunk5, padz1, padz2, asd6, asd7, asd3, asd8, asdunk1, asdunk2])

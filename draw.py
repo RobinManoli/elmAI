@@ -1,11 +1,11 @@
-import level
-
 def draw(game):
     game.screen.fill(game.colors.skyblue)
     drawlev(game)
     drawbike(game)
 
-    game.gui.label(game, 'Welcome to LassElma AI', 10, 10)
+    #game.gui.label(game, 'Welcome to LassElma AI', 10, 10)
+    game.gui.label(game, '%.2f' % (game.score), 10, 10)
+    game.gui.label(game, '%.2f' % (game.last_score), 100, 10)
     game.gui.label(game, '%.2f' % (game.timesteptotal * game.realtimecoeff), game.width-70, 10)
     if game.lasttime:
         game.gui.label(game, 'prev: %.2f' % game.lasttime, game.width-210, 10)
@@ -13,13 +13,12 @@ def draw(game):
 
     # draw lev coords
     mx, my = game.pygame.mouse.get_pos()
-    if lev:
-        levx = lev.xmin - (game.width/zoom - lev.width)/2 + mx/zoom
-        levy = lev.ymin - (game.height/zoom - lev.height)/2 + my/zoom
-        # keep coords visible on screen
-        mx = game.width - 110 if mx > game.width - 110 else mx
-        my = game.height - 20 if my > game.height - 20 else my
-        game.gui.label(game, '%d x %d' % (levx, levy), mx+15, my)
+    levx = game.level.xmin - (game.width/zoom - game.level.width)/2 + mx/zoom
+    levy = game.level.ymin - (game.height/zoom - game.level.height)/2 + my/zoom
+    # keep coords visible on screen
+    mx = game.width - 110 if mx > game.width - 110 else mx
+    my = game.height - 20 if my > game.height - 20 else my
+    game.gui.label(game, '%d x %d' % (levx, levy), mx+15, my)
     
 
     # todo: optimize display using .update or whatnot (opengl?) https://www.pygame.org/docs/ref/display.html#pygame.display.flip
@@ -48,40 +47,40 @@ def drawbike(game):
     game.pygame.draw.circle(game.screen, game.colors.green, (int(lwx), int(lwy)), 5)
     game.pygame.draw.circle(game.screen, game.colors.green, (int(rwx), int(rwy)), 5)
 
-lev = None
+initlev = False
+# check out pygame.camera instead of zooming and offsetting
 zoom = 1
 xoffset = 0
 yoffset = 0
 zoomed_polygons = []
 zoomed_objects = []
 def drawlev(game):
-    global lev, zoom, xoffset, yoffset, zoomed_polygons, zoomed_objects
-    if not lev:
+    global initlev, zoom, xoffset, yoffset, zoomed_polygons, zoomed_objects
+    if not initlev:
         # do lev stuff once, not on every tick
-        lev = level.Level()
-        lev.read(game.levpath, game.levfilename)
-        print("xmin %d, xmax %d, ymin %d, ymax %d, width %d, height %d" % (lev.xmin, lev.xmax, lev.ymin, lev.ymax, lev.width, lev.height))
-        xratio = game.width / lev.width
-        yratio = game.height / lev.height
+        initlev = True
+        print("xmin %d, xmax %d, ymin %d, ymax %d, width %d, height %d" % (game.level.xmin, game.level.xmax, game.level.ymin, game.level.ymax, game.level.width, game.level.height))
+        xratio = game.width / game.level.width
+        yratio = game.height / game.level.height
         if xratio < yratio:
             zoom = xratio
             # start x-axis on x-min
-            xoffset = -lev.xmin * zoom
+            xoffset = -game.level.xmin * zoom
             # center y-axis starting on y-min
-            yoffset = -lev.ymin * zoom + (game.height - lev.height * zoom ) / 2
+            yoffset = -game.level.ymin * zoom + (game.height - game.level.height * zoom ) / 2
         else:
             zoom = yratio
             # start y-axis on y-min
-            yoffset = -lev.ymin * zoom
+            yoffset = -game.level.ymin * zoom
             # center x-axis starting on x-min
-            xoffset = -lev.xmin * zoom + (game.width - lev.width * zoom ) / 2
+            xoffset = -game.level.xmin * zoom + (game.width - game.level.width * zoom ) / 2
         #print("xratio %d, yratio %d, zoom %d, xoffset %d, yoffset %d" % (xratio, yratio, zoom, xoffset, yoffset))
 
-        for polygon in lev.polygons:
+        for polygon in game.level.polygons:
             if not polygon.grass:
                 vertexes = [(v.x*zoom + xoffset, v.y*zoom + yoffset) for v in polygon.vertexes]
                 zoomed_polygons.append( vertexes )
-        for obj in lev.objects:
+        for obj in game.level.objects:
             colors = [None, game.colors.white, game.colors.red, game.colors.black, game.colors.yellow]
             x = obj.x*zoom + xoffset
             y = obj.y*zoom + yoffset

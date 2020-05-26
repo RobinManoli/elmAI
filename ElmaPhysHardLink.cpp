@@ -11,10 +11,9 @@
 // init engine globally, so that cython doesn't have to declare phys::Engine
 phys::Level lev;
 phys::Engine *engine; // use a pointer because otherwise the class is initialized with default level
-bool engineInitialized = false;
 
 //phys::Engine cinit(std::string path = "C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\1dg54.lev")
-void cinit(std::string pathfilename)
+phys::KuskiState cinit(std::string pathfilename)
 {
     std::cout << "hi\n" << "loading lev: " << pathfilename << "\n";
     // Engine params currentLev(NULL), levelData(NULL), screenScrollDelay(0.5), turnAnimDelay(0.35), isSinglePlayer(1), flagTagMode(0)
@@ -27,12 +26,15 @@ void cinit(std::string pathfilename)
     engine = new phys::Engine();
     std::cout << "initPhysicsEngine:\n";
     engine->initPhysicsEngine(lev); //initPhysicsEngine(phys::Level& lev); // also resets players
-    engineInitialized = true;
     //return engine;
+    //std::cout << "\nLeave cinit: " << engine->getPlayer(0).body.location.x << ' ' << engine->getPlayer(0).body.location.y; // working
+    return engine->getPlayer(0);
 }
 
-// redundant because this is called from python, but required because otherwise there is a parachute segmentation fault in pygame
-//phys::Engine engine = cinit();
+void restartLevel(){
+    engine->initPhysicsEngine(lev);    
+}
+
 
 // cinit must intialize engine before running nextFrameKuski
 //nextFrameKuski( inputKeys, timestep, time)

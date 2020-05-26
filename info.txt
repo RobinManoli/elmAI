@@ -1,5 +1,6 @@
 local files:
     run Developer Command Prompt for VS 2019, then "code ." - for accessing c compiler in vscode
+    though need to compile in anaconda for compiling cython
 
 About implementing machine learning:
     phase 1:
@@ -8,18 +9,18 @@ About implementing machine learning:
             or use multi label, ie not select one class -- use sigmoid_cross_entropy_with_logits (or v2?) despite having multiple output units
 
 About machine learning:
-    # https://towardsdatascience.com/teach-your-ai-how-to-walk-5ad55fce8bca
-    # https://github.com/shivaverma/OpenAIGym/tree/master/bipedal-walker
-    # https://www.reddit.com/r/reinforcementlearning/comments/9tkk52/have_anyone_solved_bipedalwalkerhardcore/
+    https://github.com/openai/gym/wiki/Table-of-environments <-- see action spaces here
+    https://github.com/openai/gym/wiki/Leaderboard <-- get best policies here
 
-    # https://mopolauta.moposite.com/viewtopic.php?p=264925#p264925 - stini's method
-    # https://towardsdatascience.com/cross-entropy-method-for-reinforcement-learning-2b6de2a4f3a0
-    # https://stackoverflow.com/questions/47034888/how-to-choose-cross-entropy-loss-in-tensorflow
-    # In case of multinomial classification, sigmoid allows to deal with non-exclusive labels (a.k.a. multi-labels),
-    # while softmax deals with exclusive classes (see below).
-    # https://stackoverflow.com/questions/44674847/what-are-the-differences-between-all-these-cross-entropy-losses-in-keras-and-ten
-    # There is just one cross (Shannon) entropy, all the tf alternatives are different ways to represent:
-    # P the actual (ground truth) distribution, and Q the predicted distribution
+    https://mopolauta.moposite.com/viewtopic.php?p=264925#p264925 - stini's method
+    https://medium.com/@rafal.plis/using-reinforcement-learning-and-cross-entropy-to-play-and-conquer-cartpole-v1-7837f66a45ce <--- cart pole with discrete action spaces
+    https://mc.ai/lets-learn-reinforcement-learning-part-1-introduction-and-the-cross-entropy-method/ <--- cart pole with discrete action spaces
+    https://stackoverflow.com/questions/47034888/how-to-choose-cross-entropy-loss-in-tensorflow
+    In case of multinomial classification, sigmoid allows to deal with non-exclusive labels (a.k.a. multi-labels),
+    while softmax deals with exclusive classes (see below).
+    https://stackoverflow.com/questions/44674847/what-are-the-differences-between-all-these-cross-entropy-losses-in-keras-and-ten
+    There is just one cross (Shannon) entropy, all the tf alternatives are different ways to represent:
+    P the actual (ground truth) distribution, and Q the predicted distribution
                                   outcomes     what is in Q    targets in P
     -------------------------------------------------------------------------------
     binary CE                                2      probability         any
@@ -28,23 +29,36 @@ About machine learning:
     sigmoid CE with logits                   2      score               any
     softmax CE with logits                  >2      score               soft
     sparse softmax CE with logits           >2      score               hard
+    https://www.machinecurve.com/index.php/2019/10/22/how-to-use-binary-categorical-crossentropy-with-keras/# <-- implementations, but dont know how to use rewards
+    advanced math describing cross entropy and reinforcement learning mathematically
+    http://machinelearningmechanic.com/deep_learning/reinforcement_learning/2019/12/06/a_mathematical_introduction_to_policy_gradient.html
+    https://towardsdatascience.com/cross-entropy-method-for-reinforcement-learning-2b6de2a4f3a0 <-- makes no sense whatsover, and not using discrete action space
+
+    https://stable-baselines.readthedocs.io/en/master/guide/rl_tips.html
+    https://spinningup.openai.com/en/latest/spinningup/rl_intro.html <----- great reinforcement learning source for non-ai-educated mathematicians
+
+    tardis uses monte carlo simulation to create data for which its c++ code that is used - uses cython
+    http://numba.pydata.org/ - fast machine code
+    https://dask.org/ using gpu?
+
+    https://pathmind.com/wiki/deep-reinforcement-learning <-- beginner's guide
+
+    kosh 09:42:24 before numba I would look at numpy or even tensorflow
+    if you have really large arrays and you are doing large numbers of vector type operations you can do them in tensorflow
+    numba is useful but you use it AFTER you have already done the stuff in numpy
+    partically because if your stuff is not in numpy then numba will not accelerate it much
+    exospecies, numba knows about numpy so if you use numpy and then write your code in a specific way that is documented on the numba website you can get LARGE performance gains that will run in parallel and vectorize
+
+    # continous cem, non-discrete action space so not usable
     https://github.com/udacity/deep-reinforcement-learning/blob/master/cross-entropy/CEM.ipynb <-- simplistic implementation example
-    https://www.machinecurve.com/index.php/2019/10/22/how-to-use-binary-categorical-crossentropy-with-keras/# <-- implementations
 
-    # https://stable-baselines.readthedocs.io/en/master/guide/rl_tips.html
-    # https://spinningup.openai.com/en/latest/spinningup/rl_intro.html <----- great reinforcement learning source for non-educated
 
-    # tardis uses monte carlo simulation to create data for which its c++ code that is used - uses cython
-    # http://numba.pydata.org/ - fast machine code
-    # https://dask.org/ using gpu?
+    bipedal walker, doesn't use a discrete action space so policy not usable:
+    https://towardsdatascience.com/teach-your-ai-how-to-walk-5ad55fce8bca
+    https://github.com/shivaverma/OpenAIGym/tree/master/bipedal-walker
+    https://www.reddit.com/r/reinforcementlearning/comments/9tkk52/have_anyone_solved_bipedalwalkerhardcore/
+    https://github.com/createamind/DRL/blob/master/spinup/algos/sac1/sac1_BipedalWalker-v2.py <--- best bipedalk walker
 
-    # https://pathmind.com/wiki/deep-reinforcement-learning <-- beginner's guide
-
-    # kosh 09:42:24 before numba I would look at numpy or even tensorflow
-    # if you have really large arrays and you are doing large numbers of vector type operations you can do them in tensorflow
-    # numba is useful but you use it AFTER you have already done the stuff in numpy
-    # partically because if your stuff is not in numpy then numba will not accelerate it much
-    # exospecies, numba knows about numpy so if you use numpy and then write your code in a specific way that is documented on the numba website you can get LARGE performance gains that will run in parallel and vectorize
 
 About elma physics (jon speaking):
     smibu code is missing timing loop iirc

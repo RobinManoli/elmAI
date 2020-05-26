@@ -194,7 +194,8 @@ cdef extern from "smibu_phys/KuskiState.h" namespace "phys":
 cdef extern from "smibu_phys/ElmaPhys.cpp":
     #Engine init()
     # phys::KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt)
-    void cinit(string pathfilename)
+    KuskiState cinit(string pathfilename)
+    void restartLevel()
     KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt, double timestep, double time)
     void saveReplay(string recFilenmae, string levFilename)
     #int main()

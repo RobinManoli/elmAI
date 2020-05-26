@@ -1,6 +1,4 @@
-import sys
-import os.path
-import struct
+import sys, os.path, struct, math
 
 class Vertex:
     def __init__( self, x, y ):
@@ -46,12 +44,16 @@ class Object:
 
 
 class Level:
-    def __init__( self ):
+    def __init__( self, path=None, filename=None, game=None ):
         #self.polygons.append( [-24.0, -8.0, 24.0, -8.0, 24.0, 2.0, -24.0, 2.0] ) # std lev
         #self.objects.append( [-2.0, -0.85, 1, 0, 0] ) # flower
         #self.objects.append( [2.0, -0.85, 4, 0, 0] ) # 4=start, 2=apples, 3=killers
         self.polygons = []
         self.objects = []
+        self.flowers = []
+        self.apples = []
+        self.killers = []
+        self.startobject = None
         self.zoomx = 1
         self.zoomy = 1
         self.xmin = None
@@ -60,7 +62,14 @@ class Level:
         self.ymax = None
         self.width = None
         self.height = None
-    
+        self.path = None
+        self.filename = None
+        self.maxplaytime = None
+
+        if path and filename:
+            self.read(path, filename)
+        self.game = game if game else None
+
     # note that these extremes include grass polygons,
     # but it shouldn't matter so much because they are about the same size polygons
     def set_xmin(self):
@@ -80,6 +89,8 @@ class Level:
 
     def read(self, path, filename, verbose=False):
         pathfilename = os.path.join( path, filename )
+        self.path = path
+        self.filename = filename
         f = open(pathfilename, 'rb')
         f.read(7)
         reclink = struct.unpack('i',f.read(4))[0]
@@ -138,6 +149,14 @@ class Level:
             animation = struct.unpack('i',f.read(4))[0]
             obj = Object(x, y, objtype, gravity, animation)
             self.objects.append( obj )
+            if obj.type == 4:
+                self.startobject = obj
+            elif obj.type == 2:
+                self.apples.append( obj )
+            elif obj.type == 3:
+                self.killers.append( obj )
+            else: # 1
+                self.flowers.append( obj )
 
             if verbose:
                 objstr = ' Object %d: %f, %f, type %s, gravity %s, animation %s' % (objnumber, x, y, obj.type_name, obj.gravity_name, obj.animation)
@@ -150,5 +169,41 @@ class Level:
         self.set_ymax()
         self.set_width()
         self.set_height()
+        print('level start pos: %.02f, %.02f' % (self.startobject.x, self.startobject.y))
 
 
+    def distance(self, obj, x, y):
+        dx = obj.x - x
+        dy = obj.y - y
+        return math.sqrt( dx*dx + dy*dy )
+
+
+
+    def reward(self):
+        # keep reward function simple, which means any progress near flower is the reward
+        # and keep a time limit so that speed becomes a reward too
+        #score = -0.1 # reduce score every frame, to penalize time # skip this because it could make gas only seem good
+        score = 0
+        if self.filename == 'ft.lev':
+            self.maxplaytime = 20 # elma seconds to play a lev before exit
+            if self.game.kuski_state['finishedTime']:
+                score += 40
+            elif self.game.kuski_state['isDead']:
+                score -= 10
+            body_x = self.game.kuski_state['body']['location']['x']
+            body_y = self.game.kuski_state['body']['location']['y']
+            # starting distance = 61
+            distance = self.distance(self.flowers[0], body_x, body_y)
+
+            prev_body_x = self.game.prev_kuski_state['body']['location']['x']
+            prev_body_y = self.game.prev_kuski_state['body']['location']['y']
+            prev_distance = self.distance(self.flowers[0], prev_body_x, prev_body_y)
+            # if distance now is larger than distance before: get a negative score
+            score -= distance - prev_distance
+            #print("prev_distance: %f, distance: %f" %(prev_distance, distance))
+            #print("distance: %f" % (distance - prev_distance))
+        return score
+
+            # todo: last_distance
+            #self.hiscore = # do not announce hiscore lower than this
+            #self.lowscore = # do not announce lowscore higher than this

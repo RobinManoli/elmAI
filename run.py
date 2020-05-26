@@ -1,36 +1,46 @@
 import sys, time, os
-import game
+import game, level
 
 game = game.Game()
-args = sys.argv
-if len(args) < 3:
-    print("usage: %s 0lp31 100 render man fps500|fps1000" % (os.path.basename(__file__)))
+game.args = sys.argv
+if len(game.args) < 3:
+    print("usage: %s 0lp31 100 render man fps30|fps500|fps1000 cem|ddpg" % (os.path.basename(__file__)))
     print("for running level 0lp31.lev, approx 100 real time seconds with chosen flags")
     print("order of flags dont matter")
+    print("shortcut: %s 0lp31 <-- will play manually if no other flags" % (os.path.basename(__file__)))
     #print("default flags: fps80")
-    sys.exit()
-arg_man = True if 'man' in args else False # play manually
-arg_render = True if 'render' in args or arg_man else False # render gfx with pygame
-arg_fps1000 = True if 'fps1000' in args else False
-arg_fps500 = True if 'fps500' in args else False
+    if len(game.args) < 2:
+        sys.exit()
+    game.args.append('man')
+game.arg_man = True if 'man' in game.args else False # play manually
+game.arg_render = True if 'render' in game.args or game.arg_man else False # render gfx with pygame
+game.arg_fps1000 = True if 'fps1000' in game.args else False
+game.arg_fps500 = True if 'fps500' in game.args else False
+game.arg_fps30 = True if 'fps30' in game.args else False
+# in case of more cem implementations, they can here be called cem1, cem2, etc
+game.arg_cem = True if 'cem' in game.args else False
+game.arg_ddpg = True if 'ddpg' in game.args else False
 
 #lev.read(r"C:\Users\Sara\Desktop\robin\elma\lev" ,"0lp31.lev")
 #lev.read(r"C:\Users\Sara\Desktop\robin\elma\lev" ,"1dg54.lev") # qwquu002
-game.levpath = r"C:\Users\Sara\Desktop\robin\elma\lev"
-game.levfilename = "%s.lev" % (args[1])
-game.maxplaytime = int(args[2]) if args[2].isnumeric() else 0 # quit script after last run has exceeded this many seconds
+levfilename = "%s.lev" % (game.args[1])
+game.level = level.Level(r"C:\Users\Sara\Desktop\robin\elma\lev", levfilename, game)
+game.maxplaytime = int(game.args[2]) if game.args[2].isnumeric() else 0 # quit script after last run has exceeded this many seconds
 
-if arg_fps500:
+if game.arg_fps30:
+    game.timestep = 0.01456 # 30 fps, lowest eol framerate but too unstable here to use
+elif game.arg_fps500:
     game.timestep = 0.0008736 # 500 fps, okeol second candidate
-elif arg_fps1000:
+elif game.arg_fps1000:
     game.timestep = 0.0004368 # 1000 fps, ultra slow motion, okeol first candidate
-elif arg_man:
+elif game.arg_man:
     game.timestep = 0.002 # oke speed for playing manually, also this computer (Zazza) renders the game almost with same elma time as real time
 else:
     # default timestep
     game.timestep = 0.00546 # fast play, 80 fps, fastest possible calculated physics according to jon, as slower than this does double or more physics iteration per step
 
-# calc timestep for 80 fps
+# calc timestep for fps
+# 1/30/2,2893772893772893772893772893773 = 0,01456
 # 1/80/2,2893772893772893772893772893773 = 0,00546
 # 1/1000/2,2893772893772893772893772893773 = 0,0004368
 # fast/slow below means how the gameplay feels in pygame
@@ -38,30 +48,40 @@ else:
 #game.timestep = 0.01 # very fast play, makes elma unstable and wheels going everywhere
 #game.timestep = 0.001 # slow play
 
+training = None
+if game.arg_cem:
+    sys.path.append("agents\\cem\\")
+    import cem_strange_rewards as training
+elif game.arg_ddpg:
+    sys.path.append("agents\\ddpg_torch\\")
+    import train as training
+game.training = training
 
-if arg_render:
+if game.arg_render:
     game.init_pygame()
 
 # after pygame.init()
 import elmaphys # must be imported after pygame.init()
-elmaphys.init(game.levpath + '\\' + game.levfilename)
+game.kuski_state = elmaphys.init(game.level.path + '\\' + game.level.filename)
+game.initial_kuski_state = game.kuski_state
+game.elmaphys = elmaphys
+#print('kuski state: ' + str(game.kuski_state))
 
+batch = 0
 game.running = True
-while game.running:
-    if arg_render:
-        game.render(arg_man)
-
-    params = game.input + [game.timestep, game.timesteptotal]
-    game.kuski_state = elmaphys.next_frame( *params ) # get kuski state before drawing first time
-    if game.kuski_state['isDead'] or game.kuski_state['finishedTime']:
-        game.restart()
-
-    if arg_render:
-        game.draw.draw(game)
-    game.timesteptotal += game.timestep
-    #print( elmaphys.next_frame() ) # segmentation fault after pygame.init()
-    #print('game running: %s' % game.running )
-    #time.sleep(1)
+game.starttime = time.time()
+if game.training:
+    while game.running:
+        secondsplayed = time.time() - game.starttime
+        secondsleft = game.maxplaytime - secondsplayed
+        print('Batch %d, last batch hiscore: %f, last batch lowscore: %f, %d minutes left' % (batch, game.batch_hiscore, game.batch_lowscore, secondsleft/60))
+        game.batch_hiscore = 0
+        game.batch_lowscore = 0
+        game.training.train_model(game, batch, 3)
+        batch += 1
+else:
+    while game.running:
+        game.loop()
 
 print('SESSION FINISHED:')
 elapsed_time = time.time() - game.starttime
@@ -75,8 +95,10 @@ elif elapsed_time > 60:
     unit = 'minutes'
 else:
     unit = 'seconds'
+print('Session hiscore: %f' % (game.hiscore))
+print('Session lowscore: %f' % (game.lowscore))
 print('Real time: %.02f %s' % (elapsed_time, unit))
 print('Elma time: %.02f %s' % (game.elmatimetotal, unit))
 print('Processing %.02f times faster than playing in realtime' % (game.elmatimetotal/elapsed_time))
-print( len(game.observation()) )
-print( game.observation() )
+#print( len(game.observation()) )
+#print( game.observation() )
