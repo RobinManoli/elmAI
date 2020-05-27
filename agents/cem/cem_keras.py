@@ -1,20 +1,34 @@
 # https://colab.research.google.com/drive/1KuzxUPUL3Y50xQFk8RvsfWDx88vDitZS#scrollTo=WB6Z4ASd5vMX
 # https://towardsdatascience.com/deep-reinforcement-learning-pong-from-pixels-keras-version-bf8a0860689f
 
-# gen 1 - seeds 61213
+# gen 1 - ft.lev - seeds 61213 - gamma = 0.99 - n_observations = 19 - n_actions = 2
+# model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
 # used non-normalized (non-diffed) observations
 # successfully lowers loss to a larger negative value in 1000 episodes
+# need to investigate why that doesn't mean higher reward?
 # run.py ft 1 cem render
-# need to investigate why that doesn't mean higher reward
 
-# gen 2 - seeds 61213
+# gen 2
+# used diffed observations
 # successfully increases average score
 # plays beautifully until about 600 episodes
 # seems to converge at gas only
+# very different learning times
 
+# gen 3 - n_actions = 3
+# model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
+# increases average reward until around 1000 - 1500 episodes
+# score 45.05 at episode 1271
+# seems to converge at gas only after 5000 episodes
+
+# gen 4 - ribotai0.lev - seeds 43364 - n_actions = 2
+# beat some good human players of this battle https://elma.online/battles/152353
+# https://elma.online/r/qvw6j5erj6
+# in less than 600 episodes
+# run.py ribotai0 1 cem render
 
 import numpy as np
-import random
+import random, os
 # import cPickle as pickle
 #import matplotlib.pyplot as plt
 #from JSAnimation.IPython_display import display_animation
@@ -39,7 +53,9 @@ import keras.backend as K
 print("\nEnter CEM Keras CEM: softmax, sparse_categorical_crossentropy and optimizer rmsprop\n")
 
 seed = random.randint(0, 99999)
-seed = 61213
+#seed = 61213 # learns well but converges into gas only
+#seed = 85711 # starts with gas only
+seed = 43364 # fast and good times on ribotai0.lev, beats killer on ribotai1.lev
 print("\nrand seed: %d\n" % (seed))
 np.random.seed(seed)
 tf.random.set_seed(seed)
@@ -61,8 +77,8 @@ def discount_n_standardise(game, r):
 
 model = Sequential()
 def init_model(game):
-    
-#    model.add(Conv2D(4, kernel_size=(3,3), padding='same', activation='relu', input_shape = (1,) + (game.n_observations, )))
+    print(game.BLUE2, "\nseed: %d\n" % seed, game.WHITE)
+    #model.add(Conv2D(4, kernel_size=(3,3), padding='same', activation='relu', input_shape = (1,) + (game.n_observations, )))
     model.add(Conv2D(4, kernel_size=(3,3), padding='same', activation='relu', input_shape = (game.n_observations, 1, 1)))
     #model.add(Conv2D(4, kernel_size=(3,3), padding='same', activation='relu', input_shape = (80,80,1)))
 
@@ -157,7 +173,7 @@ def train_model(game):
             # Take an action given current state of policy model
             p = model.predict( observations[frame][None,:,:,:] )
             #p = model.predict_classes( prev_observation )
-            #print('actions: %s' % (p))
+            #print('probabilities: %s' % (p))
             #print()
             a = np.random.choice( game.n_actions, p=p[0] )
             #action = action_space[a]
@@ -194,15 +210,22 @@ def train_model(game):
                 #print(losses[game.episode])
                 
                 # Print out metrics like rewards, how long each episode lasted etc.
-                if game.episode % ( game.n_episodes // 20 ) == 0:
+                if game.episode > 0 and game.episode % 100 == 0: # game.episode % ( game.n_episodes // 20 ) == 0:
                     game.arg_render = True
                     ave_reward = np.mean(reward_sums[max(0,game.episode-200):game.episode])
                     ave_loss = np.mean(losses[max(0,game.episode-200):game.episode])
                     ave_time = np.mean(time_taken[max(0,game.episode-200):game.episode])
                     acc_ratio = 0.0 + np.count_nonzero(actions == 1)/game.frame
-                    
-                    print('Episode: {0:d}, Average Loss: {1:.4f}, Average Reward: {2:.2f}, Average steps: {3:.0f}, Acc ratio: {4:.2f}'
-                        .format(game.episode, ave_loss, ave_reward, ave_time, acc_ratio))
+
+                    elapsed_time, unit = game.elapsed_time()
+
+
+                    print(game.GREEN + 'Episode: {0:d}, Average Loss: {1:.4f}, Average Reward: {2:.2f}, Average steps: {3:.0f}, Acc ratio: {4:.2f}'
+                        .format(game.episode, ave_loss, ave_reward, ave_time, acc_ratio)
+                        + ', Real time: %.02f %s' % (elapsed_time, unit)
+                        + ', Elma time: %.02f %s' % (game.elmatimetotal, unit)
+                        + game.WHITE
+                    )
                 else:
                     game.arg_render = False
                 game.frame = 0

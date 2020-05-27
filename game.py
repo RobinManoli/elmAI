@@ -32,7 +32,21 @@ class Game:
         self.training = False
         self.died = False
         self.finished = False
-
+        # terminal colors
+        # https://stackoverflow.com/a/39452138
+        self.BLACK  = '\33[30m'
+        self.RED    = '\33[31m'
+        self.GREEN  = '\33[32m'
+        self.YELLOW = '\33[33m'
+        self.BLUE   = '\33[34m'
+        self.VIOLET = '\33[35m'
+        self.BEIGE  = '\33[36m'
+        self.WHITE  = '\33[37m'
+        self.GREY    = '\33[90m'
+        self.RED2    = '\33[91m'
+        self.GREEN2  = '\33[92m'
+        self.BLUE2   = '\33[94m'
+        self.WHITE2  = '\33[97m'
 
     def init_pygame(self):
         import os, pygame, eventhandler, draw, gui, colors
@@ -71,10 +85,10 @@ class Game:
             pass
         elif self.kuski_state['finishedTime']:
             self.finished = True
-            print('lev completed, time: %.2f, score: %.2f' % (self.lasttime, self.score))
+            print('lev completed, time: %.2f, score: %.2f, var finishedTime: %.2f' % (self.lasttime, self.score, self.kuski_state['finishedTime']))
         filenametime = "%.02f" % self.lasttime
         filenametime = filenametime.replace('.', '') # remove dot from filename, because elma can't handle it
-        if self.save_rec:
+        if self.save_rec or self.level.hiscore and self.score > self.level.hiscore:
             #self.elmaphys.save_replay("00x%s_%d_%s.rec" % (filenametime, self.score, random.randint(10,99)), self.level.filename) # working
             self.elmaphys.save_replay("00x%s_%d.rec" % (filenametime, self.score), self.level.filename) # working
         if self.maxplaytime and time.time() - self.starttime > self.maxplaytime:
@@ -83,10 +97,10 @@ class Game:
         self.last_score = self.score
         if self.score > self.hiscore:
             self.hiscore = self.score
-            print('episode %d, hiscore: %.2f, time: %.2f, died: %s, finished: %s' %(self.episode, self.score, self.lasttime, self.died, self.finished))
+            print(self.YELLOW + 'episode %d, hiscore: %.2f, time: %.2f, died: %s, finished: %s' % (self.episode, self.score, self.lasttime, self.died, self.finished) + self.WHITE)
         elif self.score < self.lowscore:
             self.lowscore = self.score
-            print('episode %d, lowscore: %.2f, time: %.2f, died: %s, finished: %s' %(self.episode, self.score, self.lasttime, self.died, self.finished))
+            print(self.YELLOW + 'episode %d, lowscore: %.2f, time: %.2f, died: %s, finished: %s' % (self.episode, self.score, self.lasttime, self.died, self.finished) + self.WHITE)
         if self.arg_render:
             print('score: %.2f, time: %.2f, died: %s, finished: %s' % (self.score, self.lasttime, self.died, self.finished))
         #print('episode %d, score: %.2f, time: %.2f' % (episode, self.score, self.timesteptotal * self.realtimecoeff))
@@ -180,6 +194,8 @@ class Game:
 
     def action_space(self, action=None):
         # accelerate = brake = left = right = turn = supervolt = 0
+        # two actions trains significantly faster than three
+        # probably twice as fast on flat track with maxtime 20
         actions = []
         # simplistic, game.action_space()[:2] or game.action_space()[:4]
         #actions.append(0) # do nothing, happens when all actions are 0
@@ -257,3 +273,17 @@ class Game:
         #BikeState bikeState # contains animation, not sure if necessary
         return np.array([body_x, body_y, body_r, lwx, lwy, lwr, rwx, rwy, rwr, head_x, head_y, head_cx, head_cy, direction, gravityScrollDirection,
         gravityDir, numTakenApples, changeDirPressedLast, lastRotationTime, pad4_x, pad4_y, pad, asd4, asd5, asdunk5, padz1, padz2, asd6, asd7, asd3, asd8, asdunk1, asdunk2])
+
+    def elapsed_time(self):
+        elapsed_time = time.time() - self.starttime
+        if elapsed_time > 3600:
+            elapsed_time /= 3600
+            self.elmatimetotal /= 3600
+            unit = 'hours'
+        elif elapsed_time > 60:
+            elapsed_time /= 60
+            self.elmatimetotal /= 60
+            unit = 'minutes'
+        else:
+            unit = 'seconds'
+        return elapsed_time, unit

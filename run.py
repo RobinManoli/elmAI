@@ -1,6 +1,7 @@
 import sys, time, os
 import game, level
 
+os.system('color') # init colors early in script
 game = game.Game()
 game.args = sys.argv
 # todo: bug or feature? with enough args number can be omitted and train forever
@@ -56,7 +57,7 @@ if game.arg_cem:
     #import cem_strange_rewards as training_mod
     import cem_keras as training_mod
     training_mod.init_model(game)
-    game.n_episodes = 1000
+    game.n_episodes = 5000
 elif game.arg_ddpg:
     sys.path.append("agents\\ddpg_torch\\")
     import train as training_mod
@@ -93,17 +94,7 @@ else:
         game.loop()
 
 print('SESSION FINISHED:')
-elapsed_time = time.time() - game.starttime
-if elapsed_time > 3600:
-    elapsed_time /= 3600
-    game.elmatimetotal /= 3600
-    unit = 'hours'
-elif elapsed_time > 60:
-    elapsed_time /= 60
-    game.elmatimetotal /= 60
-    unit = 'minutes'
-else:
-    unit = 'seconds'
+elapsed_time, unit = game.elapsed_time()
 print('Session hiscore: %f' % (game.hiscore))
 print('Session lowscore: %f' % (game.lowscore))
 print('Real time: %.02f %s' % (elapsed_time, unit))
