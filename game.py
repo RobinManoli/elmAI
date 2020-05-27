@@ -66,9 +66,11 @@ class Game:
         self.elmatimetotal += self.lasttime
         self.timesteptotal = 0.0
         if self.kuski_state['isDead']:
+            self.died = True
             #print('kuski died, time: %.2f, score: %.2f' % (self.lasttime, self.score))
             pass
         elif self.kuski_state['finishedTime']:
+            self.finished = True
             print('lev completed, time: %.2f, score: %.2f' % (self.lasttime, self.score))
         filenametime = "%.02f" % self.lasttime
         filenametime = filenametime.replace('.', '') # remove dot from filename, because elma can't handle it
@@ -85,7 +87,7 @@ class Game:
         elif self.score < self.lowscore:
             self.lowscore = self.score
             print('episode %d, lowscore: %.2f, time: %.2f, died: %s, finished: %s' %(self.episode, self.score, self.lasttime, self.died, self.finished))
-        if not self.training:
+        if self.arg_render:
             print('score: %.2f, time: %.2f, died: %s, finished: %s' % (self.score, self.lasttime, self.died, self.finished))
         #print('episode %d, score: %.2f, time: %.2f' % (episode, self.score, self.timesteptotal * self.realtimecoeff))
         self.batch_hiscore = max(self.batch_hiscore, self.score)
@@ -227,11 +229,12 @@ class Game:
         head_cx = self.kuski_state['headCenterLocation']['x']
         head_cy = self.kuski_state['headCenterLocation']['y']
         direction = self.kuski_state['direction'] + 0.0 # int
-        gravityScrollDirection = self.kuski_state['gravityScrollDirection'] + 0.0 # int
-        gravityDir = self.kuski_state['gravityDir'] + 0.0 # int
-        numTakenApples = self.kuski_state['numTakenApples'] + 0.0 # int
+        gravityScrollDirection = self.kuski_state['gravityScrollDirection']/10 + 0.0 # int # normalized
+        gravityDir = self.kuski_state['gravityDir']/10 + 0.0 # int # normalized
+        numTakenApples = self.kuski_state['numTakenApples']# + 0.0 # int
         changeDirPressedLast = self.kuski_state['changeDirPressedLast'] + 0.0 # int
-        lastRotationTime = self.kuski_state['lastRotationTime'] # double
+        lastRotationTime = self.kuski_state['lastRotationTime']/100 # double # normalized? starts with 100, doesn't seem to increase but didn't try to turn
+        #print(gravityDir)
 
         # full, game.observation() -- 33
         # unnamed

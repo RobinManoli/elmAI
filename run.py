@@ -50,7 +50,7 @@ else:
 #game.timestep = 0.01 # very fast play, makes elma unstable and wheels going everywhere
 #game.timestep = 0.001 # slow play
 
-training = None
+training_mod = None
 if game.arg_cem:
     sys.path.append("agents\\cem\\")
     #import cem_strange_rewards as training_mod
@@ -80,7 +80,6 @@ game.running = True
 game.starttime = time.time()
 if game.training_mod:
     while game.running:
-        game.training = True
         secondsplayed = time.time() - game.starttime
         secondsleft = game.maxplaytime - secondsplayed
         print()

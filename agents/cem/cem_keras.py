@@ -1,9 +1,16 @@
 # https://colab.research.google.com/drive/1KuzxUPUL3Y50xQFk8RvsfWDx88vDitZS#scrollTo=WB6Z4ASd5vMX
 # https://towardsdatascience.com/deep-reinforcement-learning-pong-from-pixels-keras-version-bf8a0860689f
 
-# successfully lowers loss to a larger negative value
+# gen 1 - seeds 61213
+# used non-normalized (non-diffed) observations
+# successfully lowers loss to a larger negative value in 1000 episodes
 # run.py ft 1 cem render
 # need to investigate why that doesn't mean higher reward
+
+# gen 2 - seeds 61213
+# successfully increases average score
+# plays beautifully until about 600 episodes
+# seems to converge at gas only
 
 
 import numpy as np
@@ -50,6 +57,7 @@ def discount_n_standardise(game, r):
     dr = discount_rewards(game, r)
     dr = (dr - dr.mean()) / dr.std()
     return dr
+
 
 model = Sequential()
 def init_model(game):
@@ -109,13 +117,15 @@ def train_model(game):
     losses = np.zeros(game.n_episodes)
     time_taken = np.zeros(game.n_episodes)
     #print("initial reset %f" % (game.timesteptotal))
-    prev_observation = game.reset()
+    observation = game.reset()
+    #print( observation )
 
     for game.episode in range(game.n_episodes):
         reward_sum = 0
         #im_shape = (80, 80, 1)
         #observation_shape = (game.n_observations, 1)
         observation_shape = (game.n_observations, 1, 1)
+        prev_observation = None
     
         buffer = 1600 # 80 fps * 20 seconds = 1600 game frames maximum
         observations = np.zeros(( buffer, ) + observation_shape)
@@ -134,12 +144,14 @@ def train_model(game):
             #observations[frame] = prev_observation.astype(np.float)[:,:,None] # preprocess
             #observations[frame] = prev_observation
             # convert shape 19 to 19,1,1
-            prev_observation = prev_observation.reshape(-1,1)[:, np.newaxis]
-            observations[game.frame] = prev_observation
+            observation = observation.reshape(-1,1)[:, np.newaxis]
+            #observations[game.frame] = prev_observation # working but not normalized
+            # normalize by only recording difference of past observations
+            observations[game.frame] = observation - prev_observation if prev_observation is not None else np.zeros(observation_shape)
             #print()
             #print(observations[frame])
             #print()
-            #prev_frame = x
+            prev_observation = observation
             
             #print(observations[frame][None,:,:,:])
             # Take an action given current state of policy model
@@ -156,7 +168,6 @@ def train_model(game):
             observation, reward, done, _ = game.step(action)
             #reward_sum += reward # record total rewards # game.score
             rewards[game.frame] = reward # record reward per step
-            prev_observation = observation
             
             if done:
                 reward_sums[game.episode] = game.score
@@ -173,13 +184,14 @@ def train_model(game):
                 model.fit(ep_observations, ep_actions, sample_weight=ep_rewards, batch_size=buffer, epochs=1, verbose=0)
                 
                 time_taken[game.episode] = game.frame
-                prev_frame = None
-                prev_observation = game.reset()
+                prev_observation = None
+                observation = game.reset()
                 losses[game.episode] = model.evaluate(ep_observations, 
                                                 ep_actions,
                                                 sample_weight=ep_rewards,
                                                 batch_size=len(ep_observations), 
                                                 verbose=0)
+                #print(losses[game.episode])
                 
                 # Print out metrics like rewards, how long each episode lasted etc.
                 if game.episode % ( game.n_episodes // 20 ) == 0:
