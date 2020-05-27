@@ -13,6 +13,8 @@ About machine learning:
     https://github.com/openai/gym/wiki/Leaderboard <-- get best policies here
 
     https://mopolauta.moposite.com/viewtopic.php?p=264925#p264925 - stini's method
+    https://github.com/keras-rl/keras-rl <-- reinforcement learning algorithms in Python inclusing CEM
+    https://colab.research.google.com/drive/1KuzxUPUL3Y50xQFk8RvsfWDx88vDitZS <--- keras, discount and sparse categorical CE
     https://medium.com/@rafal.plis/using-reinforcement-learning-and-cross-entropy-to-play-and-conquer-cartpole-v1-7837f66a45ce <--- cart pole with discrete action spaces
     https://mc.ai/lets-learn-reinforcement-learning-part-1-introduction-and-the-cross-entropy-method/ <--- cart pole with discrete action spaces
     https://stackoverflow.com/questions/47034888/how-to-choose-cross-entropy-loss-in-tensorflow
@@ -36,6 +38,7 @@ About machine learning:
 
     https://stable-baselines.readthedocs.io/en/master/guide/rl_tips.html
     https://spinningup.openai.com/en/latest/spinningup/rl_intro.html <----- great reinforcement learning source for non-ai-educated mathematicians
+    https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial <--- q learning in tensorflow
 
     tardis uses monte carlo simulation to create data for which its c++ code that is used - uses cython
     http://numba.pydata.org/ - fast machine code

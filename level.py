@@ -202,6 +202,8 @@ class Level:
             score -= distance - prev_distance
             #print("prev_distance: %f, distance: %f" %(prev_distance, distance))
             #print("distance: %f" % (distance - prev_distance))
+        self.game.score += score
+        self.game.score_delta = score
         return score
 
             # todo: last_distance

@@ -3,8 +3,9 @@ import game, level
 
 game = game.Game()
 game.args = sys.argv
+# todo: bug or feature? with enough args number can be omitted and train forever
 if len(game.args) < 3:
-    print("usage: %s 0lp31 100 render man fps30|fps500|fps1000 cem|ddpg" % (os.path.basename(__file__)))
+    print("usage: %s 0lp31 100 render man fps30|fps500|fps1000 rltf|cem|ddpg" % (os.path.basename(__file__)))
     print("for running level 0lp31.lev, approx 100 real time seconds with chosen flags")
     print("order of flags dont matter")
     print("shortcut: %s 0lp31 <-- will play manually if no other flags" % (os.path.basename(__file__)))
@@ -20,6 +21,7 @@ game.arg_fps30 = True if 'fps30' in game.args else False
 # in case of more cem implementations, they can here be called cem1, cem2, etc
 game.arg_cem = True if 'cem' in game.args else False
 game.arg_ddpg = True if 'ddpg' in game.args else False
+game.arg_rltf = True if 'rltf' in game.args else False # reinforcement learning tensorflow
 
 #lev.read(r"C:\Users\Sara\Desktop\robin\elma\lev" ,"0lp31.lev")
 #lev.read(r"C:\Users\Sara\Desktop\robin\elma\lev" ,"1dg54.lev") # qwquu002
@@ -51,11 +53,18 @@ else:
 training = None
 if game.arg_cem:
     sys.path.append("agents\\cem\\")
-    import cem_strange_rewards as training
+    #import cem_strange_rewards as training_mod
+    import cem_keras as training_mod
+    training_mod.init_model(game)
+    game.n_episodes = 1000
 elif game.arg_ddpg:
     sys.path.append("agents\\ddpg_torch\\")
-    import train as training
-game.training = training
+    import train as training_mod
+elif game.arg_rltf:
+    sys.path.append("agents\\")
+    import rl_tf as training_mod
+    game.n_episodes = 1000
+game.training_mod = training_mod
 
 if game.arg_render:
     game.init_pygame()
@@ -67,18 +76,19 @@ game.initial_kuski_state = game.kuski_state
 game.elmaphys = elmaphys
 #print('kuski state: ' + str(game.kuski_state))
 
-batch = 0
 game.running = True
 game.starttime = time.time()
-if game.training:
+if game.training_mod:
     while game.running:
+        game.training = True
         secondsplayed = time.time() - game.starttime
         secondsleft = game.maxplaytime - secondsplayed
-        print('Batch %d, last batch hiscore: %f, last batch lowscore: %f, %d minutes left' % (batch, game.batch_hiscore, game.batch_lowscore, secondsleft/60))
+        print()
+        print('Batch %d, last batch hiscore: %f, last batch lowscore: %f, %d minutes left' % (game.batch, game.batch_hiscore, game.batch_lowscore, secondsleft/60))
         game.batch_hiscore = 0
         game.batch_lowscore = 0
-        game.training.train_model(game, batch, 3)
-        batch += 1
+        game.training_mod.train_model(game)
+        game.batch += 1
 else:
     while game.running:
         game.loop()

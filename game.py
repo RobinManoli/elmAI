@@ -20,6 +20,19 @@ class Game:
         self.lowscore = 0 # lowest score this session
         self.batch_hiscore = 0 # highest score this batch
         self.batch_lowscore = 0 # lowest score this batch
+        self.batch = 0
+        self.frame = 0
+        self.episode = 0
+        self.n_episodes = 1
+        self.n_actions = 2 # 4 # action_size = 4 # simplistic, 7 elma, 13 precise
+        self.n_observations = 19 # 33 # len(game.observation())
+        self.gamma = 0.99 # discount factor
+        self.learning_rate = 0.01
+        self.save_rec = False
+        self.training = False
+        self.died = False
+        self.finished = False
+
 
     def init_pygame(self):
         import os, pygame, eventhandler, draw, gui, colors
@@ -41,17 +54,17 @@ class Game:
         #draw.game = self
 
     def has_ended(self):
-        return self.kuski_state['isDead'] or self.kuski_state['finishedTime']
+        return self.kuski_state['isDead'] or self.kuski_state['finishedTime'] > 0
     
     def end(self):
         #print("Ended level programatically")
         self.elmaphys.restart_level()
 
-    def restart(self, save_rec=False):
+    def restart(self):
         self.lasttime = self.timesteptotal * self.realtimecoeff
         #print('time: %.2f, score: %.2f, timesteptotal: %.2f' % (self.lasttime, self.score, self.timesteptotal))
         self.elmatimetotal += self.lasttime
-        self.timesteptotal = 0
+        self.timesteptotal = 0.0
         if self.kuski_state['isDead']:
             #print('kuski died, time: %.2f, score: %.2f' % (self.lasttime, self.score))
             pass
@@ -59,21 +72,56 @@ class Game:
             print('lev completed, time: %.2f, score: %.2f' % (self.lasttime, self.score))
         filenametime = "%.02f" % self.lasttime
         filenametime = filenametime.replace('.', '') # remove dot from filename, because elma can't handle it
-        if save_rec:
+        if self.save_rec:
             #self.elmaphys.save_replay("00x%s_%d_%s.rec" % (filenametime, self.score, random.randint(10,99)), self.level.filename) # working
             self.elmaphys.save_replay("00x%s_%d.rec" % (filenametime, self.score), self.level.filename) # working
         if self.maxplaytime and time.time() - self.starttime > self.maxplaytime:
             self.running = False
+
         self.last_score = self.score
+        if self.score > self.hiscore:
+            self.hiscore = self.score
+            print('episode %d, hiscore: %.2f, time: %.2f, died: %s, finished: %s' %(self.episode, self.score, self.lasttime, self.died, self.finished))
+        elif self.score < self.lowscore:
+            self.lowscore = self.score
+            print('episode %d, lowscore: %.2f, time: %.2f, died: %s, finished: %s' %(self.episode, self.score, self.lasttime, self.died, self.finished))
+        if not self.training:
+            print('score: %.2f, time: %.2f, died: %s, finished: %s' % (self.score, self.lasttime, self.died, self.finished))
+        #print('episode %d, score: %.2f, time: %.2f' % (episode, self.score, self.timesteptotal * self.realtimecoeff))
+        self.batch_hiscore = max(self.batch_hiscore, self.score)
+        self.batch_lowscore = min(self.batch_lowscore, self.score)
+
         self.score_delta = 0
         self.score = 0
         self.kuski_state = self.initial_kuski_state
         self.last_kuski_state = self.initial_kuski_state
+        self.died = False
+        self.finished = False
         if not self.has_ended():
             # if game ended programatically, eg because level max time is up
             # must run after saving rec
             self.end()
         #print('restarted')
+
+    # emulate openai env.methods -- easy to use with code that uses env
+    def reset(self):
+        # check if game has progressed (don't restart if resetting as first action in agent)
+        if self.timesteptotal > 0:
+            self.restart()
+        return self.observation()[:self.n_observations]
+        #self.n_action_space = 2
+    def step(self, action):
+        elmainputs = self.action_space(action) # [0, 0, ...]
+        #print(elmainputs)
+        done = self.loop(elmainputs)
+        observation = self.observation()[:self.n_observations] # after action taken
+        reward = self.score_delta
+        info = dict()
+        return observation, reward, done, info
+    def render(self):
+        # render is done by self, not outside script
+        pass
+
 
 
     def handle_input(self):
@@ -87,7 +135,7 @@ class Game:
                 #self.draw.draw(game, event, self.input, elmaphys) # draw only on self.input
             #self.draw.draw(game, event, elmaphys) # proceed drawing only on events, eg when mouse moves
 
-    def loop(self, actions=None, save_rec=False):
+    def loop(self, actions=None):
         "run the game loop, return true if done"
         self.prev_kuski_state = self.kuski_state
 
@@ -114,42 +162,46 @@ class Game:
         "perform actions with elma physics, return true if done"
         if actions is None:
             actions = self.input
-        # make it possible to use fewer than all actions, and in that case fill actions with 0s
-        while len(actions) < len(self.input):
-            actions.append(0)
         params = actions + [self.timestep, self.timesteptotal]
         self.kuski_state = self.elmaphys.next_frame( *params )
         #print(self.kuski_state)
         #if self.has_ended():    
         #    self.restart()
+        self.level.reward()
         self.timesteptotal += self.timestep
-        self.score_delta = self.level.reward()
-        self.score += self.score_delta
+        #print(self.score_delta, self.timesteptotal, self.level.maxplaytime)
+        #print("episode: %d, score delta: %.2f, score: %.2f" % (self.episode, self.score_delta, self.score))
         if not self.arg_man and self.level.maxplaytime and self.timesteptotal * self.realtimecoeff > self.level.maxplaytime:
             #print('max play time over')
             return True
         return False
 
-    def action_space(self):
+    def action_space(self, action=None):
         # accelerate = brake = left = right = turn = supervolt = 0
         actions = []
         # simplistic, game.action_space()[:2] or game.action_space()[:4]
-        actions.append(0) # 00 do nothing
-        actions.append(0) # 01 accelerate
-        actions.append(0) # 02 brake
-        actions.append(0) # 03 turn
+        #actions.append(0) # do nothing, happens when all actions are 0
+        actions.append(0) # 00 accelerate
+        actions.append(0) # 01 brake
+        actions.append(0) # 02 turn
         # elma, game.action_space()[:6] or game.action_space()[:7]
-        actions.append(0) # 04 left
-        actions.append(0) # 05 right
-        actions.append(0) # 06 supervolt
+        actions.append(0) # 03 left
+        actions.append(0) # 04 right
+        actions.append(0) # 05 supervolt
+        if action is not None:
+            if action > 0:
+                actions[action-1] = 1 # makes one of the zeroes = 1
+            return actions
+
         # precise, game.action_space() -- 13
-        actions.append(0) # 07 accelerate + left
+        # below need to be translated into elmainput of 6 actions or no action (all zeroes)
+        """actions.append(0) # 07 accelerate + left
         actions.append(0) # 08 accelerate + right
         actions.append(0) # 09 accelerate + supervolt
         actions.append(0) # 10 brake + left
         actions.append(0) # 11 brake + right
         actions.append(0) # 12 brake + supervolt
-        # super precise turn + other keys, brake + acc
+        # super precise turn + other keys, brake + acc"""
         return actions
 
 
