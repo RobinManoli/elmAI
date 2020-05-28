@@ -1,6 +1,7 @@
 local files:
-    run Developer Command Prompt for VS 2019, then "code ." - for accessing c compiler in vscode
-    though need to compile in anaconda for compiling cython
+    compile in anaconda for compiling cython
+    run in anaconda for accessing keras model save
+    # old: run Developer Command Prompt for VS 2019, then "code ." - for accessing c compiler in vscode
 
 About implementing machine learning:
     phase 1:
@@ -9,6 +10,9 @@ About implementing machine learning:
             or use multi label, ie not select one class -- use sigmoid_cross_entropy_with_logits (or v2?) despite having multiple output units
 
 About machine learning:
+    https://spinningup.openai.com/en/latest/spinningup/rl_intro.html <----- great reinforcement learning source for non-ai-educated mathematicians
+    https://stable-baselines.readthedocs.io/en/master/guide/rl_tips.html
+
     https://github.com/openai/gym/wiki/Table-of-environments <-- see action spaces here
     https://github.com/openai/gym/wiki/Leaderboard <-- get best policies here
 
@@ -36,8 +40,6 @@ About machine learning:
     http://machinelearningmechanic.com/deep_learning/reinforcement_learning/2019/12/06/a_mathematical_introduction_to_policy_gradient.html
     https://towardsdatascience.com/cross-entropy-method-for-reinforcement-learning-2b6de2a4f3a0 <-- makes no sense whatsover, and not using discrete action space
 
-    https://stable-baselines.readthedocs.io/en/master/guide/rl_tips.html
-    https://spinningup.openai.com/en/latest/spinningup/rl_intro.html <----- great reinforcement learning source for non-ai-educated mathematicians
     https://www.tensorflow.org/agents/tutorials/1_dqn_tutorial <--- q learning in tensorflow
 
     tardis uses monte carlo simulation to create data for which its c++ code that is used - uses cython

@@ -10,5 +10,7 @@ build
 
 # ignore for now
 rec
+# save explicit?
+keras_models
 
 !ElmaPhysHardLink.cpp

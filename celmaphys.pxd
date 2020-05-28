@@ -197,5 +197,5 @@ cdef extern from "smibu_phys/ElmaPhys.cpp":
     KuskiState cinit(string pathfilename)
     void restartLevel()
     KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt, double timestep, double time)
-    void saveReplay(string recFilenmae, string levFilename)
+    bool saveReplay(string recFilenmae, string levFilename)
     #int main()

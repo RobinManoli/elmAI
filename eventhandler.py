@@ -4,6 +4,7 @@ DOUBLECLICKTIME = 200 # ms
 dblclock = None
 
 def elmainput(game, event):
+    #print("input happened: %s" % (event.type))
     global dblclock
     accelerate = brake = left = right = turn = supervolt = 0 # random.choice([0,1])
     # not working since cython code makes pygame crasch on any keypress

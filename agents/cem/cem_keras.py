@@ -2,11 +2,11 @@
 # https://towardsdatascience.com/deep-reinforcement-learning-pong-from-pixels-keras-version-bf8a0860689f
 
 # gen 1 - ft.lev - seeds 61213 - gamma = 0.99 - n_observations = 19 - n_actions = 2
-# model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
+# game.model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
 # used non-normalized (non-diffed) observations
 # successfully lowers loss to a larger negative value in 1000 episodes
 # need to investigate why that doesn't mean higher reward?
-# run.py ft 1 cem render
+# run.py ft.lev 1 cem render
 
 # gen 2
 # used diffed observations
@@ -16,7 +16,7 @@
 # very different learning times
 
 # gen 3 - n_actions = 3
-# model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
+# game.model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
 # increases average reward until around 1000 - 1500 episodes
 # score 45.05 at episode 1271
 # seems to converge at gas only after 5000 episodes
@@ -25,7 +25,7 @@
 # beat some good human players of this battle https://elma.online/battles/152353
 # https://elma.online/r/qvw6j5erj6
 # in less than 600 episodes
-# run.py ribotai0 1 cem render
+# run.py ribotai0.lev 1 cem render
 
 import numpy as np
 import random, os
@@ -36,7 +36,7 @@ import random, os
 #import gym
 
 import tensorflow as tf
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 #from keras.layers import Dense, Flatten, Activation
 from keras.layers import Dense, MaxPool2D, Flatten, Activation, Conv2D
 from keras.optimizers import rmsprop
@@ -52,13 +52,12 @@ import keras.backend as K
 
 print("\nEnter CEM Keras CEM: softmax, sparse_categorical_crossentropy and optimizer rmsprop\n")
 
-seed = random.randint(0, 99999)
+# todo: set and print this from game.set_seed()
+#seed = random.randint(0, 99999)
 #seed = 61213 # learns well but converges into gas only
 #seed = 85711 # starts with gas only
-seed = 43364 # fast and good times on ribotai0.lev, beats killer on ribotai1.lev
-print("\nrand seed: %d\n" % (seed))
-np.random.seed(seed)
-tf.random.set_seed(seed)
+#seed = 43364 # fast and good times on ribotai0.lev, beats killer on ribotai1.lev
+#print("\nrand seed: %d\n" % (seed))
 
 def discount_rewards(game, r):
     """ take 1D float array of rewards and compute discounted reward """
@@ -75,39 +74,42 @@ def discount_n_standardise(game, r):
     return dr
 
 
-model = Sequential()
 def init_model(game):
-    print(game.BLUE2, "\nseed: %d\n" % seed, game.WHITE)
-    #model.add(Conv2D(4, kernel_size=(3,3), padding='same', activation='relu', input_shape = (1,) + (game.n_observations, )))
-    model.add(Conv2D(4, kernel_size=(3,3), padding='same', activation='relu', input_shape = (game.n_observations, 1, 1)))
-    #model.add(Conv2D(4, kernel_size=(3,3), padding='same', activation='relu', input_shape = (80,80,1)))
+    tf.random.set_seed(game.seed)
+    if game.load is not None:
+        game.model = load_model("keras_models\\%s" % (game.load))
+    else:
+        game.model = Sequential()
+        #game.model.add(Conv2D(4, kernel_size=(3,3), padding='same', activation='relu', input_shape = (1,) + (game.n_observations, )))
+        game.model.add(Conv2D(4, kernel_size=(3,3), padding='same', activation='relu', input_shape = (game.n_observations, 1, 1)))
+        #game.model.add(Conv2D(4, kernel_size=(3,3), padding='same', activation='relu', input_shape = (80,80,1)))
 
-    # shape too small for further pooling: https://stackoverflow.com/a/47325544
-    #model.add(MaxPool2D(pool_size=(2, 2)))
-    #model.add(Conv2D(8, kernel_size=(3,3), padding='same', activation='relu'))
-    #model.add(MaxPool2D(pool_size=(2, 2)))
-    #model.add(Conv2D(12, kernel_size=(3,3), padding='same', activation='relu'))
-    #model.add(MaxPool2D(pool_size=(2, 2)))
-    #model.add(Conv2D(16, kernel_size=(3,3), padding='same', activation='relu'))
-    #model.add(MaxPool2D(pool_size=(2, 2)))
-    model.add(Flatten())
-    model.add(Dense(game.n_actions, activation='softmax'))
-    model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
-    model.summary()
+        # shape too small for further pooling: https://stackoverflow.com/a/47325544
+        #game.model.add(MaxPool2D(pool_size=(2, 2)))
+        #game.model.add(Conv2D(8, kernel_size=(3,3), padding='same', activation='relu'))
+        #game.model.add(MaxPool2D(pool_size=(2, 2)))
+        #game.model.add(Conv2D(12, kernel_size=(3,3), padding='same', activation='relu'))
+        #game.model.add(MaxPool2D(pool_size=(2, 2)))
+        #game.model.add(Conv2D(16, kernel_size=(3,3), padding='same', activation='relu'))
+        #game.model.add(MaxPool2D(pool_size=(2, 2)))
+        game.model.add(Flatten())
+        game.model.add(Dense(game.n_actions, activation=game.activation))
+        game.model.compile(optimizer=game.optimizer, loss=game.loss)
+    game.model.summary()
     """
     # model from cem_keras_rl.py
     model = Sequential()
-    model.add(Flatten(input_shape=(1600,game.n_observations, )))
-    #model.add(Flatten( input_shape = (game.n_observations,) ))
-    model.add(Dense(game.n_actions))
-    model.add(Activation('softmax'))
-    #model.add(Dense(game.n_actions, activation='softmax'))
-    #model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
-    #model.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
-    model.compile(optimizer='adam', loss='categorical_crossentropy')
+    game.model.add(Flatten(input_shape=(1600,game.n_observations, )))
+    #game.model.add(Flatten( input_shape = (game.n_observations,) ))
+    game.model.add(Dense(game.n_actions))
+    game.model.add(Activation('softmax'))
+    #game.model.add(Dense(game.n_actions, activation='softmax'))
+    #game.model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
+    #game.model.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
+    game.model.compile(optimizer='adam', loss='categorical_crossentropy')
     """
 
-    model.summary()
+    game.model.summary()
 
 # pretrain loop
 """
@@ -126,9 +128,15 @@ rewards = []
 rewards = np.array(rewards)
 """
 
-
+render = None
 def train_model(game):
-    game.arg_render = False
+    global render
+
+    if game.training and render is None:
+        render = False # initialize
+    else:
+        render = game.arg_render
+    game.arg_render = render
     reward_sums = np.zeros(game.n_episodes)
     losses = np.zeros(game.n_episodes)
     time_taken = np.zeros(game.n_episodes)
@@ -171,11 +179,14 @@ def train_model(game):
             
             #print(observations[frame][None,:,:,:])
             # Take an action given current state of policy model
-            p = model.predict( observations[frame][None,:,:,:] )
-            #p = model.predict_classes( prev_observation )
+            p = game.model.predict( observations[frame][None,:,:,:] )
+            #p = game.model.predict_classes( prev_observation )
             #print('probabilities: %s' % (p))
             #print()
-            a = np.random.choice( game.n_actions, p=p[0] )
+            if game.noise:
+                a = np.random.choice( game.n_actions, p=p[0] )
+            else:
+                a = np.argmax(p)
             #action = action_space[a]
             action = a
             actions[game.frame] = a
@@ -196,13 +207,14 @@ def train_model(game):
 
                 #print("training run...")
                 # batch size is probably how many frames to train per iteration
-                # so let's use all frames of the episode            
-                model.fit(ep_observations, ep_actions, sample_weight=ep_rewards, batch_size=buffer, epochs=1, verbose=0)
+                # so let's use all frames of the episode
+                if game.training:
+                    game.model.fit(ep_observations, ep_actions, sample_weight=ep_rewards, batch_size=buffer, epochs=1, verbose=0)
                 
                 time_taken[game.episode] = game.frame
                 prev_observation = None
                 observation = game.reset()
-                losses[game.episode] = model.evaluate(ep_observations, 
+                losses[game.episode] = game.model.evaluate(ep_observations, 
                                                 ep_actions,
                                                 sample_weight=ep_rewards,
                                                 batch_size=len(ep_observations), 
@@ -220,17 +232,21 @@ def train_model(game):
                     elapsed_time, unit = game.elapsed_time()
 
 
-                    print(game.GREEN + 'Episode: {0:d}, Average Loss: {1:.4f}, Average Reward: {2:.2f}, Average steps: {3:.0f}, Acc ratio: {4:.2f}'
-                        .format(game.episode, ave_loss, ave_reward, ave_time, acc_ratio)
+                    print(game.GREEN + 'Episode: {0:d}, Average Loss: {1:.4f}, Average Reward: {2:.2f}, Average steps: {3:.0f}'
+                        .format(game.episode, ave_loss, ave_reward, ave_time))
+                    print('Acc ratio: %.2f' % acc_ratio
                         + ', Real time: %.02f %s' % (elapsed_time, unit)
                         + ', Elma time: %.02f %s' % (game.elmatimetotal, unit)
-                        + game.WHITE
-                    )
+                        + ', seed: %d' % (game.seed)
+                        + game.WHITE)
                 else:
-                    game.arg_render = False
+                    if not game.arg_test:
+                        game.arg_render = False
                 game.frame = 0
                 break
-
+        if not game.running:
+            # respond to exiting (after run complete)
+            break
     print("leaving train_model, episode: %d/%d, done:%s, " % (game.episode+1, game.n_episodes, done))
     """if game.training:
         # perform a run based on current training

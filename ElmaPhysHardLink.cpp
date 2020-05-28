@@ -74,11 +74,12 @@ phys::KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, 
 }
 
 // todo: receive filenames or have temp file names
-void saveReplay(std::string recFilenmae, std::string levFilename){
+bool saveReplay(std::string recFilenmae, std::string levFilename){
     //void saveReplay(const std::string& recFileName, const std::string& levFileName){
     //void phys::Engine::saveReplay(const std::string& recFileName, const std::string& levFileName)
     engine->saveReplay(recFilenmae, levFilename); // working
     //std::cout << "exiting saveReplay";
+    return true; // isn't returned if saveReplay crashes internally
 }
 
 int main()

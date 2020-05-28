@@ -64,8 +64,9 @@ class Level:
         self.height = None
         self.path = None
         self.filename = None
+        self.name = ""
         self.maxplaytime = None
-        self.hiscore = None
+        self.hiscore = None # save recs and progress when this hiscore is beaten
 
         if path and filename:
             self.read(path, filename)
@@ -103,6 +104,7 @@ class Level:
         lgr = b''.join(struct.unpack('16c',f.read(16)))
         ground = b''.join(struct.unpack('10c',f.read(10)))
         sky = b''.join(struct.unpack('10c',f.read(10)))
+        self.name = levname
 
         if verbose:
             print( 'Reclink: ' + str(reclink) )
@@ -209,7 +211,7 @@ class Level:
             #print("distance: %f" % (distance - prev_distance))
         elif self.filename.lower() == 'ribotai0.lev':
             self.maxplaytime = 10 # elma seconds to play a lev before exit
-            self.hiscore = 150 # best score so far 194 or 7.86s
+            self.hiscore = 180 # best score so far 194 or 7.86s
             distance = self.flower_distance(self.game.kuski_state)
             prev_distance = self.flower_distance(self.game.prev_kuski_state)
             # if distance now is larger than distance before: get a negative score
@@ -232,3 +234,6 @@ class Level:
             # todo: last_distance
             #self.hiscore = # do not announce hiscore lower than this
             #self.lowscore = # do not announce lowscore higher than this
+
+    def filename_wo_ext(self):
+        return self.filename.split('.')[0] if self.filename else ''

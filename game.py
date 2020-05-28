@@ -3,6 +3,10 @@ import numpy as np
 
 class Game:
     def __init__(self):
+        self.set_terminal_colors()
+        self.set_seed()
+        self.pygame = None
+
         # to check this: make replay and store timesteptotal,
         # then check rec time in elma 12.53 28.67
         # for example timestep = 0.002 with timesteptotal of 12.53 makes a rec of 28.67 seconds
@@ -20,6 +24,14 @@ class Game:
         self.lowscore = 0 # lowest score this session
         self.batch_hiscore = 0 # highest score this batch
         self.batch_lowscore = 0 # lowest score this batch
+
+        self.training = False
+        self.noise = True
+        self.model = None
+        self.load = None
+        self.activation = 'softmax'
+        self.optimizer = 'rmsprop'
+        self.loss = 'sparse_categorical_crossentropy'
         self.batch = 0
         self.frame = 0
         self.episode = 0
@@ -32,40 +44,6 @@ class Game:
         self.training = False
         self.died = False
         self.finished = False
-        # terminal colors
-        # https://stackoverflow.com/a/39452138
-        self.BLACK  = '\33[30m'
-        self.RED    = '\33[31m'
-        self.GREEN  = '\33[32m'
-        self.YELLOW = '\33[33m'
-        self.BLUE   = '\33[34m'
-        self.VIOLET = '\33[35m'
-        self.BEIGE  = '\33[36m'
-        self.WHITE  = '\33[37m'
-        self.GREY    = '\33[90m'
-        self.RED2    = '\33[91m'
-        self.GREEN2  = '\33[92m'
-        self.BLUE2   = '\33[94m'
-        self.WHITE2  = '\33[97m'
-
-    def init_pygame(self):
-        import os, pygame, eventhandler, draw, gui, colors
-        os.environ['SDL_VIDEO_CENTERED'] = '1'
-        pygame.init()
-        pygame.display.set_caption('ElmAI')
-        # pygame.event.set_blocked([pygame.KEYDOWN, pygame.KEYUP]) # block keydown that crashes phys? still crashing on keypress
-        self.pygame = pygame
-        self.size = 800, 640
-        self.width, self.height = self.size
-        self.screen = pygame.display.set_mode(self.size)
-        # initialize font; must be called after 'pygame.init()' to avoid 'Font not Initialized' error
-        self.font = pygame.font.SysFont("monospace", 18)
-        self.eventhandler = eventhandler
-        self.gui = gui
-        self.draw = draw
-        self.colors = colors
-        #gui.game = self
-        #draw.game = self
 
     def has_ended(self):
         return self.kuski_state['isDead'] or self.kuski_state['finishedTime'] > 0
@@ -73,6 +51,22 @@ class Game:
     def end(self):
         #print("Ended level programatically")
         self.elmaphys.restart_level()
+
+    def rec_name(self):
+        filenametime = "%.02f" % self.lasttime
+        filenametime = filenametime.replace('.', '') # remove dot from filename, because elma can't handle it
+        filename = "00x%s_%d_%s.rec" % (filenametime, self.score, self.level.filename_wo_ext())
+        return filename
+    
+    def model_save_name(self):
+        filename = self.rec_name()
+        filename += "_seed%d_" % (self.seed)
+        filename += "observations%d_" % (self.n_observations)
+        filename += "actions%d_" % (self.n_actions)
+        filename += "lr%f_" % (self.learning_rate)
+        filename += "gamma%f_" % (self.gamma)
+        filename += "%s_%s_%s" % (self.activation, self.optimizer, self.loss)
+        return filename
 
     def restart(self):
         self.lasttime = self.timesteptotal * self.realtimecoeff
@@ -85,14 +79,15 @@ class Game:
             pass
         elif self.kuski_state['finishedTime']:
             self.finished = True
-            print('lev completed, time: %.2f, score: %.2f, var finishedTime: %.2f' % (self.lasttime, self.score, self.kuski_state['finishedTime']))
-        filenametime = "%.02f" % self.lasttime
-        filenametime = filenametime.replace('.', '') # remove dot from filename, because elma can't handle it
+            print(self.VIOLET + 'lev completed, time: %.2f, score: %.2f, var finishedTime: %.2f' % (self.lasttime, self.score, self.kuski_state['finishedTime']), self.WHITE)
         if self.save_rec or self.level.hiscore and self.score > self.level.hiscore:
             #self.elmaphys.save_replay("00x%s_%d_%s.rec" % (filenametime, self.score, random.randint(10,99)), self.level.filename) # working
-            self.elmaphys.save_replay("00x%s_%d.rec" % (filenametime, self.score), self.level.filename) # working
-        if self.maxplaytime and time.time() - self.starttime > self.maxplaytime:
-            self.running = False
+            self.elmaphys.save_replay(self.rec_name(), self.level.filename) # working
+            if self.model is not None:
+                print('saving keras model: ' + self.model_save_name())
+                self.model.save("keras_models\\" + self.model_save_name())
+        #if self.maxplaytime and time.time() - self.starttime > self.maxplaytime:
+        #    self.running = False
 
         self.last_score = self.score
         if self.score > self.hiscore:
@@ -101,7 +96,9 @@ class Game:
         elif self.score < self.lowscore:
             self.lowscore = self.score
             print(self.YELLOW + 'episode %d, lowscore: %.2f, time: %.2f, died: %s, finished: %s' % (self.episode, self.score, self.lasttime, self.died, self.finished) + self.WHITE)
-        if self.arg_render:
+        if not self.training:
+            # print this when periodical test runs happen, ie arg_render are set temporarily
+            # or when playing manually
             print('score: %.2f, time: %.2f, died: %s, finished: %s' % (self.score, self.lasttime, self.died, self.finished))
         #print('episode %d, score: %.2f, time: %.2f' % (episode, self.score, self.timesteptotal * self.realtimecoeff))
         self.batch_hiscore = max(self.batch_hiscore, self.score)
@@ -146,7 +143,7 @@ class Game:
                 self.running = False
             # pygame often crashes after keydown, if elmaphys is called any time after
             # input starts on mouse down and ends on mouseup; sustain input in between
-            elif self.arg_man and event.type in (self.pygame.MOUSEBUTTONDOWN, self.pygame.MOUSEBUTTONUP, self.pygame.KEYDOWN, self.pygame.KEYUP):
+            elif event.type in (self.pygame.MOUSEBUTTONDOWN, self.pygame.MOUSEBUTTONUP, self.pygame.KEYDOWN, self.pygame.KEYUP):
                 self.input = self.eventhandler.elmainput(self, event)
                 #self.draw.draw(game, event, self.input, elmaphys) # draw only on self.input
             #self.draw.draw(game, event, elmaphys) # proceed drawing only on events, eg when mouse moves
@@ -155,14 +152,17 @@ class Game:
         "run the game loop, return true if done"
         self.prev_kuski_state = self.kuski_state
 
-        if self.arg_render:
+        # render can be temporarily set to true to display periodical runs
+        # but only do render if pygame is initiated
+        if self.arg_render and self.pygame is not None:
             self.handle_input()
 
         done = self.act(actions)
 
         #print(self.level.reward())
 
-        if self.arg_render:
+        # see above comment on rendering
+        if self.arg_render and self.pygame is not None:
             self.draw.draw(self)
         #print( elmaphys.next_frame() ) # segmentation fault after pygame.init()
         #print('game running: %s' % self.running )
@@ -287,3 +287,50 @@ class Game:
         else:
             unit = 'seconds'
         return elapsed_time, unit
+
+    def set_seed(self):
+        self.seed = 43364
+        print(self.BLUE2, "\nseed: %d\n" % self.seed, self.WHITE)
+        #import random
+        #self.seed = random.randint(0, 99999)
+        np.random.seed(self.seed)
+        #tf.random.set_seed(self.seed) # set in model if it uses tf
+
+
+    def set_terminal_colors(self):
+        # terminal colors
+        # https://stackoverflow.com/a/39452138
+        self.BLACK  = '\33[30m'
+        self.RED    = '\33[31m'
+        self.GREEN  = '\33[32m'
+        self.YELLOW = '\33[33m'
+        self.BLUE   = '\33[34m'
+        self.VIOLET = '\33[35m'
+        self.BEIGE  = '\33[36m'
+        self.WHITE  = '\33[37m'
+        self.GREY    = '\33[90m'
+        self.RED2    = '\33[91m'
+        self.GREEN2  = '\33[92m'
+        self.BLUE2   = '\33[94m'
+        self.WHITE2  = '\33[97m'
+
+
+    def init_pygame(self):
+        import os, pygame, eventhandler, draw, gui, colors
+        os.environ['SDL_VIDEO_CENTERED'] = '1'
+        pygame.init()
+        pygame.display.set_caption('ElmAI')
+        # pygame.event.set_blocked([pygame.KEYDOWN, pygame.KEYUP]) # block keydown that crashes phys? still crashing on keypress
+        self.pygame = pygame
+        self.size = 800, 640
+        self.width, self.height = self.size
+        self.screen = pygame.display.set_mode(self.size)
+        # initialize font; must be called after 'pygame.init()' to avoid 'Font not Initialized' error
+        self.font = pygame.font.SysFont("monospace", 18)
+        self.eventhandler = eventhandler
+        self.gui = gui
+        self.draw = draw
+        self.colors = colors
+        #gui.game = self
+        #draw.game = self
+

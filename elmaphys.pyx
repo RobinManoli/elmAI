@@ -30,7 +30,8 @@ def next_frame(accelerate, brake, left, right, turn, supervolt, timestep, time):
     #print( "body_location_x % s" % body_location_x )
 
 def save_replay(rec_filename, lev_filename):
-    rec_filename = bytes( rec_filename, 'utf-8' )
-    lev_filename = bytes( lev_filename, 'utf-8' )
-    saveReplay(rec_filename, lev_filename)
-    print(b"replay saved: %s" % rec_filename )
+    brec_filename = bytes( rec_filename, 'utf-8' )
+    blev_filename = bytes( lev_filename, 'utf-8' )
+    saved = saveReplay(brec_filename, blev_filename)
+    print("replay %s saved: %s" % (rec_filename, saved) )
+    return saved
