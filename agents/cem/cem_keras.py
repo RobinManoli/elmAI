@@ -142,7 +142,7 @@ def train_model(game):
     time_taken = np.zeros(game.n_episodes)
     #print("initial reset %f" % (game.timesteptotal))
     observation = game.reset()
-    #print( observation )
+    print( observation )
 
     for game.episode in range(game.n_episodes):
         reward_sum = 0
@@ -247,7 +247,8 @@ def train_model(game):
         if not game.running:
             # respond to exiting (after run complete)
             break
-    print("leaving train_model, episode: %d/%d, done:%s, " % (game.episode+1, game.n_episodes, done))
+    game.episode += 1
+    print("leaving train_model, episode: %d/%d, done:%s, " % (game.episode, game.n_episodes, done))
     """if game.training:
         # perform a run based on current training
         print("performing a batch run without noise...")

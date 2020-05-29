@@ -7,8 +7,9 @@ game.args = sys.argv
 
 
 # todo: bug or feature? with enough args number can be omitted and train forever
+# todo: actions=ABLRTS
 if len(game.args) < 3:
-    print("usage: %s 0lp31.lev 100 render man test continue fps30|fps500|fps1000 rltf|cem|ddpg" % (os.path.basename(__file__)))
+    print("usage: %s 0lp31.lev 100 render man test fps30|fps500|fps1000 rltf|cem|ddpg" % (os.path.basename(__file__)))
     print("for running level 0lp31.lev, 100 episodes with chosen flags")
     #print("order of flags dont matter")
     #print("shortcut: %s 0lp31 <-- will play manually if no other flags" % (os.path.basename(__file__)))
@@ -106,6 +107,7 @@ print('Session hiscore: %f' % (game.hiscore))
 print('Session lowscore: %f' % (game.lowscore))
 print('Real time: %.02f %s' % (elapsed_time, unit))
 print('Elma time: %.02f %s' % (game.elmatimetotal, unit))
-print('Processing %.02f times faster than playing in realtime' % (game.elmatimetotal/elapsed_time))
+if elapsed_time != 0:
+    print('Processing %.02f times faster than playing in realtime' % (game.elmatimetotal/elapsed_time))
 #print( len(game.observation()) )
 #print( game.observation() )
