@@ -1,5 +1,5 @@
 import sys, time, os
-import game, level
+import game, level, local
 
 try:
     os.system('color') # init colors early in script
@@ -30,10 +30,8 @@ try:
         game.arg_ddpg = True if 'ddpg' in game.args else False #
         game.arg_rltf = True if 'rltf' in game.args else False # reinforcement learning tensorflow
 
-    #lev.read(r"C:\Users\Sara\Desktop\robin\elma\lev" ,"0lp31.lev")
-    #lev.read(r"C:\Users\Sara\Desktop\robin\elma\lev" ,"1dg54.lev") # qwquu002
     levfilename = game.args[1]
-    game.level = level.Level(r"C:\Users\Sara\Desktop\robin\elma\lev", levfilename, game)
+    game.level = level.Level(local.levpath, levfilename, game)
     #game.maxplaytime = int(game.args[2]) if game.args[2].isnumeric() else 0 # quit script after last run has exceeded this many seconds
     game.n_episodes = int(game.args[2]) if game.args[2].isnumeric() else 0 # quit script after last run has exceeded this many seconds
 
@@ -118,6 +116,7 @@ try:
     # make terminal output visible before automatically closing
     input("Press return to exit")
 
-except:
+except Exception as e:
+    print(e)
     # make terminal output visible before automatically closing
     input("Press return to exit")
