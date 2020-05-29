@@ -64,14 +64,12 @@ if game.arg_cem:
     #import cem_strange_rewards as training_mod
     import cem_keras as training_mod
     training_mod.init_model(game)
-    game.n_episodes = 600
 elif game.arg_ddpg:
     sys.path.append("agents\\ddpg_torch\\")
     import train as training_mod
 elif game.arg_rltf:
     sys.path.append("agents\\")
     import rl_tf as training_mod
-    game.n_episodes = 1000
 game.training_mod = training_mod
 if training_mod and not game.arg_test:
     game.training = True
@@ -89,11 +87,11 @@ game.elmaphys = elmaphys
 game.running = True
 game.starttime = time.time()
 if game.training_mod:
-    while game.running:
+    while game.episode < game.n_episodes:
         secondsplayed = time.time() - game.starttime
         #secondsleft = game.maxplaytime - secondsplayed
         print()
-        print('Batch %d, last batch hiscore: %f, last batch lowscore: %f, %d minutes played' % (game.batch, game.batch_hiscore, game.batch_lowscore, secondsplayed/60))
+        #print('Batch %d, last batch hiscore: %f, last batch lowscore: %f, %d minutes played' % (game.batch, game.batch_hiscore, game.batch_lowscore, secondsplayed/60))
         game.batch_hiscore = 0
         game.batch_lowscore = 0
         game.training_mod.train_model(game)

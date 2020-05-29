@@ -31,6 +31,16 @@ class GUI:
         self.agentWidget.select_set(0)
         self.agentWidget.pack(side=LEFT)
 
+        self.actionsWidget = Listbox(self.top, exportselection=0, selectmode=MULTIPLE)
+        self.actionsWidget.insert(END, 'accelerate')
+        self.actionsWidget.insert(END, 'brake')
+        self.actionsWidget.insert(END, 'left')
+        self.actionsWidget.insert(END, 'right')
+        self.actionsWidget.insert(END, 'turn')
+        self.actionsWidget.insert(END, 'supervolt')
+        self.actionsWidget.select_set(0)
+        self.actionsWidget.pack(side=LEFT)
+
         self.episodesLabel = Label(self.rightFrame, text="Episodes")
         self.episodesLabel.pack(anchor="w")
         self.episodesEntry = Entry(self.rightFrame)
@@ -52,15 +62,22 @@ class GUI:
 
         self.loadWidget = Listbox(self.master, exportselection=0, width=100)
         self.loadWidget.insert(END, '')
-        self.loadWidget.insert(END, '00x786_194_ribotai0.recseed43364_observations19_actions2_lr0.010000_gamma0.990000_softmax_rmsprop_sparse_categorical_crossentropy')
-        self.loadWidget.insert(END, '00x794_184_ribotai0.recseed43364_observations19_actions2_lr0.010000_gamma0.990000_softmax_rmsprop_sparse_categorical_crossentropy')
+        self.loadWidget.insert(END, '00x786_194_ribotai0.recseed43364_observations19_actionsA_lr0.010000_gamma0.990000_softmax_rmsprop_sparse_categorical_crossentropy')
+        self.loadWidget.insert(END, '00x794_184_ribotai0.recseed43364_observations19_actionsA_lr0.010000_gamma0.990000_softmax_rmsprop_sparse_categorical_crossentropy')
         self.loadWidget.select_set(0)
         self.loadWidget.pack()
 
         self.doneButton = Button(self.master, text="START", height=10, command=self.start)
         self.doneButton.pack(fill=BOTH)
 
+        # handle closing window so that game will not proceed if closing (rather than pressing start button)
+        self.master.protocol("WM_DELETE_WINDOW", self.on_close)
         self.master.mainloop()
+
+    def on_close(self):
+        self.master.destroy()
+        import sys
+        sys.exit()
 
     def start(self):
         # this setup of vars keep the possibility of having command line args intact
@@ -89,6 +106,16 @@ class GUI:
         self.game.arg_cem = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 0 else False
         self.game.arg_ddpg = False
         self.game.arg_rltf = False
+
+        # [accelerate, brake, left, right, turn, supervolt]
+        for selected_action in self.actionsWidget.curselection():
+            self.game.n_actions += 1
+            elmainputs = [0, 0, 0, 0, 0, 0]
+            elmainputs[selected_action] = 1
+            self.game.actions.append(elmainputs)
+            action_name = self.actionsWidget.get(selected_action)
+            self.game.actions_str += action_name[0].upper()
+        #print(self.game.n_actions, self.game.actions, self.game.actions_str)
         self.master.destroy()
 
 

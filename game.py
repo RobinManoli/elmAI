@@ -36,7 +36,12 @@ class Game:
         self.frame = 0
         self.episode = 0
         self.n_episodes = 1
-        self.n_actions = 2 # 4 # action_size = 4 # simplistic, 7 elma, 13 precise
+        self.n_actions = 1 # first action is noop
+        # [accelerate, brake, left, right, turn, supervolt]
+        # self.actions[0] is elmainputs for noop
+        # append full list of elmainputs to send for each available game action
+        self.actions = [[0, 0, 0, 0, 0, 0]]
+        self.actions_str = '' # any letters of ABLRTS
         self.n_observations = 19 # 33 # len(game.observation())
         self.gamma = 0.99 # discount factor
         self.learning_rate = 0.01
@@ -62,7 +67,7 @@ class Game:
         filename = self.rec_name()
         filename += "_seed%d_" % (self.seed)
         filename += "observations%d_" % (self.n_observations)
-        filename += "actions%d_" % (self.n_actions)
+        filename += "actions%s_" % (self.actions_str)
         filename += "lr%f_" % (self.learning_rate)
         filename += "gamma%f_" % (self.gamma)
         filename += "%s_%s_%s" % (self.activation, self.optimizer, self.loss)
@@ -79,7 +84,10 @@ class Game:
             pass
         elif self.kuski_state['finishedTime']:
             self.finished = True
-            print(self.VIOLET + 'lev completed, time: %.2f, score: %.2f, var finishedTime: %.2f' % (self.lasttime, self.score, self.kuski_state['finishedTime']), self.WHITE)
+            print(
+                self.VIOLET + 'lev completed, time: %.2f, score: %.2f, var finishedTime: %.2f, episode: %d'
+                % (self.lasttime, self.score, self.kuski_state['finishedTime'], self.episode),
+                self.WHITE)
         if self.save_rec or self.level.hiscore and self.score > self.level.hiscore:
             #self.elmaphys.save_replay("00x%s_%d_%s.rec" % (filenametime, self.score, random.randint(10,99)), self.level.filename) # working
             self.elmaphys.save_replay(self.rec_name(), self.level.filename) # working
@@ -122,9 +130,8 @@ class Game:
         if self.timesteptotal > 0:
             self.restart()
         return self.observation()[:self.n_observations]
-        #self.n_action_space = 2
     def step(self, action):
-        elmainputs = self.action_space(action) # [0, 0, ...]
+        elmainputs = self.actions[action] # [0, 0, ...]
         #print(elmainputs)
         done = self.loop(elmainputs)
         observation = self.observation()[:self.n_observations] # after action taken
@@ -191,36 +198,6 @@ class Game:
             #print('max play time over')
             return True
         return False
-
-    def action_space(self, action=None):
-        # accelerate = brake = left = right = turn = supervolt = 0
-        # two actions trains significantly faster than three
-        # probably twice as fast on flat track with maxtime 20
-        actions = []
-        # simplistic, game.action_space()[:2] or game.action_space()[:4]
-        #actions.append(0) # do nothing, happens when all actions are 0
-        actions.append(0) # 00 accelerate
-        actions.append(0) # 01 brake
-        actions.append(0) # 02 turn
-        # elma, game.action_space()[:6] or game.action_space()[:7]
-        actions.append(0) # 03 left
-        actions.append(0) # 04 right
-        actions.append(0) # 05 supervolt
-        if action is not None:
-            if action > 0:
-                actions[action-1] = 1 # makes one of the zeroes = 1
-            return actions
-
-        # precise, game.action_space() -- 13
-        # below need to be translated into elmainput of 6 actions or no action (all zeroes)
-        """actions.append(0) # 07 accelerate + left
-        actions.append(0) # 08 accelerate + right
-        actions.append(0) # 09 accelerate + supervolt
-        actions.append(0) # 10 brake + left
-        actions.append(0) # 11 brake + right
-        actions.append(0) # 12 brake + supervolt
-        # super precise turn + other keys, brake + acc"""
-        return actions
 
 
     def observation(self):
