@@ -1,0 +1,9 @@
+ez things to try:
+    change learning rate
+    change gamma
+    change optimizer
+    change loss
+
+things to develop:
+    own nn
+    

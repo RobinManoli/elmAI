@@ -104,19 +104,21 @@ try:
         print(game.running)
 
     print('SESSION FINISHED:')
-    elapsed_time, unit = game.elapsed_time()
+    elapsed_time, elapsed_elma_time, unit = game.elapsed_time()
     print('Session hiscore: %f' % (game.hiscore))
     print('Session lowscore: %f' % (game.lowscore))
     print('Real time: %.02f %s' % (elapsed_time, unit))
-    print('Elma time: %.02f %s' % (game.elmatimetotal, unit))
+    print('Elma time: %.02f %s' % (elapsed_elma_time, unit))
     if elapsed_time != 0:
-        print('Processing %.02f times faster than playing in realtime' % (game.elmatimetotal/elapsed_time))
+        print('Processing %.02f times faster than playing in realtime' % (elapsed_elma_time/elapsed_time))
     #print( len(game.observation()) )
     #print( game.observation() )
     # make terminal output visible before automatically closing
     input("Press return to exit")
 
 except Exception as e:
+    import traceback
+    print( traceback.format_exc() )
     print(e)
     # make terminal output visible before automatically closing
     input("Press return to exit")

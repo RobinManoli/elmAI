@@ -66,6 +66,7 @@ class Game:
     def model_save_name(self):
         filename = self.rec_name()
         filename += "_seed%d_" % (self.seed)
+        #filename += "episodes%d_" % (self.episode) # to use this it should calc the total also if model was loaded
         filename += "observations%d_" % (self.n_observations)
         filename += "actions%s_" % (self.actions_str)
         filename += "lr%f_" % (self.learning_rate)
@@ -84,10 +85,10 @@ class Game:
             pass
         elif self.kuski_state['finishedTime']:
             self.finished = True
-            print(
-                self.VIOLET + 'lev completed, time: %.2f, score: %.2f, var finishedTime: %.2f, episode: %d'
-                % (self.lasttime, self.score, self.kuski_state['finishedTime'], self.episode),
-                self.WHITE)
+            #print(
+            #    self.VIOLET + 'lev completed, time: %.2f, score: %.2f, var finishedTime: %.2f, episode: %d'
+            #    % (self.lasttime, self.score, self.kuski_state['finishedTime'], self.episode),
+            #    self.WHITE)
         if self.save_rec or self.level.hiscore and self.score > self.level.hiscore:
             #self.elmaphys.save_replay("00x%s_%d_%s.rec" % (filenametime, self.score, random.randint(10,99)), self.level.filename) # working
             self.elmaphys.save_replay(self.rec_name(), self.level.filename) # working
@@ -261,22 +262,24 @@ class Game:
 
     def elapsed_time(self):
         elapsed_time = time.time() - self.starttime
+        elapsed_elma_time = self.elmatimetotal
         if elapsed_time > 3600:
             elapsed_time /= 3600
-            self.elmatimetotal /= 3600
+            elapsed_elma_time /= 3600
             unit = 'hours'
         elif elapsed_time > 60:
             elapsed_time /= 60
-            self.elmatimetotal /= 60
+            elapsed_elma_time /= 60
             unit = 'minutes'
         else:
             unit = 'seconds'
-        return elapsed_time, unit
+        return elapsed_time, elapsed_elma_time, unit
 
-    def set_seed(self):
-        #self.seed = 43364
-        import random
-        self.seed = random.randint(0, 99999)
+    def set_seed(self, seed=None):
+        if seed is None:
+            import random
+            seed = random.randint(0, 99999)
+        self.seed = seed
         np.random.seed(self.seed)
         #tf.random.set_seed(self.seed) # set in model if it uses tf
         print(self.BLUE2, "\nseed: %d\n" % self.seed, self.WHITE)

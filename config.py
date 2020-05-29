@@ -63,8 +63,7 @@ class GUI:
 
         self.loadWidget = Listbox(self.master, exportselection=0, width=100)
         self.loadWidget.insert(END, '')
-        self.loadWidget.insert(END, '00x786_194_ribotai0.recseed43364_observations19_actionsA_lr0.010000_gamma0.990000_softmax_rmsprop_sparse_categorical_crossentropy')
-        self.loadWidget.insert(END, '00x794_184_ribotai0.recseed43364_observations19_actionsA_lr0.010000_gamma0.990000_softmax_rmsprop_sparse_categorical_crossentropy')
+        self.loadWidget.insert(END, '00x786_194_ribotAI0.rec_seed88148_observations17_actionsA_lr0.010000_gamma0.990000_softmax_rmsprop_sparse_categorical_crossentropy')
         self.loadWidget.select_set(0)
         self.loadWidget.pack()
 
@@ -95,6 +94,16 @@ class GUI:
         if self.loadWidget.curselection()[0] > 0:
             selected_model_index = self.loadWidget.curselection()[0]
             self.game.load = self.loadWidget.get(selected_model_index)
+            # when loading model, use same seed as that model
+            selected_model_seed_index = self.game.load.find('seed')
+            seed_str = ""
+            for char in self.game.load[selected_model_seed_index+4:]:
+                if char.isnumeric():
+                    seed_str += char 
+                else:
+                    break
+            #print(seed_str)
+            self.game.set_seed( int(seed_str) )
             #print(self.game.load)
 
         #self.game.n_episodes = self.episodesEntry.get() # set below

@@ -27,7 +27,13 @@
 # in less than 600 episodes
 # run.py ribotai0.lev 1 cem render
 
-# gen 5 - changing observations to 8 core positions + body rotation
+# gen 5 - changing observations to:
+# 8 core positions + body rotation + speeds + direction
+# Processing 15 times faster than playing in realtime
+# almost same result as old observations:
+# time: 7.87 in 1332 episodes, seed 28460
+# time: 7.86 in 1354 episodes, seed 88148
+# time: 7.77 in 309 episodes after above, loaded with seed 41532
 
 
 import numpy as np
@@ -145,7 +151,7 @@ def train_model(game):
     time_taken = np.zeros(game.n_episodes)
     #print("initial reset %f" % (game.timesteptotal))
     observation = game.reset()
-    print( observation )
+    #print( observation )
 
     for game.episode in range(game.n_episodes):
         reward_sum = 0
@@ -232,14 +238,14 @@ def train_model(game):
                     ave_time = np.mean(time_taken[max(0,game.episode-200):game.episode])
                     acc_ratio = 0.0 + np.count_nonzero(actions == 1)/game.frame
 
-                    elapsed_time, unit = game.elapsed_time()
+                    elapsed_time, elapsed_elma_time, unit = game.elapsed_time()
 
 
-                    print(game.GREEN + 'Episode: {0:d}, Average Loss: {1:.4f}, Average Reward: {2:.2f}, Average steps: {3:.0f}'
-                        .format(game.episode, ave_loss, ave_reward, ave_time))
+                    print(game.GREEN + 'Episode: {0:d}/{1:d}, Average Loss: {2:.4f}, Average Reward: {3:.2f}, Average steps: {4:.0f}'
+                        .format(game.episode, game.n_episodes, ave_loss, ave_reward, ave_time))
                     print('Acc ratio: %.2f' % acc_ratio
                         + ', Real time: %.02f %s' % (elapsed_time, unit)
-                        + ', Elma time: %.02f %s' % (game.elmatimetotal, unit)
+                        + ', Elma time: %.02f %s' % (elapsed_elma_time, unit)
                         + ', seed: %d' % (game.seed)
                         + game.WHITE)
                 else:
