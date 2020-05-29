@@ -145,7 +145,7 @@ def train_model(game):
     time_taken = np.zeros(game.n_episodes)
     #print("initial reset %f" % (game.timesteptotal))
     observation = game.reset()
-    #print( observation )
+    print( observation )
 
     for game.episode in range(game.n_episodes):
         reward_sum = 0

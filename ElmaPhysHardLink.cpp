@@ -22,6 +22,12 @@ phys::KuskiState cinit(std::string pathfilename)
     //lev.loadFromPath("C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\qwquu002.lev"); // erroneous levhash - replays for this level become corrupt
     //inputKeys.InputKeys();
 
+    // 16
+    //std::cout <<"size of struct Point2d: " << sizeof(struct phys::Point2D) << "\n";
+
+    // 72
+    //std::cout <<"size of struct BodyPart: " << sizeof(struct phys::BodyPart) << "\n"; 
+
     //phys::Engine engine;
     engine = new phys::Engine();
     std::cout << "initPhysicsEngine:\n";

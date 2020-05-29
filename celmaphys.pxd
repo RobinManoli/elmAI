@@ -139,7 +139,9 @@ cdef extern from "smibu_phys/BodyPart.cpp":
 cdef extern from "smibu_phys/BodyPart.h" namespace "phys":
     cdef struct BodyPart:
         double rotation
+        double rotationSpeed
         Point2D location
+        Point2D dword58 # probably speed
 
 cdef extern from "smibu_phys/KuskiState.cpp":
     pass

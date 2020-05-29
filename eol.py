@@ -78,6 +78,9 @@ def read_process_memory(pid, address, size=0, ctype='str', allow_partial=False):
     if ctype == 'str':
         buf = (ctypes.c_char * size)()
         #c_char = ctypes.c_char()
+    elif ctype == 'int':
+        buf = (ctypes.c_int * 1)()
+        size = 4 # as int from smibu_phys KuskiState.h
     elif ctype == 'double':
         #buf = (ctypes.c_byte * 8)() # works but creates byte array
         buf = (ctypes.c_double * 1)()
@@ -107,20 +110,57 @@ PROCESS_VM_READ = 0x0010
 SIZE_T = ctypes.c_size_t
 def process_position(pid, base_addr):
     try:
-        # retrieved from level
-        #self.start_x = read_process_memory(pid, base_addr+0x000538D0, ctype='double', allow_partial=True)[0]
-        #self.start_y = read_process_memory(pid, base_addr+0x000538D8, ctype='double', allow_partial=True)[0]
-        #self.x = read_process_memory(pid, base_addr+0x53A20, ctype='double', allow_partial=True)[0] # torso or general x
-        #self.y = read_process_memory(pid, base_addr+0x53A28, ctype='double', allow_partial=True)[0]
-        head_x = read_process_memory(pid, base_addr+0x53B30, ctype='double', allow_partial=True)[0] # head 0x453B30
-        print( head_x )
+        # confirmed with game.observation
+        # correct with usually a few decimals
+        # but not exact, because time always passed before measuring here
+
+        # 5 doubles before body_x
+        body_rot = read_process_memory(pid, base_addr+0x539F8, ctype='double')[0] # left wheel y value
+        body_rot_spd = read_process_memory(pid, base_addr+0x53A00, ctype='double')[0] # left wheel y value
+        # 104 or 0x68 bytes before lwx
+        body_x = read_process_memory(pid, base_addr+0x53A20, ctype='double')[0] # left wheel x value
+        body_y = read_process_memory(pid, base_addr+0x53A28, ctype='double')[0] # left wheel y value
+        # previously self.vx and self.vy
+        # meaning the sizeof Point2d (16 or 0x10) is probably correct
+        body_spd_x = read_process_memory(pid, base_addr+0x53A30, ctype='double')[0] # x speed
+        body_spd_y = read_process_memory(pid, base_addr+0x53A38, ctype='double')[0] # y speed
+
+        # old values
+        lwx = read_process_memory(pid, base_addr+0x53A88, ctype='double')[0] # left wheel x value
+        lwy = read_process_memory(pid, base_addr+0x53A90, ctype='double')[0] # left wheel y value
+        # add sizeof Point2d (16 or 0x10)
+        lw_spd_x = read_process_memory(pid, base_addr+0x53A98, ctype='double')[0] # left wheel x value
+        lw_spd_y = read_process_memory(pid, base_addr+0x53AA0, ctype='double')[0] # left wheel y value
+        # 104 or 0x68 bytes differ between lwx and rwx
+        # old values
+        rwx = read_process_memory(pid, base_addr+0x53AF0, ctype='double')[0] # right wheel x value
+        rwy = read_process_memory(pid, base_addr+0x53AF8, ctype='double')[0] # right wheel y value
+        # add sizeof Point2d (16 or 0x10)
+        rw_spd_x = read_process_memory(pid, base_addr+0x53B00, ctype='double')[0] # left wheel x value
+        rw_spd_y = read_process_memory(pid, base_addr+0x53AA0, ctype='double')[0] # left wheel y value
+
+
+        # headCenterLocation seems to be a part of the body
+        # headCenterLocation is a point2d, a struct which starts with double x and double y
+        # this seems to be the same value as old ai's self.x and self.y
+        #head_cx = read_process_memory(pid, base_addr+0x53B30, ctype='double', allow_partial=True)[0]
+        #head_cy = read_process_memory(pid, base_addr+0x53B38, ctype='double', allow_partial=True)[0]
+
+        # since having found that value
+        # the previous vars of KuskiState.h could be found walking backwards
+        # starting with gravityDir... and confirmed with direction
+        # sizeof Point2d: 16
+
+        # both direction and turn work and contain the same value
+        # though turn is not documented in smibu's code
+        # which is a reason why the values here cannot be obtained
+        # by following smibu's code as an exact map
+        #turn = read_process_memory(pid, base_addr+0x53B20, ctype='int', allow_partial=False)[0]
+        direction = read_process_memory(pid, base_addr+0x53B24, ctype='int', allow_partial=False)[0]
+        #gravityScrollDirection = read_process_memory(pid, base_addr+0x53B28, ctype='int', allow_partial=False)[0]
+        #gravityDir = read_process_memory(pid, base_addr+0x53B2C, ctype='int', allow_partial=False)[0]
+        #print(rw_spd_x, rw_spd_y)
         """
-        self.x = read_process_memory(pid, base_addr+0x53B30, ctype='double', allow_partial=True)[0] # head 0x453B30
-        self.y = read_process_memory(pid, base_addr+0x53B38, ctype='double', allow_partial=True)[0] # 0x453B18?
-        self.lwx = read_process_memory(pid, base_addr+0x53A88, ctype='double')[0] # first (left?) wheel x value
-        self.lwy = read_process_memory(pid, base_addr+0x53A90, ctype='double')[0] # first wheel y value
-        self.rwx = read_process_memory(pid, base_addr+0x53AF0, ctype='double')[0] # second (right?) wheel x value
-        self.rwy = read_process_memory(pid, base_addr+0x53AF8, ctype='double')[0] # second wheel y value
         self.vx = read_process_memory(pid, base_addr+0x53A30, ctype='double')[0] # x speed
         self.vy = read_process_memory(pid, base_addr+0x53A38, ctype='double')[0] # y speed
         self.turn = read_process_memory(pid, base_addr+0x53B20, size=2)[0] # turn
@@ -219,8 +259,14 @@ if __name__ == "__main__":
     windowMgr.find_window_wildcard("Elasto Mania")
 
     windowMgr.set_as_foreground() # alt tab to "Elasto Mania"
-    time.sleep(0.1) # wait before done
+    time.sleep(0.5) # wait to catch up
     Key(DIK_RETURN) # start level
+    process_position(eol_pid, base_addr) # get observation
+    time.sleep(0.5) # wait to catch up
+    process_position(eol_pid, base_addr) # get observation
+    time.sleep(0.5) # wait to catch up
+    #Key(DIK_LCONTROL) # turn
+    time.sleep(0.5) # wait to catch up
     process_position(eol_pid, base_addr) # get observation
     Key(DIK_ESCAPE) # exit level
 
