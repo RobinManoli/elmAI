@@ -15,6 +15,7 @@ class GUI:
         self.levWidget.insert(END, 'ribotAI0.lev')
         self.levWidget.insert(END, 'ribotAI1.lev')
         self.levWidget.insert(END, 'ft.lev')
+        self.levWidget.insert(END, 'ai.lev')
         self.levWidget.select_set(0)
         self.levWidget.pack(side=LEFT)
 

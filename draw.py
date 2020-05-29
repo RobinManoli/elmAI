@@ -35,6 +35,8 @@ def drawbike(game):
     rwx = game.kuski_state['rightWheel']['location']['x'] * zoom + xoffset
     rwy = -game.kuski_state['rightWheel']['location']['y'] * zoom + yoffset
 
+    #body_rot = self.kuski_state['body']['rotation']
+
     body_thickness = 2
     if game.kuski_state['direction'] == 0:
         body_polygon = (bodyx - 8, bodyy), (bodyx + 8, bodyy + 4), (bodyx + 8, bodyy - 4)
@@ -59,7 +61,7 @@ def drawlev(game):
     if not initlev:
         # do lev stuff once, not on every tick
         initlev = True
-        print("xmin %d, xmax %d, ymin %d, ymax %d, width %d, height %d" % (game.level.xmin, game.level.xmax, game.level.ymin, game.level.ymax, game.level.width, game.level.height))
+        #print("xmin %d, xmax %d, ymin %d, ymax %d, width %d, height %d" % (game.level.xmin, game.level.xmax, game.level.ymin, game.level.ymax, game.level.width, game.level.height))
         xratio = game.width / game.level.width
         yratio = game.height / game.level.height
         if xratio < yratio:
@@ -86,8 +88,8 @@ def drawlev(game):
             y = obj.y*zoom + yoffset
             color = colors[obj.type]
             zoomed_objects.append(( int(x), int(y), color ))
-            if obj.type == 4:
-                print('Lev start position: %d, %d' % (obj.x, obj.y))
+            #if obj.type == 4:
+            #    print('Lev start position: %d, %d' % (obj.x, obj.y))
 
     for obj in zoomed_objects:
         #print(obj)

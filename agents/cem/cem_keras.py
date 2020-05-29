@@ -27,6 +27,9 @@
 # in less than 600 episodes
 # run.py ribotai0.lev 1 cem render
 
+# gen 5 - changing observations to 8 core positions + body rotation
+
+
 import numpy as np
 import random, os
 # import cPickle as pickle
@@ -142,7 +145,7 @@ def train_model(game):
     time_taken = np.zeros(game.n_episodes)
     #print("initial reset %f" % (game.timesteptotal))
     observation = game.reset()
-    print( observation )
+    #print( observation )
 
     for game.episode in range(game.n_episodes):
         reward_sum = 0

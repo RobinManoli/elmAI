@@ -49,7 +49,7 @@ try:
         # default timestep
         game.timestep = 0.00546 # fast play, 80 fps, fastest possible calculated physics according to jon, as slower than this does double or more physics iteration per step
 
-    print("fps: %f" % (game.timestep * game.realtimecoeff))
+    print("fps: %f" % ( 1/(game.timestep*game.realtimecoeff) ))
 
     # calc timestep for fps
     # 1/30/2,2893772893772893772893772893773 = 0,01456
@@ -88,7 +88,7 @@ try:
 
     game.running = True
     game.starttime = time.time()
-    if game.training_mod:
+    if game.training_mod is not None:
         while game.episode < game.n_episodes:
             secondsplayed = time.time() - game.starttime
             #secondsleft = game.maxplaytime - secondsplayed
@@ -99,8 +99,11 @@ try:
             game.training_mod.train_model(game)
             game.batch += 1
     else:
+        print("playing manually")
         while game.running:
             game.loop()
+
+        print(game.running)
 
     print('SESSION FINISHED:')
     elapsed_time, unit = game.elapsed_time()

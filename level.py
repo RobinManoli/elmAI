@@ -172,8 +172,8 @@ class Level:
         self.set_ymax()
         self.set_width()
         self.set_height()
-        print('level start pos: %.02f, %.02f' % (self.startobject.x, self.startobject.y))
-        print('level first flower: %.02f, %.02f' % (self.flowers[0].x, self.flowers[0].y))
+        print('%s start pos: %.02f, %.02f' % (self.filename, self.startobject.x, self.startobject.y))
+        print('first flower: %.02f, %.02f' % (self.flowers[0].x, self.flowers[0].y))
 
     def distance(self, obj, x, y):
         dx = obj.x - x
@@ -199,6 +199,7 @@ class Level:
             score +=  margin * margin * 30
         elif self.game.kuski_state['isDead']:
             score -= 10
+
         if self.filename.lower() == 'ft.lev':
             self.maxplaytime = 20 # elma seconds to play a lev before exit
             self.hiscore = 45.0
@@ -209,6 +210,7 @@ class Level:
             score -= distance - prev_distance
             #print("prev_distance: %f, distance: %f" %(prev_distance, distance))
             #print("distance: %f" % (distance - prev_distance))
+
         elif self.filename.lower() == 'ribotai0.lev':
             self.maxplaytime = 10 # elma seconds to play a lev before exit
             self.hiscore = 180 # best score so far 194 or 7.86s
@@ -218,8 +220,19 @@ class Level:
             score -= distance - prev_distance
             #print("prev_distance: %f, distance: %f" %(prev_distance, distance))
             #print("distance: %f" % (distance - prev_distance))
+
         elif self.filename.lower() == 'ribotai1.lev':
             self.maxplaytime = 20 # elma seconds to play a lev before exit
+            self.hiscore = 100 # best score so far 194 or 7.86s
+            distance = self.flower_distance(self.game.kuski_state)
+            prev_distance = self.flower_distance(self.game.prev_kuski_state)
+            # if distance now is larger than distance before: get a negative score
+            score -= distance - prev_distance
+            #print("prev_distance: %f, distance: %f" %(prev_distance, distance))
+            #print("distance: %f" % (distance - prev_distance))
+
+        elif self.filename.lower() == 'ai.lev':
+            self.maxplaytime = 0.1 # elma seconds to play a lev before exit
             self.hiscore = 100 # best score so far 194 or 7.86s
             distance = self.flower_distance(self.game.kuski_state)
             prev_distance = self.flower_distance(self.game.prev_kuski_state)

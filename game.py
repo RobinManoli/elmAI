@@ -42,7 +42,7 @@ class Game:
         # append full list of elmainputs to send for each available game action
         self.actions = [[0, 0, 0, 0, 0, 0]]
         self.actions_str = '' # any letters of ABLRTS
-        self.n_observations = 19 # 33 # len(game.observation())
+        self.n_observations = 9 # 33 # len(game.observation())
         self.gamma = 0.99 # discount factor
         self.learning_rate = 0.01
         self.save_rec = False
@@ -166,8 +166,6 @@ class Game:
 
         done = self.act(actions)
 
-        #print(self.level.reward())
-
         # see above comment on rendering
         if self.arg_render and self.pygame is not None:
             self.draw.draw(self)
@@ -207,49 +205,53 @@ class Game:
         # Point2D headLocation
         # Point2D headCenterLocation
 
-        # basic, game.observation()[:19]
         body_x = self.kuski_state['body']['location']['x']
         body_y = self.kuski_state['body']['location']['y']
-        body_r = self.kuski_state['body']['rotation']
         lwx = self.kuski_state['leftWheel']['location']['x']
         lwy = self.kuski_state['leftWheel']['location']['y']
-        lwr = self.kuski_state['leftWheel']['rotation']
         rwx = self.kuski_state['rightWheel']['location']['x']
         rwy = self.kuski_state['rightWheel']['location']['y']
-        rwr = self.kuski_state['rightWheel']['rotation']
         head_x = self.kuski_state['headLocation']['x']
         head_y = self.kuski_state['headLocation']['y']
-        head_cx = self.kuski_state['headCenterLocation']['x']
-        head_cy = self.kuski_state['headCenterLocation']['y']
-        direction = self.kuski_state['direction'] + 0.0 # int
-        gravityScrollDirection = self.kuski_state['gravityScrollDirection']/10 + 0.0 # int # normalized
-        gravityDir = self.kuski_state['gravityDir']/10 + 0.0 # int # normalized
-        numTakenApples = self.kuski_state['numTakenApples']# + 0.0 # int
-        changeDirPressedLast = self.kuski_state['changeDirPressedLast'] + 0.0 # int
-        lastRotationTime = self.kuski_state['lastRotationTime']/100 # double # normalized? starts with 100, doesn't seem to increase but didn't try to turn
+        body_rot = self.kuski_state['body']['rotation']
+
+        #todo: add speeds?
+
+        #lwr = self.kuski_state['leftWheel']['rotation']
+        #rwr = self.kuski_state['rightWheel']['rotation']
+        #head_cx = self.kuski_state['headCenterLocation']['x'] # this is more like body location, or at least very close
+        #head_cy = self.kuski_state['headCenterLocation']['y'] # this is more like body location, or at least very close
+        #direction = self.kuski_state['direction'] + 0.0 # int
+        #gravityScrollDirection = self.kuski_state['gravityScrollDirection']/10 + 0.0 # int # normalized
+        #gravityDir = self.kuski_state['gravityDir']/10 + 0.0 # int # normalized
+        #numTakenApples = self.kuski_state['numTakenApples']# + 0.0 # int
+        #changeDirPressedLast = self.kuski_state['changeDirPressedLast'] + 0.0 # int
+        #lastRotationTime = self.kuski_state['lastRotationTime']/100 # double # normalized? starts with 100, doesn't seem to increase but didn't try to turn
         #print(gravityDir)
+        #print(body_x, head_cx)
 
         # full, game.observation() -- 33
         # unnamed
-        pad4_x = self.kuski_state['pad4']['x']
-        pad4_y = self.kuski_state['pad4']['y']
-        pad = self.kuski_state['pad'] + 0.0 # int
-        asd4 = self.kuski_state['asd4'] + 0.0 # int
-        asd5 = self.kuski_state['asd5'] + 0.0 # int
-        asdunk5 = self.kuski_state['asdunk5'] + 0.0 # int
-        padz1 = self.kuski_state['padz1'] # double
-        padz2 = self.kuski_state['padz2'] # double
-        asd6 = self.kuski_state['asd6'] # double
-        asd7 = self.kuski_state['asd7'] # double
-        asd3 = self.kuski_state['asd3'] # double
-        asd8 = self.kuski_state['asd8'] # double
-        asdunk1 = self.kuski_state['asdunk1'] # double
-        asdunk2 = self.kuski_state['asdunk2'] # double
+        #pad4_x = self.kuski_state['pad4']['x']
+        #pad4_y = self.kuski_state['pad4']['y']
+        #pad = self.kuski_state['pad'] + 0.0 # int
+        #asd4 = self.kuski_state['asd4'] + 0.0 # int
+        #asd5 = self.kuski_state['asd5'] + 0.0 # int
+        #asdunk5 = self.kuski_state['asdunk5'] + 0.0 # int
+        #padz1 = self.kuski_state['padz1'] # double
+        #padz2 = self.kuski_state['padz2'] # double
+        #asd6 = self.kuski_state['asd6'] # double
+        #asd7 = self.kuski_state['asd7'] # double
+        #asd3 = self.kuski_state['asd3'] # double
+        #asd8 = self.kuski_state['asd8'] # double
+        #asdunk1 = self.kuski_state['asdunk1'] # double
+        #asdunk2 = self.kuski_state['asdunk2'] # double
         # not used
         #char isThrottling
         #BikeState bikeState # contains animation, not sure if necessary
-        return np.array([body_x, body_y, body_r, lwx, lwy, lwr, rwx, rwy, rwr, head_x, head_y, head_cx, head_cy, direction, gravityScrollDirection,
-        gravityDir, numTakenApples, changeDirPressedLast, lastRotationTime, pad4_x, pad4_y, pad, asd4, asd5, asdunk5, padz1, padz2, asd6, asd7, asd3, asd8, asdunk1, asdunk2])
+        return np.array([body_x, body_y, lwx, lwy, rwx, rwy, head_x, head_y, body_rot])
+        #return np.array([body_x, body_y, body_r, lwx, lwy, lwr, rwx, rwy, rwr, head_x, head_y, head_cx, head_cy, direction, gravityScrollDirection,
+        #gravityDir, numTakenApples, changeDirPressedLast, lastRotationTime, pad4_x, pad4_y, pad, asd4, asd5, asdunk5, padz1, padz2, asd6, asd7, asd3, asd8, asdunk1, asdunk2])
 
     def elapsed_time(self):
         elapsed_time = time.time() - self.starttime
@@ -266,12 +268,12 @@ class Game:
         return elapsed_time, unit
 
     def set_seed(self):
-        self.seed = 43364
-        print(self.BLUE2, "\nseed: %d\n" % self.seed, self.WHITE)
-        #import random
-        #self.seed = random.randint(0, 99999)
+        #self.seed = 43364
+        import random
+        self.seed = random.randint(0, 99999)
         np.random.seed(self.seed)
         #tf.random.set_seed(self.seed) # set in model if it uses tf
+        print(self.BLUE2, "\nseed: %d\n" % self.seed, self.WHITE)
 
 
     def set_terminal_colors(self):
