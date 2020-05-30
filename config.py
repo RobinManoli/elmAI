@@ -1,5 +1,5 @@
 from tkinter import *
-import random
+import random, os
 
 class GUI:
     def __init__(self, game):
@@ -18,7 +18,7 @@ class GUI:
         self.levWidget.insert(END, 'ribotAI1.lev')
         self.levWidget.insert(END, 'ft.lev')
         self.levWidget.insert(END, 'ai.lev')
-        self.levWidget.select_set(0)
+        self.levWidget.select_set(1)
         self.levWidget.pack(side=LEFT)
 
         self.fpsWidget = Listbox(self.top, exportselection=0)
@@ -69,7 +69,7 @@ class GUI:
         self.manCheckbutton.deselect()
         self.renderCheckbutton.deselect()
         self.testCheckbutton.deselect()
-        self.eolCheckbutton.select()
+        self.eolCheckbutton.deselect()
         self.manCheckbutton.pack(anchor="w")
         self.renderCheckbutton.pack(anchor="w")
         self.testCheckbutton.pack(anchor="w")
@@ -77,7 +77,9 @@ class GUI:
 
         self.loadWidget = Listbox(self.master, exportselection=0, width=100)
         self.loadWidget.insert(END, '')
-        self.loadWidget.insert(END, '00x786_194_ribotAI0.rec_seed88148_observations17_actionsA_lr0.010000_gamma0.990000_softmax_rmsprop_sparse_categorical_crossentropy')
+        for filename in os.listdir('keras_models'):
+            #self.loadWidget.insert(END, '00x786_194_ribotAI0.rec_seed88148_observations17_actionsA_lr0.010000_gamma0.990000_softmax_rmsprop_sparse_categorical_crossentropy')
+            self.loadWidget.insert(END, filename)
         self.loadWidget.select_set(0)
         self.loadWidget.pack()
 

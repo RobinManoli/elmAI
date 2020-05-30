@@ -241,7 +241,8 @@ def train_model(game):
                 #print(losses[game.episode])
                 
                 # Print out metrics like rewards, how long each episode lasted etc.
-                if game.episode > 0 and game.episode % 100 == 0: # game.episode % ( game.n_episodes // 20 ) == 0:
+                if not game.arg_eol and game.episode > 0 and game.episode % 100 == 0: # game.episode % ( game.n_episodes // 20 ) == 0:
+                    # not (yet?) implemented in eol
                     game.arg_render = True
                     ave_reward = np.mean(reward_sums[max(0,game.episode-200):game.episode])
                     ave_loss = np.mean(losses[max(0,game.episode-200):game.episode])

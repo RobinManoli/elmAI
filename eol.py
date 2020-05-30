@@ -306,10 +306,13 @@ def next_frame(game, accelerate, brake, left, right, turn, supervolt, timestep, 
     kuski_state['isDead'] = True if mode_info == 0.0 else False
     kuski_state['body']['location']['x'] = observation[0]
     kuski_state['body']['location']['y'] = observation[1]
-    #time.sleep(0.01)
+    # time to hold down keys, to make sure eol receives them
+    # maybe supervolt was buggy because not holding down keys enough?
+    # ( happened during sleep(0) )
+    time.sleep(0.01)
     toggle_keys(ReleaseKey, accelerate, brake, left, right, turn, supervolt)
     game.timestep = time.time() - starttime
-    print(game.timestep)
+    #print(game.timestep)
     return kuski_state
 
 
