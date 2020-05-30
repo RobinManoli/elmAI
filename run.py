@@ -74,7 +74,9 @@ try:
     if training_mod and not game.arg_test:
         game.training = True
 
-    if game.arg_render:
+    if game.arg_eol:
+        game.init_eol()
+    elif game.arg_render:
         game.init_pygame()
 
     # after pygame.init()
@@ -104,6 +106,10 @@ try:
         print(game.running)
 
     print('SESSION FINISHED:')
+    game.winsound.Beep(1231, 123)
+    game.winsound.Beep(1631, 123)
+    game.winsound.Beep(2631, 123)
+    game.winsound.Beep(1631, 123)
     elapsed_time, elapsed_elma_time, unit = game.elapsed_time()
     print('Session hiscore: %f' % (game.hiscore))
     print('Session lowscore: %f' % (game.lowscore))
@@ -115,6 +121,11 @@ try:
     #print( game.observation() )
     # make terminal output visible before automatically closing
     input("Press return to exit")
+
+except KeyboardInterrupt:
+    if game.eol is not None:
+        # def toggle_keys(press_or_release_func, accelerate, brake, left, right, turn, supervolt):
+        game.eol.toggle_keys(game.eol.ReleaseKey, True, True, True, True, True, True)
 
 except Exception as e:
     import traceback

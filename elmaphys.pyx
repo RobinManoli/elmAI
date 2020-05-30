@@ -16,6 +16,7 @@ def init(levpathfilename):
 def restart_level():
     restartLevel()
 
+# must look same as in eol.py (except game)
 def next_frame(accelerate, brake, left, right, turn, supervolt, timestep, time):
     # int accelerate, int brake, int left, int right, int turn, int supervolt
     return nextFrameKuski(accelerate, brake, left, right, turn, supervolt, timestep, time)

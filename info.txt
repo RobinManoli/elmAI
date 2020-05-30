@@ -83,3 +83,5 @@ About elma physics (jon speaking):
 
     so what is timestep for 80 fps?
     1/80/2.2893772893772893772893772893773 = 0.0055
+
+Now, since smibu phys is unstable at 30 fps, the above probably doesn't happen in game.py implementation (at the time of writing.)

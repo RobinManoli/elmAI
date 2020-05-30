@@ -65,6 +65,7 @@ class Level:
         self.path = None
         self.filename = None
         self.name = ""
+        self.reclink = None
         self.maxplaytime = None
         self.hiscore = None # save recs and progress when this hiscore is beaten
 
@@ -96,6 +97,7 @@ class Level:
         f = open(pathfilename, 'rb')
         f.read(7)
         reclink = struct.unpack('i',f.read(4))[0]
+        self.reclink = reclink
         i1 = struct.unpack('d',f.read(8))[0]
         i2 = struct.unpack('d',f.read(8))[0]
         i3 = struct.unpack('d',f.read(8))[0]
@@ -174,6 +176,7 @@ class Level:
         self.set_height()
         print('%s start pos: %.02f, %.02f' % (self.filename, self.startobject.x, self.startobject.y))
         print('first flower: %.02f, %.02f' % (self.flowers[0].x, self.flowers[0].y))
+        print('reclink: %d' % (self.reclink))
 
     def distance(self, obj, x, y):
         dx = obj.x - x
@@ -213,7 +216,10 @@ class Level:
 
         elif self.filename.lower() == 'ribotai0.lev':
             self.maxplaytime = 10 # elma seconds to play a lev before exit
-            self.hiscore = 180 # best score so far 194 or 7.86s
+            if self.reclink == 2052057095:
+                self.hiscore = 60
+            else:
+                self.hiscore = 180 # best score so far 200+ or 7.77s
             distance = self.flower_distance(self.game.kuski_state)
             prev_distance = self.flower_distance(self.game.prev_kuski_state)
             # if distance now is larger than distance before: get a negative score

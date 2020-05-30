@@ -1,10 +1,12 @@
 from tkinter import *
+import random
 
 class GUI:
     def __init__(self, game):
         self.game = game
         self.master = Tk()
         self.master.title('Elma AI Config')
+        self.master.bind("<KeyRelease>", self.keyup)
         self.top = Frame(self.master)
         self.top.pack(side=TOP)
         self.rightFrame = Frame(self.top)
@@ -45,21 +47,33 @@ class GUI:
         self.episodesLabel = Label(self.rightFrame, text="Episodes")
         self.episodesLabel.pack(anchor="w")
         self.episodesEntry = Entry(self.rightFrame)
-        self.episodesEntry.insert(0, 200)
+        self.episodesEntry.insert(0, 5000)
         self.episodesEntry.pack(anchor="w")
+
+        self.seedLabel = Label(self.rightFrame, text="Seed")
+        self.seedLabel.pack(anchor="w")
+        self.seedEntry = Entry(self.rightFrame)
+        self.seedEntry.insert(0, self.game.seed)
+        self.seedEntry.pack(anchor="w")
+        self.seedButton = Button(self.rightFrame, text="Generate", command=lambda: self.seedEntry.delete(0, END) == 0 or self.seedEntry.insert(0, random.randint(0,999999)))
+        self.seedButton.pack(anchor="w")
 
         self.arg_man = IntVar()
         self.arg_render = IntVar()
         self.arg_test = IntVar()
+        self.arg_eol = IntVar()
         self.manCheckbutton = Checkbutton(self.rightFrame, text="Play Manually", variable=self.arg_man)
         self.renderCheckbutton = Checkbutton(self.rightFrame, text="Render", variable=self.arg_render)
         self.testCheckbutton = Checkbutton(self.rightFrame, text="Test (don't train)", variable=self.arg_test)
+        self.eolCheckbutton = Checkbutton(self.rightFrame, text="Play EOL", variable=self.arg_eol)
         self.manCheckbutton.deselect()
-        self.renderCheckbutton.select()
+        self.renderCheckbutton.deselect()
         self.testCheckbutton.deselect()
+        self.eolCheckbutton.select()
         self.manCheckbutton.pack(anchor="w")
         self.renderCheckbutton.pack(anchor="w")
         self.testCheckbutton.pack(anchor="w")
+        self.eolCheckbutton.pack(anchor="w")
 
         self.loadWidget = Listbox(self.master, exportselection=0, width=100)
         self.loadWidget.insert(END, '')
@@ -75,9 +89,18 @@ class GUI:
         self.master.mainloop()
 
     def on_close(self):
+        #filehandler = open("config.pickle","wb")
+        #pickle.dump(self, filehandler)
+        #filehandler.close()
         self.master.destroy()
         import sys
         sys.exit()
+
+    def keyup(self, e):
+        # print(e)
+        # <KeyRelease event state=Mod1 keysym=Return keycode=13 char='\r' x=796 y=86>
+        if e.keysym == 'Return':
+            self.start()
 
     def start(self):
         # this setup of vars keep the possibility of having command line args intact
@@ -89,6 +112,12 @@ class GUI:
         # default fps 80 not handled here as it is default
         self.game.arg_fps500 = True if self.fpsWidget.curselection()[0] == 2 else False
         self.game.arg_fps1000 = True if self.fpsWidget.curselection()[0] == 3 else False
+
+        # set before loading
+        seed = self.seedEntry.get().strip()
+        seed = int(seed) if seed.isnumeric() else 0
+        if seed != self.game.seed:
+            self.game.set_seed( seed )
 
         #self.game.arg_load = True if self.loadWidget.curselection()[0] > 0 else False
         if self.loadWidget.curselection()[0] > 0:
@@ -111,6 +140,7 @@ class GUI:
         self.game.arg_man = self.arg_man.get() == 1
         self.game.arg_render = self.arg_render.get() == 1 or self.game.arg_man
         self.game.arg_test = self.arg_test.get() == 1
+        self.game.arg_eol = self.arg_eol.get() == 1
         #print(self.game.args)
 
         self.game.arg_cem = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 0 else False
@@ -125,7 +155,7 @@ class GUI:
             self.game.actions.append(elmainputs)
             action_name = self.actionsWidget.get(selected_action)
             self.game.actions_str += action_name[0].upper()
-        #print(self.game.n_actions, self.game.actions, self.game.actions_str)
+        print("actions: %s" % (self.game.actions_str))
         self.master.destroy()
 
 

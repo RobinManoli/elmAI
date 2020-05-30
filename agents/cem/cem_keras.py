@@ -1,39 +1,46 @@
 # https://colab.research.google.com/drive/1KuzxUPUL3Y50xQFk8RvsfWDx88vDitZS#scrollTo=WB6Z4ASd5vMX
 # https://towardsdatascience.com/deep-reinforcement-learning-pong-from-pixels-keras-version-bf8a0860689f
 
-# gen 1 - ft.lev - seeds 61213 - gamma = 0.99 - n_observations = 19 - n_actions = 2
+# success 1 - ft.lev - seeds 61213 - gamma = 0.99 - n_observations = 19 - n_actions = 2
 # game.model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
 # used non-normalized (non-diffed) observations
 # successfully lowers loss to a larger negative value in 1000 episodes
 # need to investigate why that doesn't mean higher reward?
 # run.py ft.lev 1 cem render
 
-# gen 2
+# success 2
 # used diffed observations
 # successfully increases average score
 # plays beautifully until about 600 episodes
 # seems to converge at gas only
 # very different learning times
 
-# gen 3 - n_actions = 3
+# success 3 - n_actions = 3
 # game.model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy')
 # increases average reward until around 1000 - 1500 episodes
 # score 45.05 at episode 1271
 # seems to converge at gas only after 5000 episodes
 
-# gen 4 - ribotai0.lev - seeds 43364 - n_actions = 2
+# success 4 - ribotai0.lev - seeds 43364 - n_actions = 2
 # beat some good human players of this battle https://elma.online/battles/152353
 # https://elma.online/r/qvw6j5erj6
 # in less than 600 episodes
 # run.py ribotai0.lev 1 cem render
 
-# gen 5 - changing observations to:
+# success 5 - changing observations to:
 # 8 core positions + body rotation + speeds + direction
 # Processing 15 times faster than playing in realtime
 # almost same result as old observations:
 # time: 7.87 in 1332 episodes, seed 28460
 # time: 7.86 in 1354 episodes, seed 88148
 # time: 7.77 in 309 episodes after above, loaded with seed 41532
+
+# success 6 - actions AR
+# alternative version of ribotAI0.lev
+# Processing 16 times faster than playing in realtime
+# finishing lev actually using R in 1520 episode
+# improving best time using R ranging from 9:69 to 9:22, last one in 4867 episodes
+
 
 
 import numpy as np
@@ -151,7 +158,7 @@ def train_model(game):
     time_taken = np.zeros(game.n_episodes)
     #print("initial reset %f" % (game.timesteptotal))
     observation = game.reset()
-    #print( observation )
+    print( observation )
 
     for game.episode in range(game.n_episodes):
         reward_sum = 0
@@ -217,17 +224,20 @@ def train_model(game):
                 #print("training run...")
                 # batch size is probably how many frames to train per iteration
                 # so let's use all frames of the episode
-                if game.training:
+                # not (yet?) implemented in eol
+                if game.training and not game.arg_eol:
                     game.model.fit(ep_observations, ep_actions, sample_weight=ep_rewards, batch_size=buffer, epochs=1, verbose=0)
                 
                 time_taken[game.episode] = game.frame
                 prev_observation = None
                 observation = game.reset()
-                losses[game.episode] = game.model.evaluate(ep_observations, 
-                                                ep_actions,
-                                                sample_weight=ep_rewards,
-                                                batch_size=len(ep_observations), 
-                                                verbose=0)
+                if not game.arg_eol:
+                    # not (yet?) implemented in eol
+                    losses[game.episode] = game.model.evaluate(ep_observations, 
+                        ep_actions,
+                        sample_weight=ep_rewards,
+                        batch_size=len(ep_observations), 
+                        verbose=0)
                 #print(losses[game.episode])
                 
                 # Print out metrics like rewards, how long each episode lasted etc.

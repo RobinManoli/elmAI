@@ -1,4 +1,4 @@
-import time, random
+import time, random, winsound
 import numpy as np 
 
 class Game:
@@ -6,6 +6,8 @@ class Game:
         self.set_terminal_colors()
         self.set_seed()
         self.pygame = None
+        self.eol = None
+        self.winsound = winsound
 
         # to check this: make replay and store timesteptotal,
         # then check rec time in elma 12.53 28.67
@@ -93,6 +95,8 @@ class Game:
             #self.elmaphys.save_replay("00x%s_%d_%s.rec" % (filenametime, self.score, random.randint(10,99)), self.level.filename) # working
             self.elmaphys.save_replay(self.rec_name(), self.level.filename) # working
             if self.model is not None:
+                self.winsound.Beep(1231, 123)
+                self.winsound.Beep(1231, 123)
                 print('saving keras model: ' + self.model_save_name())
                 self.model.save("keras_models\\" + self.model_save_name())
         #if self.maxplaytime and time.time() - self.starttime > self.maxplaytime:
@@ -100,6 +104,7 @@ class Game:
 
         self.last_score = self.score
         if self.score > self.hiscore:
+            self.winsound.Beep(1231, 123)
             self.hiscore = self.score
             print(self.YELLOW + 'episode %d, hiscore: %.2f, time: %.2f, died: %s, finished: %s' % (self.episode, self.score, self.lasttime, self.died, self.finished) + self.WHITE)
         elif self.score < self.lowscore:
@@ -125,20 +130,30 @@ class Game:
             self.end()
         #print('restarted')
 
-    # emulate openai env.methods -- easy to use with code that uses env
+    # emulate openai env.method
     def reset(self):
         # check if game has progressed (don't restart if resetting as first action in agent)
         if self.timesteptotal > 0:
             self.restart()
+        if self.arg_eol:
+            self.eol.reset(self)
+            return self.eol.observation()[:self.n_observations]
         return self.observation()[:self.n_observations]
+
+    # emulated openai env.method
     def step(self, action):
         elmainputs = self.actions[action] # [0, 0, ...]
         #print(elmainputs)
         done = self.loop(elmainputs)
-        observation = self.observation()[:self.n_observations] # after action taken
+        if self.arg_eol:
+            observation = self.eol.observation()[:self.n_observations] # after action taken
+        else:
+            observation = self.observation()[:self.n_observations] # after action taken
         reward = self.score_delta
         info = dict()
         return observation, reward, done, info
+
+    # emulated openai env.method
     def render(self):
         # render is done by self, not outside script
         pass
@@ -185,7 +200,10 @@ class Game:
         if actions is None:
             actions = self.input
         params = actions + [self.timestep, self.timesteptotal]
-        self.kuski_state = self.elmaphys.next_frame( *params )
+        if self.arg_eol:
+            self.kuski_state = self.eol.next_frame( self, *params )
+        else:
+            self.kuski_state = self.elmaphys.next_frame( *params )
         #print(self.kuski_state)
         #if self.has_ended():    
         #    self.restart()
@@ -193,13 +211,19 @@ class Game:
         self.timesteptotal += self.timestep
         #print(self.score_delta, self.timesteptotal, self.level.maxplaytime)
         #print("episode: %d, score delta: %.2f, score: %.2f" % (self.episode, self.score_delta, self.score))
-        if not self.arg_man and self.level.maxplaytime and self.timesteptotal * self.realtimecoeff > self.level.maxplaytime:
+        # done is not yet implemented in eol
+        if not self.arg_eol and not self.arg_man and self.level.maxplaytime and self.timesteptotal * self.realtimecoeff > self.level.maxplaytime:
             #print('max play time over')
             return True
         return False
 
 
     def observation(self):
+        # todo: instead of creating python dict kuski_state,
+        # observation would probably be faster if returned from elmaphys.pyx
+        # since many kuskistate values are not used MUCH elsewhere in code
+        # used at the time of writing: isDead, finishedTime, body location x, y (in level for flower distance)
+
         # BodyPart body
         # BodyPart leftWheel
         # BodyPart rightWheel
@@ -278,7 +302,7 @@ class Game:
     def set_seed(self, seed=None):
         if seed is None:
             import random
-            seed = random.randint(0, 99999)
+            seed = random.randint(0, 999999)
         self.seed = seed
         np.random.seed(self.seed)
         #tf.random.set_seed(self.seed) # set in model if it uses tf
@@ -302,6 +326,11 @@ class Game:
         self.BLUE2   = '\33[94m'
         self.WHITE2  = '\33[97m'
 
+
+    def init_eol(self):
+        import eol
+        self.eol = eol
+        self.realtimecoeff = 0 # not applicable in eol, as eol runs in realtime
 
     def init_pygame(self):
         import os, pygame, eventhandler, draw, gui, colors
