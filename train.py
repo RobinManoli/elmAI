@@ -30,10 +30,32 @@ def train_model(game):
         render = False # initialize
     else:
         render = game.arg_render
+    #buffer = 1600 # 80 fps * 20 seconds = 1600 game frames maximum
+    #print(game.level.maxplaytime, game.timestep, game.realtimecoeff)
+    # todo: do not initialize level in reward()
+    if game.level.maxplaytime is None:
+        game.level.reward() # initialize level
+    if game.arg_eol:
+        buffer = game.level.maxplaytime * 1000 # time * eol fps
+    else:
+        # train
+        buffer = game.level.maxplaytime / (game.timestep*game.realtimecoeff) # max time * fps
+        buffer = int(np.ceil( buffer ))
+
     game.arg_render = render
     reward_sums = np.zeros(game.n_episodes)
     losses = np.zeros(game.n_episodes)
     steps_per_episode = np.zeros(game.n_episodes)
+
+    observation_shape = (game.n_observations, 1, 1)
+    # not working because buffer size is not reached for each episode
+    #batch_observations = np.zeros(((100, buffer) + observation_shape))
+    #batch_actions = np.zeros((100, buffer, 1))
+    #batch_rewards = np.zeros((100, buffer))
+    #batch_observations = []
+    #batch_actions = []
+    #batch_rewards = []
+
     #print("initial reset %f" % (game.timesteptotal))
     observation = game.reset()
     print( observation )
@@ -41,20 +63,8 @@ def train_model(game):
     for game.episode in range(game.n_episodes):
         reward_sum = 0
         #im_shape = (80, 80, 1)
-        observation_shape = (game.n_observations, 1, 1)
         prev_observation = None
     
-        #buffer = 1600 # 80 fps * 20 seconds = 1600 game frames maximum
-        #print(game.level.maxplaytime, game.timestep, game.realtimecoeff)
-        # todo: do not initialize level in reward()
-        if game.level.maxplaytime is None:
-            game.level.reward() # initialize level
-        if game.arg_eol:
-            buffer = game.level.maxplaytime * 1000 # time * eol fps
-        else:
-            # train
-            buffer = game.level.maxplaytime / (game.timestep*game.realtimecoeff) # max time * fps
-            buffer = int(np.ceil( buffer ))
         observations = np.zeros(( buffer, ) + observation_shape)
         actions = np.zeros(( buffer, 1 ))
         rewards = np.zeros(( buffer ))
@@ -64,9 +74,9 @@ def train_model(game):
             #    print(game.episode)
             # convert shape 19 to 19,1,1
             observation = observation.reshape(-1,1)[:, np.newaxis]
-            #observations[game.frame] = prev_observation # working but not normalized
+            observations[game.frame] = observation # working but not normalized
             # normalize by only recording difference of past observations
-            observations[game.frame] = observation - prev_observation if prev_observation is not None else np.zeros(observation_shape)
+            #observations[game.frame] = observation - prev_observation if prev_observation is not None else np.zeros(observation_shape)
             #print()
             #print(observations[game.frame])
             #print()
@@ -84,6 +94,7 @@ def train_model(game):
                 a = np.argmax(p)
             #action = action_space[a]
             action = a
+            #print(a, end='')
             actions[game.frame] = a
             observation, reward, done, _ = game.step(action)
             rewards[game.frame] = reward # record reward per step
@@ -100,18 +111,30 @@ def train_model(game):
                 ep_rewards = rewards[:game.frame]
                 ep_rewards = discount_n_standardise(game, ep_rewards)
 
-                #print("training run...")
+                #batch_observations[game.episode] = ep_observations
+                #batch_actions[game.episode] = ep_actions
+                #batch_rewards[game.episode] = ep_rewards
+                #batch_observations.append( ep_observations )
+                #batch_actions.append( ep_actions )
+                #batch_rewards.append( ep_rewards )
+
                 # batch size is probably how many frames to train per fit iteration
                 # so let's use all frames of the episode
                 # not (yet?) implemented in eol mode
                 if game.training and not game.arg_eol:
+                    #if game.training and not game.arg_eol and game.episode % 100 == 99:
+                    # train every 100 episodes (0, 1, 2, ..., 99)
+                    #print("training %d..." % (game.episode))
                     game.training_mod.fit(game, ep_observations, ep_actions,
                         sample_weight=ep_rewards, batch_size=buffer,
                         epochs=1, verbose=0)
+                    #game.model.fit(
+                    #    x=np.array(np.array(batch_observations), np.array(batch_actions), np.array(batch_rewards)),
+                    #    batch_size=buffer, epochs=100, verbose=0)
+                    #batch_observations = []
+                    #batch_actions = []
+                    #batch_rewards = []
 
-                steps_per_episode[game.episode] = game.frame
-                prev_observation = None
-                observation = game.reset()
                 if not game.arg_eol:
                     # not (yet?) implemented in eol mode
                     losses[game.episode] = game.training_mod.evaluate(game,
@@ -141,6 +164,9 @@ def train_model(game):
                 else:
                     if not game.arg_test:
                         game.arg_render = False
+                steps_per_episode[game.episode] = game.frame
+                prev_observation = None
+                observation = game.reset()
                 game.frame = 0
                 break
         if not game.running:

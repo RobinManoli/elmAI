@@ -31,8 +31,9 @@ class GUI:
 
         self.agentWidget = Listbox(self.top, exportselection=0)
         self.agentWidget.insert(END, 'CEM')
+        self.agentWidget.insert(END, 'ribot algorithm')
         self.agentWidget.insert(END, 'Benchmark')
-        self.agentWidget.select_set(0)
+        self.agentWidget.select_set(1)
         self.agentWidget.pack(side=LEFT)
 
         self.actionsWidget = Listbox(self.top, exportselection=0, selectmode=MULTIPLE)
@@ -147,7 +148,8 @@ class GUI:
         #print(self.game.args)
 
         self.game.arg_cem = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 0 else False
-        self.game.arg_benchmark = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 1 else False
+        self.game.arg_ribot = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 1 else False
+        self.game.arg_benchmark = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 2 else False
         self.game.arg_ddpg = False
         self.game.arg_rltf = False
 

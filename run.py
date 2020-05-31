@@ -78,6 +78,10 @@ try:
     elif game.arg_rltf:
         sys.path.append("agents\\")
         import rl_tf as training_mod
+    elif game.arg_ribot:
+        sys.path.append("agents\\")
+        import ribot_algorithm as training_mod
+        training_mod.init_model(game)
     game.training_mod = training_mod
     if training_mod and not game.arg_test:
         game.training = True

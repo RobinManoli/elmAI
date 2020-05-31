@@ -7,6 +7,7 @@ class Game:
         self.set_seed()
         self.pygame = None
         self.eol = None
+        self.np = np
         self.winsound = winsound
 
         # to check this: make replay and store timesteptotal,
@@ -44,7 +45,7 @@ class Game:
         # append full list of elmainputs to send for each available game action
         self.actions = [[0, 0, 0, 0, 0, 0]]
         self.actions_str = '' # any letters of ABLRTS
-        self.n_observations = 10 # len(game.observation())
+        self.n_observations = 1 # len(game.observation())
         self.gamma = 0.99 # discount factor
         self.learning_rate = 0.01
         self.save_rec = False
@@ -142,7 +143,8 @@ class Game:
             self.eol.reset(self)
             return self.eol.observation()[:self.n_observations]
         #return self.observation()[:self.n_observations]
-        return self.kuski_state[:self.n_observations]
+        #return self.kuski_state[:self.n_observations]
+        return np.array(self.timesteptotal)
 
     # emulated openai env.method
     def step(self, action):
@@ -153,7 +155,8 @@ class Game:
             observation = self.eol.observation()[:self.n_observations] # after action taken
         else:
             #observation = self.observation()[:self.n_observations] # after action taken
-            observation = self.kuski_state[:self.n_observations]
+            #observation = self.kuski_state[:self.n_observations]
+            observation = np.array(self.timesteptotal)
         reward = self.score_delta
         info = dict()
         return observation, reward, done, info

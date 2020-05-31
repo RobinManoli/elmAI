@@ -230,7 +230,7 @@ class Level:
             if self.reclink == 2052057095:
                 self.hiscore = 60
             else:
-                self.hiscore = 180 # best score so far 200+ or 7.77s
+                self.hiscore = 190 # best score so far 200+ or 7.77s
             #distance = self.flower_distance(self.game.kuski_state)
             #prev_distance = self.flower_distance(self.game.prev_kuski_state)
             distance = self.game.kuski_state[12]
