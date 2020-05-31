@@ -1,5 +1,5 @@
 import sys, time, os
-import game, level, local
+import game, level, local, train
 
 try:
     os.system('color') # init colors early in script
@@ -8,10 +8,13 @@ try:
 
 
     # todo: bug or feature? with enough args number can be omitted and train forever
-    # todo: actions=ABLRTS
+    # todo: actions=ABLRTS?
+
     if len(game.args) < 3:
-        print("usage: %s 0lp31.lev 100 render man test fps30|fps500|fps1000 rltf|cem|ddpg" % (os.path.basename(__file__)))
-        print("for running level 0lp31.lev, 100 episodes with chosen flags")
+        # the commandline args have been discontinued for now
+        # as developing both them and a tkinter gui seems counter productive
+        #print("usage: %s 0lp31.lev 100 render man test fps30|fps500|fps1000 rltf|cem|ddpg" % (os.path.basename(__file__)))
+        #print("for running level 0lp31.lev, 100 episodes with chosen flags")
         #print("order of flags dont matter")
         #print("shortcut: %s 0lp31 <-- will play manually if no other flags" % (os.path.basename(__file__)))
         #print("default flags: fps80")
@@ -59,7 +62,12 @@ try:
     #game.timestep = 0.001 # slow play
 
     training_mod = None
-    if game.arg_cem:
+    if game.arg_benchmark:
+        sys.path.append("agents\\")
+        #import cem_strange_rewards as training_mod
+        import benchmark as training_mod
+        training_mod.init_model(game)
+    elif game.arg_cem:
         sys.path.append("agents\\cem\\")
         #import cem_strange_rewards as training_mod
         import cem_keras as training_mod
@@ -83,6 +91,8 @@ try:
     import elmaphys # must be imported after pygame.init()
     game.kuski_state = elmaphys.init(game.level.path + '\\' + game.level.filename)
     game.initial_kuski_state = game.kuski_state
+    # todo, do not do this? needed now because level maxtimes are set inside rewards
+    game.prev_kuski_state = game.kuski_state
     game.elmaphys = elmaphys
     #print('kuski state: ' + str(game.kuski_state))
 
@@ -96,7 +106,7 @@ try:
             #print('Batch %d, last batch hiscore: %f, last batch lowscore: %f, %d minutes played' % (game.batch, game.batch_hiscore, game.batch_lowscore, secondsplayed/60))
             game.batch_hiscore = 0
             game.batch_lowscore = 0
-            game.training_mod.train_model(game)
+            train.train_model(game)
             game.batch += 1
     else:
         print("playing manually")

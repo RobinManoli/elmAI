@@ -41,14 +41,11 @@
 # finishing lev actually using R in 1520 episode
 # improving best time using R ranging from 9:69 to 9:22, last one in 4867 episodes
 
-
+# after further investigation, speeds should probably not be observed
+# as they are the actual observation
 
 import numpy as np
 import random, os
-# import cPickle as pickle
-#import matplotlib.pyplot as plt
-#from JSAnimation.IPython_display import display_animation
-#from matplotlib import animation
 #import gym
 
 import tensorflow as tf
@@ -59,36 +56,12 @@ from keras.optimizers import rmsprop
 import keras.backend as K
 
 #%matplotlib inline
-
 #env = gym.make("PongDeterministic-v4")
 #env.env.get_action_meanings()
 #['NOOP', 'FIRE', 'RIGHT', 'LEFT', 'RIGHTFIRE', 'LEFTFIRE']
-
 #action_space = [4,5] #[No-op, up, down]
 
 print("\nEnter CEM Keras CEM: softmax, sparse_categorical_crossentropy and optimizer rmsprop\n")
-
-# todo: set and print this from game.set_seed()
-#seed = random.randint(0, 99999)
-#seed = 61213 # learns well but converges into gas only
-#seed = 85711 # starts with gas only
-#seed = 43364 # fast and good times on ribotai0.lev, beats killer on ribotai1.lev
-#print("\nrand seed: %d\n" % (seed))
-
-def discount_rewards(game, r):
-    """ take 1D float array of rewards and compute discounted reward """
-    discounted_r = np.zeros_like(r)
-    running_add = 0
-    for t in reversed(range(len(discounted_r))):
-        running_add =  r[t] + running_add * game.gamma # belman equation
-        discounted_r[t] = running_add
-    return discounted_r
-
-def discount_n_standardise(game, r):
-    dr = discount_rewards(game, r)
-    dr = (dr - dr.mean()) / dr.std()
-    return dr
-
 
 def init_model(game):
     tf.random.set_seed(game.seed)
@@ -127,162 +100,20 @@ def init_model(game):
 
     game.model.summary()
 
-# pretrain loop
-"""
-observation = game.reset()
-rewards = []
-    p = np.random.dirichlet( [1] * len(game.n_actions), 1 ).ravel()
-    a = np.random.choice( len(game.n_actions), p=p )
-    #action = action_space[a]
-    print("actions: %s" % a)
-    action = game.action_space(a)
-    observation, reward, done, info = game.step(action)
-    r.append(reward)
-    if done:
-        break
-        
-rewards = np.array(rewards)
-"""
 
-render = None
-def train_model(game):
-    global render
-
-    if game.training and render is None:
-        render = False # initialize
-    else:
-        render = game.arg_render
-    game.arg_render = render
-    reward_sums = np.zeros(game.n_episodes)
-    losses = np.zeros(game.n_episodes)
-    time_taken = np.zeros(game.n_episodes)
-    #print("initial reset %f" % (game.timesteptotal))
-    observation = game.reset()
-    print( observation )
-
-    for game.episode in range(game.n_episodes):
-        reward_sum = 0
-        #im_shape = (80, 80, 1)
-        #observation_shape = (game.n_observations, 1)
-        observation_shape = (game.n_observations, 1, 1)
-        prev_observation = None
-    
-        buffer = 1600 # 80 fps * 20 seconds = 1600 game frames maximum
-        observations = np.zeros(( buffer, ) + observation_shape)
-        #observations = np.zeros(( buffer, 1 ))
-        actions = np.zeros(( buffer, 1 ))
-        rewards = np.zeros(( buffer ))
-        frame = 0
-        done = False
-        for game.frame in range(buffer):
-            #if game.episode % 50 == 0:
-            #    print(game.episode)
-            #while episodes < n_episodes:
-            #x = preprocess(observation)
-            #xs[k] = x - prev_frame if prev_frame is not None else np.zeros(im_shape)
-            #prev_frame = x        
-            #observations[frame] = prev_observation.astype(np.float)[:,:,None] # preprocess
-            #observations[frame] = prev_observation
-            # convert shape 19 to 19,1,1
-            observation = observation.reshape(-1,1)[:, np.newaxis]
-            #observations[game.frame] = prev_observation # working but not normalized
-            # normalize by only recording difference of past observations
-            observations[game.frame] = observation - prev_observation if prev_observation is not None else np.zeros(observation_shape)
-            #print()
-            #print(observations[frame])
-            #print()
-            prev_observation = observation
-            
-            #print(observations[frame][None,:,:,:])
-            # Take an action given current state of policy model
-            p = game.model.predict( observations[frame][None,:,:,:] )
-            #p = game.model.predict_classes( prev_observation )
-            #print('probabilities: %s' % (p))
-            #print()
-            if game.noise:
-                a = np.random.choice( game.n_actions, p=p[0] )
-            else:
-                a = np.argmax(p)
-            #action = action_space[a]
-            action = a
-            actions[game.frame] = a
-            
-            # Renew state of environment
-            observation, reward, done, _ = game.step(action)
-            #reward_sum += reward # record total rewards # game.score
-            rewards[game.frame] = reward # record reward per step
-            
-            if done:
-                reward_sums[game.episode] = game.score
-                
-                # trunc to actual gathered values
-                ep_observations = observations[:game.frame]
-                ep_actions = actions[:game.frame]
-                ep_rewards = rewards[:game.frame]
-                ep_rewards = discount_n_standardise(game, ep_rewards)
-
-                #print("training run...")
-                # batch size is probably how many frames to train per iteration
-                # so let's use all frames of the episode
-                # not (yet?) implemented in eol
-                if game.training and not game.arg_eol:
-                    game.model.fit(ep_observations, ep_actions, sample_weight=ep_rewards, batch_size=buffer, epochs=1, verbose=0)
-                
-                time_taken[game.episode] = game.frame
-                prev_observation = None
-                observation = game.reset()
-                if not game.arg_eol:
-                    # not (yet?) implemented in eol
-                    losses[game.episode] = game.model.evaluate(ep_observations, 
-                        ep_actions,
-                        sample_weight=ep_rewards,
-                        batch_size=len(ep_observations), 
-                        verbose=0)
-                #print(losses[game.episode])
-                
-                # Print out metrics like rewards, how long each episode lasted etc.
-                if not game.arg_eol and game.episode > 0 and game.episode % 100 == 0: # game.episode % ( game.n_episodes // 20 ) == 0:
-                    # not (yet?) implemented in eol
-                    game.arg_render = True
-                    ave_reward = np.mean(reward_sums[max(0,game.episode-200):game.episode])
-                    ave_loss = np.mean(losses[max(0,game.episode-200):game.episode])
-                    ave_time = np.mean(time_taken[max(0,game.episode-200):game.episode])
-                    acc_ratio = 0.0 + np.count_nonzero(actions == 1)/game.frame
-
-                    elapsed_time, elapsed_elma_time, unit = game.elapsed_time()
+def predict(game, observation):
+    #p = game.model.predict_classes( prev_observation )
+    return game.model.predict( observation[None,:,:,:] )
 
 
-                    print(game.GREEN + 'Episode: {0:d}/{1:d}, Average Loss: {2:.4f}, Average Reward: {3:.2f}, Average steps: {4:.0f}'
-                        .format(game.episode, game.n_episodes, ave_loss, ave_reward, ave_time))
-                    print('Acc ratio: %.2f' % acc_ratio
-                        + ', Real time: %.02f %s' % (elapsed_time, unit)
-                        + ', Elma time: %.02f %s' % (elapsed_elma_time, unit)
-                        + ', seed: %d' % (game.seed)
-                        + game.WHITE)
-                else:
-                    if not game.arg_test:
-                        game.arg_render = False
-                game.frame = 0
-                break
-        if not game.running:
-            # respond to exiting (after run complete)
-            break
-    game.episode += 1
-    print("leaving train_model, episode: %d/%d, done:%s, " % (game.episode, game.n_episodes, done))
-    """if game.training:
-        # perform a run based on current training
-        print("performing a batch run without noise...")
-        game.training = False
-        train_model(game) # test here
-        game.training = True"""
+def fit(game, ep_observations, ep_actions, sample_weight,
+        batch_size, epochs=1, verbose=0):
+    game.model.fit(ep_observations, ep_actions, sample_weight=sample_weight,
+                    batch_size=batch_size, epochs=epochs, verbose=verbose)
 
+def evaluate(game, ep_observations, ep_actions, sample_weight,
+            batch_size, verbose=0):
+    return game.model.evaluate(ep_observations, ep_actions,
+        sample_weight=sample_weight, batch_size=batch_size, verbose=verbose)
 
-#window = 20
-#plt.plot(losses[:episodes])
-#plt.plot(np.convolve(losses[:episodes], np.ones((window,))/window, mode='valid'))
-#plt.show()
-
-#plt.plot(reward_sums[:episodes])
-#plt.plot(np.convolve(reward_sums[:episodes], np.ones((window,))/window, mode='valid'))
-#plt.show()
 

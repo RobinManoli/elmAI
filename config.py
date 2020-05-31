@@ -31,6 +31,7 @@ class GUI:
 
         self.agentWidget = Listbox(self.top, exportselection=0)
         self.agentWidget.insert(END, 'CEM')
+        self.agentWidget.insert(END, 'Benchmark')
         self.agentWidget.select_set(0)
         self.agentWidget.pack(side=LEFT)
 
@@ -105,7 +106,7 @@ class GUI:
             self.start()
 
     def start(self):
-        # this setup of vars keep the possibility of having command line args intact
+        # this setup of vars might contain some legacy of old command line usage
         selected_level_index = self.levWidget.curselection()[0]
         selected_level_name = self.levWidget.get(selected_level_index)
         self.game.args.append(selected_level_name)
@@ -146,6 +147,7 @@ class GUI:
         #print(self.game.args)
 
         self.game.arg_cem = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 0 else False
+        self.game.arg_benchmark = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 1 else False
         self.game.arg_ddpg = False
         self.game.arg_rltf = False
 
