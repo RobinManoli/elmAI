@@ -36,7 +36,7 @@ def train_model(game):
     steps_per_episode = np.zeros(game.n_episodes)
     #print("initial reset %f" % (game.timesteptotal))
     observation = game.reset()
-    #print( observation )
+    print( observation )
 
     for game.episode in range(game.n_episodes):
         reward_sum = 0
@@ -87,6 +87,7 @@ def train_model(game):
             actions[game.frame] = a
             observation, reward, done, _ = game.step(action)
             rewards[game.frame] = reward # record reward per step
+            #print(reward)
             
             if done:
                 reward_sums[game.episode] = game.score

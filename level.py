@@ -185,8 +185,11 @@ class Level:
 
 
     def flower_distance(self, kuski_state):
-        body_x = kuski_state['body']['location']['x']
-        body_y = kuski_state['body']['location']['y']
+        #body_x = kuski_state['body']['location']['x']
+        body_x = kuski_state[0]
+        #body_y = kuski_state['body']['location']['y']
+        body_y = kuski_state[1]
+        #print("flower distance, flower x: %f, flower y: %f, body_x: %f, body_y: %f" % (self.flowers[0].x, self.flowers[0].y, body_x, body_y))
         return self.distance(self.flowers[0], body_x, body_y)
 
     def reward(self):
@@ -194,13 +197,17 @@ class Level:
         # and keep a time limit so that speed becomes a reward too
         #score = -0.1 # reduce score every frame, to penalize time # skip this because it could make gas only seem good
         score = 0
-        if self.game.kuski_state['finishedTime']:
+        #if self.game.kuski_state['finishedTime']:
+        if self.game.kuski_state[11] > 0:
             score += 40
             #finished_time = self.game.timesteptotal * self.game.realtimecoeff
-            finished_time = self.game.kuski_state['finishedTime'] / 100.0
+            #finished_time = self.game.kuski_state['finishedTime'] / 100.0
+            finished_time = self.game.kuski_state[11] / 100.0
             margin = (self.maxplaytime - finished_time) # bigger margin better score
             score +=  margin * margin * 30
-        elif self.game.kuski_state['isDead']:
+        #elif self.game.kuski_state['isDead']:
+        elif self.game.kuski_state[10] > 0:
+            #print("isDead: %f" % (self.game.kuski_state[10]))
             score -= 10
 
         if self.filename.lower() == 'ft.lev':

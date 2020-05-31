@@ -12,8 +12,26 @@
 phys::Level lev;
 phys::Engine *engine; // use a pointer because otherwise the class is initialized with default level
 
+double * observation(const phys::KuskiState *kuskiState){
+    static double arr[12];
+    arr[0] = kuskiState->body.location.x;
+    arr[1] = kuskiState->body.location.y;
+    arr[2] = kuskiState->leftWheel.location.x;
+    arr[3] = kuskiState->leftWheel.location.y;
+    arr[4] = kuskiState->rightWheel.location.x;
+    arr[5] = kuskiState->rightWheel.location.y;
+    arr[6] = kuskiState->headLocation.y;
+    arr[7] = kuskiState->headLocation.y;
+    arr[8] = kuskiState->body.rotation;
+    arr[9] = kuskiState->direction;
+    arr[10] = kuskiState->isDead;
+    arr[11] = kuskiState->finishedTime;
+    return arr;
+}
+
 //phys::Engine cinit(std::string path = "C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\1dg54.lev")
-phys::KuskiState cinit(std::string pathfilename)
+//phys::KuskiState cinit(std::string pathfilename)
+double * cinit(std::string pathfilename)
 {
     std::cout << "hi\n" << "loading lev: " << pathfilename << "\n";
     // Engine params currentLev(NULL), levelData(NULL), screenScrollDelay(0.5), turnAnimDelay(0.35), isSinglePlayer(1), flagTagMode(0)
@@ -34,7 +52,8 @@ phys::KuskiState cinit(std::string pathfilename)
     engine->initPhysicsEngine(lev); //initPhysicsEngine(phys::Level& lev); // also resets players
     //return engine;
     //std::cout << "\nLeave cinit: " << engine->getPlayer(0).body.location.x << ' ' << engine->getPlayer(0).body.location.y; // working
-    return engine->getPlayer(0);
+    //return engine->getPlayer(0); // working, but perhaps slow?
+    return observation( &engine->getPlayer(0) );
 }
 
 void restartLevel(){
@@ -44,7 +63,8 @@ void restartLevel(){
 
 // cinit must intialize engine before running nextFrameKuski
 //nextFrameKuski( inputKeys, timestep, time)
-phys::KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt, double timestep, double time)
+//phys::KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt, double timestep, double time)
+double * nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt, double timestep, double time)
 {
     // todo: send inputKeysPlayer1 from calling program
     std::vector<phys::InputKeys*> inputKeysArray;
@@ -76,7 +96,8 @@ phys::KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, 
     //std::cout << "\nAfter engine.nextFrame: " << engine.getPlayer(0).body.location.x << ' ' << engine.getPlayer(0).body.location.y; // working
     //if (engine.getPlayer(0).isDead) engine.resetPlayers(); // working but doesn't reset player to correct position
     //if (engine.getPlayer(0).isDead) engine.setPlayMode(1, 0); // same as above
-    return engine->getPlayer(0);
+    //return engine->getPlayer(0); // working, but perhaps slow?
+    return observation( &engine->getPlayer(0) );
 }
 
 // todo: receive filenames or have temp file names
@@ -90,9 +111,16 @@ bool saveReplay(std::string recFilenmae, std::string levFilename){
 
 int main()
 {
+    double * arr1;
+    double * arr2 ;
+
+    arr1 = cinit("C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\0lp31.lev");
+    std::cout << arr1[0] << " " << arr1[1] << "\n";
+
     for (int i = 0; i < 5; i++) {
         //std::cout << engine.nextFrameKuski(inputKeysArray, 0.01, 0.01); // int nextFrame(const std::vector<InputKeys*> p1keys, double timeStep, double time);
-        nextFrameKuski(1, 0, 0, 0, 0, 0, 0.01, 0.01);
+        arr2 = nextFrameKuski(1, 0, 0, 0, 0, 0, 0.00546, 0.01);
+        std::cout << arr2[0] << " " << arr2[1] << "\n";
     }
 
     //saveReplay();

@@ -53,7 +53,8 @@ class Game:
         self.finished = False
 
     def has_ended(self):
-        return self.kuski_state['isDead'] or self.kuski_state['finishedTime'] > 0
+        #return self.kuski_state['isDead'] or self.kuski_state['finishedTime'] > 0
+        return self.kuski_state[10] > 0 or self.kuski_state[11] > 0
     
     def end(self):
         #print("Ended level programatically")
@@ -81,11 +82,13 @@ class Game:
         #print('time: %.2f, score: %.2f, timesteptotal: %.2f' % (self.lasttime, self.score, self.timesteptotal))
         self.elmatimetotal += self.lasttime
         self.timesteptotal = 0.0
-        if self.kuski_state['isDead']:
+        #if self.kuski_state['isDead']:
+        if self.kuski_state[10] > 0:
             self.died = True
             #print('kuski died, time: %.2f, score: %.2f' % (self.lasttime, self.score))
             pass
-        elif self.kuski_state['finishedTime']:
+        #elif self.kuski_state['finishedTime']:
+        elif self.kuski_state[11] > 0:
             self.finished = True
             #print(
             #    self.VIOLET + 'lev completed, time: %.2f, score: %.2f, var finishedTime: %.2f, episode: %d'
@@ -138,7 +141,8 @@ class Game:
         if self.arg_eol:
             self.eol.reset(self)
             return self.eol.observation()[:self.n_observations]
-        return self.observation()[:self.n_observations]
+        #return self.observation()[:self.n_observations]
+        return self.kuski_state[:self.n_observations]
 
     # emulated openai env.method
     def step(self, action):
@@ -148,7 +152,8 @@ class Game:
         if self.arg_eol:
             observation = self.eol.observation()[:self.n_observations] # after action taken
         else:
-            observation = self.observation()[:self.n_observations] # after action taken
+            #observation = self.observation()[:self.n_observations] # after action taken
+            observation = self.kuski_state[:self.n_observations]
         reward = self.score_delta
         info = dict()
         return observation, reward, done, info
@@ -219,6 +224,7 @@ class Game:
 
 
     def observation(self):
+        pass
         # todo: instead of creating python dict kuski_state,
         # observation would probably be faster if returned from elmaphys.pyx
         # since many kuskistate values are not used MUCH elsewhere in code
@@ -230,7 +236,8 @@ class Game:
         # Point2D headLocation
         # Point2D headCenterLocation
 
-        body_x = self.kuski_state['body']['location']['x']
+        # observation optimized as array so no longer used
+        """body_x = self.kuski_state['body']['location']['x']
         body_y = self.kuski_state['body']['location']['y']
         #body_spd_x = self.kuski_state['body']['dword58']['x']
         #body_spd_y = self.kuski_state['body']['dword58']['y']
@@ -246,7 +253,7 @@ class Game:
         head_y = self.kuski_state['headLocation']['y']
         body_rot = self.kuski_state['body']['rotation']
         #body_rot_spd = self.kuski_state['body']['rotationSpeed']
-        direction = self.kuski_state['direction'] + 0.0 # int
+        direction = self.kuski_state['direction'] + 0.0 # int"""
 
 
         #lwr = self.kuski_state['leftWheel']['rotation']
@@ -280,7 +287,7 @@ class Game:
         # not used
         #char isThrottling
         #BikeState bikeState # contains animation, not sure if necessary
-        return np.array([body_x, body_y, lwx, lwy, rwx, rwy, head_x, head_y, body_rot, direction])
+        #return np.array([body_x, body_y, lwx, lwy, rwx, rwy, head_x, head_y, body_rot, direction])
         #return np.array([body_x, body_y, lwx, lwy, rwx, rwy, head_x, head_y, body_rot, direction, body_spd_x, body_spd_y, lw_spd_x, lw_spd_y, rw_spd_x, rw_spd_y, body_rot_spd])
         #return np.array([body_x, body_y, body_r, lwx, lwy, lwr, rwx, rwy, rwr, head_x, head_y, head_cx, head_cy, direction, gravityScrollDirection,
         #gravityDir, numTakenApples, changeDirPressedLast, lastRotationTime, pad4_x, pad4_y, pad, asd4, asd5, asdunk5, padz1, padz2, asd6, asd7, asd3, asd8, asdunk1, asdunk2])

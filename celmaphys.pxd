@@ -146,47 +146,49 @@ cdef extern from "smibu_phys/BodyPart.h" namespace "phys":
 cdef extern from "smibu_phys/KuskiState.cpp":
     pass
 cdef extern from "smibu_phys/KuskiState.h" namespace "phys":
-    #cdef struct BikeAnimationState:
-    #    int lastDirection
-    #    double turnBeginTime
-    #    double lastScrollBeginTime
-    #    double scrollProgress
-    #    double turnAnimProgress
-    #cdef struct BikeState:
-    #    double asdunk7
-    #    BikeAnimationState turndata
-    #    BikeAnimationState screenLocation
-    cdef struct KuskiState:
-        BodyPart body
-        BodyPart leftWheel
-        BodyPart rightWheel
-        Point2D headLocation
-        int direction
-        int finishedTime # 0 until level finished, also 0 if died -- not in observation space
-        bool isDead # not in observation space
-        # for ai
-        int gravityScrollDirection
-        int gravityDir
-        Point2D headCenterLocation
-        int numTakenApples
-        char isThrottling
-        double lastRotationTime
-        int changeDirPressedLast
-        #BikeState bikeState # contains animation, not sure if necessary
-        # unnamed
-        Point2D pad4
-        int pad
-        int asd4
-        int asd5
-        int asdunk5
-        double padz1
-        double padz2
-        double asd6
-        double asd7
-        double asd3
-        double asd8
-        double asdunk1
-        double asdunk2
+    pass
+    # below was used when kuskistate was used as python dict in game.py
+    ##cdef struct BikeAnimationState:
+    ##    int lastDirection
+    ##    double turnBeginTime
+    ##    double lastScrollBeginTime
+    ##    double scrollProgress
+    ##    double turnAnimProgress
+    ##cdef struct BikeState:
+    ##    double asdunk7
+    ##    BikeAnimationState turndata
+    ##    BikeAnimationState screenLocation
+    #cdef struct KuskiState:
+    #    BodyPart body
+    #    BodyPart leftWheel
+    #    BodyPart rightWheel
+    #    Point2D headLocation
+    #    int direction
+    #    int finishedTime # 0 until level finished, also 0 if died -- not in observation space
+    #    bool isDead # not in observation space
+    #    # for ai
+    #    int gravityScrollDirection
+    #    int gravityDir
+    #    Point2D headCenterLocation
+    #    int numTakenApples
+    #    char isThrottling
+    #    double lastRotationTime
+    #    int changeDirPressedLast
+    #    #BikeState bikeState # contains animation, not sure if necessary
+    #    # unnamed
+    #    Point2D pad4
+    #    int pad
+    #    int asd4
+    #    int asd5
+    #    int asdunk5
+    #    double padz1
+    #    double padz2
+    #    double asd6
+    #    double asd7
+    #    double asd3
+    #    double asd8
+    #    double asdunk1
+    #    double asdunk2
     #cdef cppclass KuskiState:
     #    pass
     #    KuskiState() except +
@@ -196,8 +198,8 @@ cdef extern from "smibu_phys/KuskiState.h" namespace "phys":
 cdef extern from "smibu_phys/ElmaPhys.cpp":
     #Engine init()
     # phys::KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt)
-    KuskiState cinit(string pathfilename)
+    double * cinit(string pathfilename)
     void restartLevel()
-    KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt, double timestep, double time)
+    double * nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt, double timestep, double time)
     bool saveReplay(string recFilenmae, string levFilename)
     #int main()
