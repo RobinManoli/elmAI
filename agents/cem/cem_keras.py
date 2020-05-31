@@ -27,10 +27,16 @@
 # in less than 600 episodes
 # run.py ribotai0.lev 1 cem render
 
-# success 5 - changing observations to:
+# success 5 - changing observations to n_observations 17:
 # 8 core positions + body rotation + speeds + direction
 # Processing 15 times faster than playing in realtime
+# note that this result was reached even with:
+# BUG here with prediction always on frame 0
 # almost same result as old observations:
+# git checkout 44935e0e4b2f91efcde541921d34922def761137
+# episode 0, lowscore: -1.89, time: 8.02, died: True, finished: False, seed 28460
+# episode 1, lowscore: -1.91, time: 8.31, died: True, finished: False, seed 28460
+# episode 2, lowscore: -2.04, time: 7.39, died: True, finished: False, seed 28460
 # time: 7.87 in 1332 episodes, seed 28460
 # time: 7.86 in 1354 episodes, seed 88148
 # time: 7.77 in 309 episodes after above, loaded with seed 41532

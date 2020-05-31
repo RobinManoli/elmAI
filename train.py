@@ -49,8 +49,12 @@ def train_model(game):
         # todo: do not initialize level in reward()
         if game.level.maxplaytime is None:
             game.level.reward() # initialize level
-        buffer = game.level.maxplaytime / (game.timestep*game.realtimecoeff) # max time * fps
-        buffer = int(np.ceil( buffer ))
+        if game.arg_eol:
+            buffer = game.level.maxplaytime * 1000 # time * eol fps
+        else:
+            # train
+            buffer = game.level.maxplaytime / (game.timestep*game.realtimecoeff) # max time * fps
+            buffer = int(np.ceil( buffer ))
         observations = np.zeros(( buffer, ) + observation_shape)
         actions = np.zeros(( buffer, 1 ))
         rewards = np.zeros(( buffer ))
@@ -69,7 +73,8 @@ def train_model(game):
             prev_observation = observation
 
             # get a list of probabilities for each action
-            p = game.training_mod.predict(game, observations[game.frame])
+            p = game.training_mod.predict(game, observations[game.frame]) # fixed bug
+            #p = game.training_mod.predict(game, observations[0]) # bug that actually produced good rec
             #print(observations[game.frame][None,:,:,:])
             #print('probabilities: %s' % (p))
             #print()

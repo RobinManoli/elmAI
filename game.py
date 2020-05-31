@@ -44,7 +44,7 @@ class Game:
         # append full list of elmainputs to send for each available game action
         self.actions = [[0, 0, 0, 0, 0, 0]]
         self.actions_str = '' # any letters of ABLRTS
-        self.n_observations = 17 # 33 # len(game.observation())
+        self.n_observations = 10 # len(game.observation())
         self.gamma = 0.99 # discount factor
         self.learning_rate = 0.01
         self.save_rec = False
@@ -232,20 +232,20 @@ class Game:
 
         body_x = self.kuski_state['body']['location']['x']
         body_y = self.kuski_state['body']['location']['y']
-        body_spd_x = self.kuski_state['body']['dword58']['x']
-        body_spd_y = self.kuski_state['body']['dword58']['y']
+        #body_spd_x = self.kuski_state['body']['dword58']['x']
+        #body_spd_y = self.kuski_state['body']['dword58']['y']
         lwx = self.kuski_state['leftWheel']['location']['x']
         lwy = self.kuski_state['leftWheel']['location']['y']
-        lw_spd_x = self.kuski_state['leftWheel']['dword58']['x']
-        lw_spd_y = self.kuski_state['leftWheel']['dword58']['y']
+        #lw_spd_x = self.kuski_state['leftWheel']['dword58']['x']
+        #lw_spd_y = self.kuski_state['leftWheel']['dword58']['y']
         rwx = self.kuski_state['rightWheel']['location']['x']
         rwy = self.kuski_state['rightWheel']['location']['y']
-        rw_spd_x = self.kuski_state['rightWheel']['dword58']['x']
-        rw_spd_y = self.kuski_state['rightWheel']['dword58']['y']
+        #rw_spd_x = self.kuski_state['rightWheel']['dword58']['x']
+        #rw_spd_y = self.kuski_state['rightWheel']['dword58']['y']
         head_x = self.kuski_state['headLocation']['x']
         head_y = self.kuski_state['headLocation']['y']
         body_rot = self.kuski_state['body']['rotation']
-        body_rot_spd = self.kuski_state['body']['rotationSpeed']
+        #body_rot_spd = self.kuski_state['body']['rotationSpeed']
         direction = self.kuski_state['direction'] + 0.0 # int
 
 
@@ -280,7 +280,8 @@ class Game:
         # not used
         #char isThrottling
         #BikeState bikeState # contains animation, not sure if necessary
-        return np.array([body_x, body_y, lwx, lwy, rwx, rwy, head_x, head_y, body_rot, direction, body_spd_x, body_spd_y, lw_spd_x, lw_spd_y, rw_spd_x, rw_spd_y, body_rot_spd])
+        return np.array([body_x, body_y, lwx, lwy, rwx, rwy, head_x, head_y, body_rot, direction])
+        #return np.array([body_x, body_y, lwx, lwy, rwx, rwy, head_x, head_y, body_rot, direction, body_spd_x, body_spd_y, lw_spd_x, lw_spd_y, rw_spd_x, rw_spd_y, body_rot_spd])
         #return np.array([body_x, body_y, body_r, lwx, lwy, lwr, rwx, rwy, rwr, head_x, head_y, head_cx, head_cy, direction, gravityScrollDirection,
         #gravityDir, numTakenApples, changeDirPressedLast, lastRotationTime, pad4_x, pad4_y, pad, asd4, asd5, asdunk5, padz1, padz2, asd6, asd7, asd3, asd8, asdunk1, asdunk2])
 

@@ -117,28 +117,28 @@ def process_observation(pid, base_addr):
 
         # 5 doubles before body_x
         body_rot = read_process_memory(pid, base_addr+0x539F8, ctype='double')[0]
-        body_rot_spd = read_process_memory(pid, base_addr+0x53A00, ctype='double')[0]
+        #body_rot_spd = read_process_memory(pid, base_addr+0x53A00, ctype='double')[0]
         # 104 or 0x68 bytes before lwx
         body_x = read_process_memory(pid, base_addr+0x53A20, ctype='double')[0]
         body_y = read_process_memory(pid, base_addr+0x53A28, ctype='double')[0]
         # previously self.vx and self.vy
         # meaning the sizeof Point2d (16 or 0x10) is probably correct
-        body_spd_x = read_process_memory(pid, base_addr+0x53A30, ctype='double')[0]
-        body_spd_y = read_process_memory(pid, base_addr+0x53A38, ctype='double')[0]
+        #body_spd_x = read_process_memory(pid, base_addr+0x53A30, ctype='double')[0]
+        #body_spd_y = read_process_memory(pid, base_addr+0x53A38, ctype='double')[0]
 
         # old values
         lwx = read_process_memory(pid, base_addr+0x53A88, ctype='double')[0]
         lwy = read_process_memory(pid, base_addr+0x53A90, ctype='double')[0]
         # add sizeof Point2d (16 or 0x10)
-        lw_spd_x = read_process_memory(pid, base_addr+0x53A98, ctype='double')[0]
-        lw_spd_y = read_process_memory(pid, base_addr+0x53AA0, ctype='double')[0]
+        #lw_spd_x = read_process_memory(pid, base_addr+0x53A98, ctype='double')[0]
+        #lw_spd_y = read_process_memory(pid, base_addr+0x53AA0, ctype='double')[0]
         # 104 or 0x68 bytes differ between lwx and rwx
         # old values
         rwx = read_process_memory(pid, base_addr+0x53AF0, ctype='double')[0]
         rwy = read_process_memory(pid, base_addr+0x53AF8, ctype='double')[0]
         # add sizeof Point2d (16 or 0x10)
-        rw_spd_x = read_process_memory(pid, base_addr+0x53B00, ctype='double')[0]
-        rw_spd_y = read_process_memory(pid, base_addr+0x53B08, ctype='double')[0]
+        #rw_spd_x = read_process_memory(pid, base_addr+0x53B00, ctype='double')[0]
+        #rw_spd_y = read_process_memory(pid, base_addr+0x53B08, ctype='double')[0]
         # KuskiState.h in simbu phys:
         # BodyPart leftWheel; // size 7x
         # BodyPart rightWheel;
@@ -177,7 +177,8 @@ def process_observation(pid, base_addr):
         #print(head_x, head_y)
     except IndexError:
         raise
-    return np.array([body_x, body_y, lwx, lwy, rwx, rwy, head_x, head_y, body_rot, direction, body_spd_x, body_spd_y, lw_spd_x, lw_spd_y, rw_spd_x, rw_spd_y, body_rot_spd])
+    return np.array([body_x, body_y, lwx, lwy, rwx, rwy, head_x, head_y, body_rot, direction])
+    #return np.array([body_x, body_y, lwx, lwy, rwx, rwy, head_x, head_y, body_rot, direction, body_spd_x, body_spd_y, lw_spd_x, lw_spd_y, rw_spd_x, rw_spd_y, body_rot_spd])
 
 # ---------------------------
 # from old elma-ai keyinput.py

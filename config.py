@@ -18,7 +18,7 @@ class GUI:
         self.levWidget.insert(END, 'ribotAI1.lev')
         self.levWidget.insert(END, 'ft.lev')
         self.levWidget.insert(END, 'ai.lev')
-        self.levWidget.select_set(1)
+        self.levWidget.select_set(0)
         self.levWidget.pack(side=LEFT)
 
         self.fpsWidget = Listbox(self.top, exportselection=0)
