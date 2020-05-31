@@ -1,4 +1,4 @@
-import sys, os.path, struct, math
+import sys, os.path, struct # math
 
 class Vertex:
     def __init__( self, x, y ):
@@ -178,10 +178,11 @@ class Level:
         print('first flower: %.02f, %.02f' % (self.flowers[0].x, self.flowers[0].y))
         print('reclink: %d' % (self.reclink))
 
-    def distance(self, obj, x, y):
-        dx = obj.x - x
-        dy = obj.y - y
-        return math.sqrt( dx*dx + dy*dy )
+    # recreated in ElmaPhys.cpp for speed
+    #def distance(self, obj, x, y):
+    #    dx = obj.x - x
+    #    dy = obj.y - y
+    #    return math.sqrt( dx*dx + dy*dy )
 
 
     def flower_distance(self, kuski_state):
@@ -214,8 +215,11 @@ class Level:
             self.maxplaytime = 20 # elma seconds to play a lev before exit
             self.hiscore = 45.0
             # starting distance = 61
-            distance = self.flower_distance(self.game.kuski_state)
-            prev_distance = self.flower_distance(self.game.prev_kuski_state)
+            #distance = self.flower_distance(self.game.kuski_state)
+            #prev_distance = self.flower_distance(self.game.prev_kuski_state)
+            distance = self.game.kuski_state[12]
+            prev_distance = self.game.prev_kuski_state[12]
+            
             # if distance now is larger than distance before: get a negative score
             score -= distance - prev_distance
             #print("prev_distance: %f, distance: %f" %(prev_distance, distance))
@@ -227,8 +231,10 @@ class Level:
                 self.hiscore = 60
             else:
                 self.hiscore = 180 # best score so far 200+ or 7.77s
-            distance = self.flower_distance(self.game.kuski_state)
-            prev_distance = self.flower_distance(self.game.prev_kuski_state)
+            #distance = self.flower_distance(self.game.kuski_state)
+            #prev_distance = self.flower_distance(self.game.prev_kuski_state)
+            distance = self.game.kuski_state[12]
+            prev_distance = self.game.prev_kuski_state[12]
             # if distance now is larger than distance before: get a negative score
             score -= distance - prev_distance
             #print("prev_distance: %f, distance: %f" %(prev_distance, distance))
@@ -237,8 +243,10 @@ class Level:
         elif self.filename.lower() == 'ribotai1.lev':
             self.maxplaytime = 20 # elma seconds to play a lev before exit
             self.hiscore = 100 # best score so far 194 or 7.86s
-            distance = self.flower_distance(self.game.kuski_state)
-            prev_distance = self.flower_distance(self.game.prev_kuski_state)
+            #distance = self.flower_distance(self.game.kuski_state)
+            #prev_distance = self.flower_distance(self.game.prev_kuski_state)
+            distance = self.game.kuski_state[12]
+            prev_distance = self.game.prev_kuski_state[12]
             # if distance now is larger than distance before: get a negative score
             score -= distance - prev_distance
             #print("prev_distance: %f, distance: %f" %(prev_distance, distance))
@@ -247,8 +255,10 @@ class Level:
         elif self.filename.lower() == 'ai.lev':
             self.maxplaytime = 0.1 # elma seconds to play a lev before exit
             self.hiscore = 100 # best score so far 194 or 7.86s
-            distance = self.flower_distance(self.game.kuski_state)
-            prev_distance = self.flower_distance(self.game.prev_kuski_state)
+            #distance = self.flower_distance(self.game.kuski_state)
+            #prev_distance = self.flower_distance(self.game.prev_kuski_state)
+            distance = self.game.kuski_state[12]
+            prev_distance = self.game.prev_kuski_state[12]
             # if distance now is larger than distance before: get a negative score
             score -= distance - prev_distance
             #print("prev_distance: %f, distance: %f" %(prev_distance, distance))

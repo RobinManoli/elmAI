@@ -70,6 +70,9 @@ def elmaphys_using_step():
     starttime = time.time()
     for episodes in range(15000):
         stepstart = time.time()
+        # inside step -> loop:
+        # game.act, game.has_ended and game.restart take significant time to process
+        # though act takes the most
         game.step(0)
         steptime = time.time() - stepstart
         steptimes.append(steptime)

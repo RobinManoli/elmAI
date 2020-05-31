@@ -210,7 +210,7 @@ class Game:
         else:
             self.kuski_state = self.elmaphys.next_frame( *params )
         #print(self.kuski_state)
-        #if self.has_ended():    
+        #if self.has_ended():
         #    self.restart()
         self.level.reward()
         self.timesteptotal += self.timestep

@@ -5,15 +5,17 @@
 
 #include "Engine.h"
 #include "Level.h"
+#include "Levobj.h"
 #include "KuskiState.h"
 #include "InputKeys.h"
 
 // init engine globally, so that cython doesn't have to declare phys::Engine
 phys::Level lev;
+phys::Levobj flower; // first flower
 phys::Engine *engine; // use a pointer because otherwise the class is initialized with default level
 
 double * observation(const phys::KuskiState *kuskiState){
-    static double arr[12];
+    static double arr[13];
     arr[0] = kuskiState->body.location.x;
     arr[1] = kuskiState->body.location.y;
     arr[2] = kuskiState->leftWheel.location.x;
@@ -26,6 +28,11 @@ double * observation(const phys::KuskiState *kuskiState){
     arr[9] = kuskiState->direction;
     arr[10] = kuskiState->isDead;
     arr[11] = kuskiState->finishedTime;
+
+    // body distance from first flower
+    double x_distance = flower.location.x - kuskiState->body.location.x;
+    double y_distance = flower.location.y - kuskiState->body.location.y;
+    arr[12] = sqrt( x_distance * x_distance + y_distance * y_distance );
     return arr;
 }
 
@@ -37,6 +44,13 @@ double * cinit(std::string pathfilename)
     // Engine params currentLev(NULL), levelData(NULL), screenScrollDelay(0.5), turnAnimDelay(0.35), isSinglePlayer(1), flagTagMode(0)
     //lev.loadFromPath("C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\0lp31.lev");
     lev.loadFromPath(pathfilename);
+    for (int i = 0; i < lev.objects.size(); i++) {
+        if ( lev.objects[i].objType == 1 ){
+            flower = lev.objects[i];
+            //std::cout << "found flower: " << flower.location.x;
+            break;
+        }
+    }
     //lev.loadFromPath("C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\qwquu002.lev"); // erroneous levhash - replays for this level become corrupt
     //inputKeys.InputKeys();
 
