@@ -9,6 +9,7 @@ class Game:
         self.eol = None
         self.np = np
         self.winsound = winsound
+        self.render_snapshots = []
 
         # to check this: make replay and store timesteptotal,
         # then check rec time in elma 12.53 28.67
@@ -193,6 +194,16 @@ class Game:
         # see above comment on rendering
         if self.arg_render and self.pygame is not None:
             self.draw.draw(self)
+            if self.arg_render_snapshot and self.frame % 10 == 0:
+                pathfilename = "snapshots/snapshot%03d.png" % self.frame
+                self.pygame.image.save(self.screen, pathfilename)
+                try:
+                    from PIL import Image
+                    im = Image.open(pathfilename)
+                    self.render_snapshots.append( im )
+                    print('Loaded %s for gif' % (im))
+                except:
+                    raise
         #print( elmaphys.next_frame() ) # segmentation fault after pygame.init()
         #print('game running: %s' % self.running )
         #time.sleep(1)

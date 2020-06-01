@@ -33,6 +33,8 @@ try:
         game.arg_ddpg = True if 'ddpg' in game.args else False #
         game.arg_rltf = True if 'rltf' in game.args else False # reinforcement learning tensorflow
 
+    game.arg_render_snapshot = False
+
     levfilename = game.args[1]
     game.level = level.Level(local.levpath, levfilename, game)
     #game.maxplaytime = int(game.args[2]) if game.args[2].isnumeric() else 0 # quit script after last run has exceeded this many seconds
@@ -133,6 +135,16 @@ try:
         print('Processing %.02f times faster than playing in realtime' % (elapsed_elma_time/elapsed_time))
     #print( len(game.observation()) )
     #print( game.observation() )
+
+    if game.training_mod is not None and game.pygame is not None:
+        print("storing snapshot...")
+        game.arg_render = True
+        game.arg_render_snapshot = True
+        game.reset()
+        train.train_model(game)
+        from PIL import Image
+        game.render_snapshots[0].save('snapshots/00.gif', save_all=True, append_images=game.render_snapshots[1:], duration=40)
+
     # make terminal output visible before automatically closing
     input("Press return to exit")
 

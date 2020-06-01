@@ -7,6 +7,8 @@ class GUI:
         self.master = Tk()
         self.master.title('Elma AI Config')
         self.master.bind("<KeyRelease>", self.keyup)
+        # works but makes double clicking episodes or seed start training
+        #self.master.bind('<Double-Button-1>', self.dblclick)
         self.top = Frame(self.master)
         self.top.pack(side=TOP)
         self.rightFrame = Frame(self.top)
@@ -101,10 +103,18 @@ class GUI:
         sys.exit()
 
     def keyup(self, e):
-        # print(e)
+        #print(e)
         # <KeyRelease event state=Mod1 keysym=Return keycode=13 char='\r' x=796 y=86>
         if e.keysym == 'Return':
             self.start()
+
+    def dblclick(self, e):
+        #print(e)
+        # <ButtonPress event state=Mod1 num=1 x=39 y=91>
+        self.start()
+
+    def noop(self, e):
+        pass
 
     def start(self):
         # this setup of vars might contain some legacy of old command line usage
