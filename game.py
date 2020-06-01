@@ -54,8 +54,8 @@ class Game:
         self.finished = False
 
     def has_ended(self):
-        #return self.kuski_state['isDead'] or self.kuski_state['finishedTime'] > 0
-        return self.kuski_state[10] > 0 or self.kuski_state[11] > 0
+        return self.kuski_state['isDead'] or self.kuski_state['finishedTime'] > 0
+        #return self.kuski_state[10] > 0 or self.kuski_state[11] > 0
     
     def end(self):
         #print("Ended level programatically")
@@ -83,13 +83,13 @@ class Game:
         #print('time: %.2f, score: %.2f, timesteptotal: %.2f' % (self.lasttime, self.score, self.timesteptotal))
         self.elmatimetotal += self.lasttime
         self.timesteptotal = 0.0
-        #if self.kuski_state['isDead']:
-        if self.kuski_state[10] > 0:
+        #if self.kuski_state[10] > 0:
+        if self.kuski_state['isDead']:
             self.died = True
             #print('kuski died, time: %.2f, score: %.2f' % (self.lasttime, self.score))
             pass
-        #elif self.kuski_state['finishedTime']:
-        elif self.kuski_state[11] > 0:
+        #elif self.kuski_state[11] > 0:
+        elif self.kuski_state['finishedTime']:
             self.finished = True
             #print(
             #    self.VIOLET + 'lev completed, time: %.2f, score: %.2f, var finishedTime: %.2f, episode: %d'
@@ -345,7 +345,7 @@ class Game:
 
     def init_pygame(self):
         import os, pygame, eventhandler, draw, gui, colors
-        os.environ['SDL_VIDEO_CENTERED'] = '1'
+        #os.environ['SDL_VIDEO_CENTERED'] = '1'
         pygame.init()
         pygame.display.set_caption('ElmAI')
         # pygame.event.set_blocked([pygame.KEYDOWN, pygame.KEYUP]) # block keydown that crashes phys? still crashing on keypress

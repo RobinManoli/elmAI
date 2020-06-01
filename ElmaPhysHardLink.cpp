@@ -8,6 +8,7 @@
 #include "Levobj.h"
 #include "KuskiState.h"
 #include "InputKeys.h"
+#include "ElmaPhysRibotAlg.h"
 
 // init engine globally, so that cython doesn't have to declare phys::Engine
 phys::Level lev;
@@ -37,8 +38,8 @@ double * observation(const phys::KuskiState *kuskiState){
 }
 
 //phys::Engine cinit(std::string path = "C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\1dg54.lev")
-//phys::KuskiState cinit(std::string pathfilename)
-double * cinit(std::string pathfilename)
+phys::KuskiState cinit(std::string pathfilename)
+//double * cinit(std::string pathfilename)
 {
     std::cout << "hi\n" << "loading lev: " << pathfilename << "\n";
     // Engine params currentLev(NULL), levelData(NULL), screenScrollDelay(0.5), turnAnimDelay(0.35), isSinglePlayer(1), flagTagMode(0)
@@ -66,8 +67,8 @@ double * cinit(std::string pathfilename)
     engine->initPhysicsEngine(lev); //initPhysicsEngine(phys::Level& lev); // also resets players
     //return engine;
     //std::cout << "\nLeave cinit: " << engine->getPlayer(0).body.location.x << ' ' << engine->getPlayer(0).body.location.y; // working
-    //return engine->getPlayer(0); // working, but perhaps slow?
-    return observation( &engine->getPlayer(0) );
+    return engine->getPlayer(0);
+    //return observation( &engine->getPlayer(0) ); // working, but not faster
 }
 
 void restartLevel(){
@@ -77,8 +78,8 @@ void restartLevel(){
 
 // cinit must intialize engine before running nextFrameKuski
 //nextFrameKuski( inputKeys, timestep, time)
-//phys::KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt, double timestep, double time)
-double * nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt, double timestep, double time)
+phys::KuskiState nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt, double timestep, double time)
+//double * nextFrameKuski(int accelerate, int brake, int left, int right, int turn, int supervolt, double timestep, double time)
 {
     // todo: send inputKeysPlayer1 from calling program
     std::vector<phys::InputKeys*> inputKeysArray;
@@ -110,8 +111,8 @@ double * nextFrameKuski(int accelerate, int brake, int left, int right, int turn
     //std::cout << "\nAfter engine.nextFrame: " << engine.getPlayer(0).body.location.x << ' ' << engine.getPlayer(0).body.location.y; // working
     //if (engine.getPlayer(0).isDead) engine.resetPlayers(); // working but doesn't reset player to correct position
     //if (engine.getPlayer(0).isDead) engine.setPlayMode(1, 0); // same as above
-    //return engine->getPlayer(0); // working, but perhaps slow?
-    return observation( &engine->getPlayer(0) );
+    return engine->getPlayer(0); // working
+    //return observation( &engine->getPlayer(0) ); // working but not faster
 }
 
 // todo: receive filenames or have temp file names
@@ -123,19 +124,26 @@ bool saveReplay(std::string recFilenmae, std::string levFilename){
     return true; // isn't returned if saveReplay crashes internally
 }
 
-int main()
+int main(int argc, char** argv)
 {
-    double * arr1;
-    double * arr2 ;
+    //double * arr1;
+    //double * arr2 ;
 
-    arr1 = cinit("C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\0lp31.lev");
-    std::cout << arr1[0] << " " << arr1[1] << "\n";
+    cinit("C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\ribotAI0.lev");
+    //arr1 = cinit("C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\ribotAI0.lev");
+    //std::cout << arr1[0] << " " << arr1[1] << "\n";
 
-    for (int i = 0; i < 5; i++) {
+    /*for (int i = 0; i < 5; i++) {
         //std::cout << engine.nextFrameKuski(inputKeysArray, 0.01, 0.01); // int nextFrame(const std::vector<InputKeys*> p1keys, double timeStep, double time);
         arr2 = nextFrameKuski(1, 0, 0, 0, 0, 0, 0.00546, 0.01);
         std::cout << arr2[0] << " " << arr2[1] << "\n";
+    }*/
+    int episodes = 1000;
+    if (argc > 1)
+    {
+        episodes = atoi(argv[1]);
     }
+    //ribotAlgorithm(engine, lev, flower, episodes); // does not work in python project
 
     //saveReplay();
     std::cout << "\n\nProgram completed.";

@@ -98,7 +98,7 @@ try:
     # todo, do not do this? needed now because level maxtimes are set inside rewards
     game.prev_kuski_state = game.kuski_state
     game.elmaphys = elmaphys
-    #print('kuski state: ' + str(game.kuski_state))
+    print('kuski state: ' + str(game.kuski_state))
 
     game.running = True
     game.starttime = time.time()

@@ -6,7 +6,7 @@ import random
 # Processing 163.43 times faster than playing in realtime
 # no idea how this happened as the code was all wrong
 
-
+print("Enter Ribot Algorithm")
 
 # optimal sequence of actions to take
 sequence = []
@@ -29,20 +29,23 @@ def predict(game, observation):
     # randominity happens in train,
     #if random.random() < 0.1:
     #    return random.choice[game.actions]
+    p = game.np.zeros( game.n_actions )
     if len(sequence) <= game.frame:
         # if sequence is too short, add gas only to the end of it
         # also make sure to take that action
         # so that in the begining gas only becomes a hiscore to beat
         sequence.append(1)
-        return game.np.array([[0.0, 1]])
-    if sequence[game.frame] == 0:
-        # if optimal action to take is noop, set it to 90% probability
-        return game.np.array([[0.95, 0.05]])
-    # otherwise set gas to 90%
-    return game.np.array([[0.05, 0.95]])
-    
-    # for n_action = 2, 70 % chance to hold gas
-    #return np.array([[0.3, 0.7]])
+        p[1] = 1 # set probability for gas first time 100%
+    else:
+        # if noise is 0.1 it means it's 90% chance to take sequence action
+        # and 10% distributed chance to take another
+        noise = 0 if game.arg_render else 0.1
+        for action in range(game.n_actions):
+            if sequence[game.frame] == action:
+                p[action] = 1 - noise
+            else:
+                p[action] = noise/(game.n_actions-1)
+    return game.np.array([p])
 
 
 def fit(game, ep_observations, ep_actions, sample_weight,
