@@ -7,7 +7,7 @@ class GUI:
         self.master = Tk()
         self.master.title('Elma AI Config')
         self.master.bind("<KeyRelease>", self.keyup)
-        # works but makes double clicking episodes or seed start training
+        # works but makes double clicking episodes or seed start training   
         #self.master.bind('<Double-Button-1>', self.dblclick)
         self.top = Frame(self.master)
         self.top.pack(side=TOP)
@@ -22,6 +22,7 @@ class GUI:
         self.levWidget.insert(END, 'ai.lev')
         self.levWidget.select_set(0)
         self.levWidget.pack(side=LEFT)
+        self.levWidget.bind('<Double-Button-1>', self.dblclick)
 
         self.fpsWidget = Listbox(self.top, exportselection=0)
         self.fpsWidget.insert(END, '30 fps')
@@ -30,6 +31,7 @@ class GUI:
         self.fpsWidget.insert(END, '1000 fps')
         self.fpsWidget.select_set(1)
         self.fpsWidget.pack(side=LEFT)
+        self.fpsWidget.bind('<Double-Button-1>', self.dblclick)
 
         self.agentWidget = Listbox(self.top, exportselection=0)
         self.agentWidget.insert(END, 'CEM')
@@ -37,6 +39,7 @@ class GUI:
         self.agentWidget.insert(END, 'Benchmark')
         self.agentWidget.select_set(1)
         self.agentWidget.pack(side=LEFT)
+        self.agentWidget.bind('<Double-Button-1>', self.dblclick)
 
         self.actionsWidget = Listbox(self.top, exportselection=0, selectmode=MULTIPLE)
         self.actionsWidget.insert(END, 'accelerate')
@@ -47,6 +50,7 @@ class GUI:
         self.actionsWidget.insert(END, 'supervolt')
         self.actionsWidget.select_set(0)
         self.actionsWidget.pack(side=LEFT)
+        self.actionsWidget.bind('<Double-Button-1>', self.dblclick)
 
         self.episodesLabel = Label(self.rightFrame, text="Episodes")
         self.episodesLabel.pack(anchor="w")
@@ -86,6 +90,7 @@ class GUI:
             self.loadWidget.insert(END, filename)
         self.loadWidget.select_set(0)
         self.loadWidget.pack()
+        self.loadWidget.bind('<Double-Button-1>', self.dblclick)
 
         self.doneButton = Button(self.master, text="START", height=10, command=self.start)
         self.doneButton.pack(fill=BOTH)
@@ -107,6 +112,8 @@ class GUI:
         # <KeyRelease event state=Mod1 keysym=Return keycode=13 char='\r' x=796 y=86>
         if e.keysym == 'Return':
             self.start()
+        elif e.keysym == 'Escape':
+            self.on_close()
 
     def dblclick(self, e):
         #print(e)
