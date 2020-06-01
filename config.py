@@ -4,6 +4,7 @@ import random, os
 class GUI:
     def __init__(self, game):
         self.game = game
+        self.db_init()
         self.master = Tk()
         self.master.title('Elma AI Config')
         self.master.bind("<KeyRelease>", self.keyup)
@@ -20,7 +21,7 @@ class GUI:
         self.levWidget.insert(END, 'ribotAI1.lev')
         self.levWidget.insert(END, 'ft.lev')
         self.levWidget.insert(END, 'ai.lev')
-        self.levWidget.select_set(0)
+        self.levWidget.select_set(self.setting['level'].int_value or 0)
         self.levWidget.pack(side=LEFT)
         self.levWidget.bind('<Double-Button-1>', self.dblclick)
 
@@ -29,15 +30,15 @@ class GUI:
         self.fpsWidget.insert(END, '80 fps')
         self.fpsWidget.insert(END, '500 fps')
         self.fpsWidget.insert(END, '1000 fps')
-        self.fpsWidget.select_set(1)
+        self.fpsWidget.select_set(self.setting['fps'].int_value or 0)
         self.fpsWidget.pack(side=LEFT)
         self.fpsWidget.bind('<Double-Button-1>', self.dblclick)
 
         self.agentWidget = Listbox(self.top, exportselection=0)
-        self.agentWidget.insert(END, 'CEM')
         self.agentWidget.insert(END, 'ribot algorithm')
         self.agentWidget.insert(END, 'Benchmark')
-        self.agentWidget.select_set(1)
+        self.agentWidget.insert(END, 'CEM')
+        self.agentWidget.select_set(self.setting['agent'].int_value or 0)
         self.agentWidget.pack(side=LEFT)
         self.agentWidget.bind('<Double-Button-1>', self.dblclick)
 
@@ -48,36 +49,33 @@ class GUI:
         self.actionsWidget.insert(END, 'right')
         self.actionsWidget.insert(END, 'turn')
         self.actionsWidget.insert(END, 'supervolt')
-        self.actionsWidget.select_set(0)
+        for value in self.setting['actions'].int_values:
+            self.actionsWidget.select_set(value)
         self.actionsWidget.pack(side=LEFT)
         self.actionsWidget.bind('<Double-Button-1>', self.dblclick)
 
         self.episodesLabel = Label(self.rightFrame, text="Episodes")
         self.episodesLabel.pack(anchor="w")
         self.episodesEntry = Entry(self.rightFrame)
-        self.episodesEntry.insert(0, 5000)
+        self.episodesEntry.insert(0, self.setting['episodes'].int_value or 5000 )
         self.episodesEntry.pack(anchor="w")
 
         self.seedLabel = Label(self.rightFrame, text="Seed")
         self.seedLabel.pack(anchor="w")
         self.seedEntry = Entry(self.rightFrame)
-        self.seedEntry.insert(0, self.game.seed)
+        self.seedEntry.insert(0, self.setting['seed'].int_value or 752958)
         self.seedEntry.pack(anchor="w")
         self.seedButton = Button(self.rightFrame, text="Generate", command=lambda: self.seedEntry.delete(0, END) == 0 or self.seedEntry.insert(0, random.randint(0,999999)))
         self.seedButton.pack(anchor="w")
 
-        self.arg_man = IntVar()
-        self.arg_render = IntVar()
-        self.arg_test = IntVar()
-        self.arg_eol = IntVar()
+        self.arg_man = IntVar( self.rightFrame, self.setting['man'].int_value )
+        self.arg_render = IntVar( self.rightFrame, self.setting['render'].int_value )
+        self.arg_test = IntVar( self.rightFrame, self.setting['test'].int_value )
+        self.arg_eol = IntVar( self.rightFrame, self.setting['eol'].int_value )
         self.manCheckbutton = Checkbutton(self.rightFrame, text="Play Manually", variable=self.arg_man)
         self.renderCheckbutton = Checkbutton(self.rightFrame, text="Render", variable=self.arg_render)
         self.testCheckbutton = Checkbutton(self.rightFrame, text="Test (don't train)", variable=self.arg_test)
         self.eolCheckbutton = Checkbutton(self.rightFrame, text="Play EOL", variable=self.arg_eol)
-        self.manCheckbutton.deselect()
-        self.renderCheckbutton.deselect()
-        self.testCheckbutton.deselect()
-        self.eolCheckbutton.deselect()
         self.manCheckbutton.pack(anchor="w")
         self.renderCheckbutton.pack(anchor="w")
         self.testCheckbutton.pack(anchor="w")
@@ -128,17 +126,20 @@ class GUI:
         selected_level_index = self.levWidget.curselection()[0]
         selected_level_name = self.levWidget.get(selected_level_index)
         self.game.args.append(selected_level_name)
+        self.setting['level'].update_record( int_value=selected_level_index )
 
         self.game.arg_fps30 = True if self.fpsWidget.curselection()[0] == 0 else False
         # default fps 80 not handled here as it is default
         self.game.arg_fps500 = True if self.fpsWidget.curselection()[0] == 2 else False
         self.game.arg_fps1000 = True if self.fpsWidget.curselection()[0] == 3 else False
+        self.setting['fps'].update_record( int_value=self.fpsWidget.curselection()[0] )
 
         # set before loading
         seed = self.seedEntry.get().strip()
         seed = int(seed) if seed.isnumeric() else 0
         if seed != self.game.seed:
             self.game.set_seed( seed )
+        self.setting['seed'].update_record( int_value=seed )
 
         #self.game.arg_load = True if self.loadWidget.curselection()[0] > 0 else False
         if self.loadWidget.curselection()[0] > 0:
@@ -156,6 +157,8 @@ class GUI:
             self.game.set_seed( int(seed_str) )
             #print(self.game.load)
 
+        n_episodes = self.episodesEntry.get()
+        self.setting['episodes'].update_record( int_value=int(n_episodes) )
         #self.game.n_episodes = self.episodesEntry.get() # set below
         self.game.args.append( self.episodesEntry.get() )
         self.game.arg_man = self.arg_man.get() == 1
@@ -163,12 +166,17 @@ class GUI:
         self.game.arg_test = self.arg_test.get() == 1
         self.game.arg_eol = self.arg_eol.get() == 1
         #print(self.game.args)
+        self.setting['man'].update_record( int_value=self.arg_man.get() )
+        self.setting['render'].update_record( int_value=self.arg_render.get() )
+        self.setting['test'].update_record( int_value=self.arg_test.get() )
+        self.setting['eol'].update_record( int_value=self.arg_eol.get() )
 
-        self.game.arg_cem = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 0 else False
-        self.game.arg_ribot = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 1 else False
-        self.game.arg_benchmark = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 2 else False
+        self.game.arg_cem = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 2 else False
+        self.game.arg_ribot = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 0 else False
+        self.game.arg_benchmark = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 1 else False
         self.game.arg_ddpg = False
         self.game.arg_rltf = False
+        self.setting['agent'].update_record( int_value=self.agentWidget.curselection()[0] )
 
         # [accelerate, brake, left, right, turn, supervolt]
         for selected_action in self.actionsWidget.curselection():
@@ -178,8 +186,26 @@ class GUI:
             self.game.actions.append(elmainputs)
             action_name = self.actionsWidget.get(selected_action)
             self.game.actions_str += action_name[0].upper()
-        print("actions: %s" % (self.game.actions_str))
+        print("actions: %s, %s" % (self.game.actions_str, self.actionsWidget.curselection()))
+        self.setting['actions'].update_record( int_value=None, int_values=self.actionsWidget.curselection() )
+
+        self.game.db.db.commit()
         self.master.destroy()
+
+    def db_init(self):
+        self.setting = dict()
+        db = self.game.db.db
+        for setting in ('seed', 'episodes', 'level', 'fps', 'agent', 'actions', 'man', 'render', 'test', 'eol'):
+            query = db.setting.name == setting
+            row = db(query).select().first()
+            if not row:
+                value = input("Value for %s (index for list value): " % (setting))
+                int_value = int(value) if value.isnumeric() else None
+                str_value = value if not value.isnumeric() else None
+                row_id = db.setting.insert( name=setting, str_value=str_value, int_value=int_value )
+                row = db.setting[row_id]
+                db.commit()
+            self.setting[setting] = row
 
 
 if __name__ == "__main__":

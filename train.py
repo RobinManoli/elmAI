@@ -31,16 +31,14 @@ def train_model(game):
     else:
         render = game.arg_render
     #buffer = 1600 # 80 fps * 20 seconds = 1600 game frames maximum
-    #print(game.level.maxplaytime, game.timestep, game.realtimecoeff)
-    # todo: do not initialize level in reward()
-    if game.level.maxplaytime is None:
-        game.level.reward() # initialize level
+    #print(game.level.db_row.maxplaytime, game.timestep, game.realtimecoeff)
     if game.arg_eol:
-        buffer = game.level.maxplaytime * 1000 # time * eol fps
+        buffer = game.level.db_row.maxplaytime * 1000 # time * eol fps
     else:
         # train
-        buffer = game.level.maxplaytime / (game.timestep*game.realtimecoeff) # max time * fps
+        buffer = game.level.db_row.maxplaytime / (game.timestep*game.realtimecoeff) # max time * fps
         buffer = int(np.ceil( buffer ))
+    #print(buffer)
 
     game.arg_render = render
     reward_sums = np.zeros(game.n_episodes)
@@ -58,7 +56,7 @@ def train_model(game):
 
     #print("initial reset %f" % (game.timesteptotal))
     observation = game.reset()
-    print( observation )
+    print( "first observation: %s" % (observation))
 
     for game.episode in range(game.n_episodes):
         reward_sum = 0

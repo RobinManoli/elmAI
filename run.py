@@ -135,15 +135,18 @@ try:
         print('Processing %.02f times faster than playing in realtime' % (elapsed_elma_time/elapsed_time))
     #print( len(game.observation()) )
     #print( game.observation() )
+    if game.training_mod and hasattr(game.training_mod, 'sequence'):
+        print("Ribot Sequence: %s" % (game.training_mod.sequence))
 
     if game.training_mod is not None and game.pygame is not None:
         print("storing snapshot...")
         game.arg_render = True
         game.arg_render_snapshot = True
+        game.n_episodes = 1
         game.reset()
         train.train_model(game)
         from PIL import Image
-        game.render_snapshots[0].save('snapshots/00.gif', save_all=True, append_images=game.render_snapshots[1:], duration=40)
+        game.render_snapshots[0].save('snapshots\\00.gif', save_all=True, append_images=game.render_snapshots[1:], duration=40)
 
     # make terminal output visible before automatically closing
     input("Press return to exit")

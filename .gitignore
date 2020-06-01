@@ -11,6 +11,11 @@ snapshots
 *.cpp
 *.lnk
 
+# pydal
+*.sqlite
+*.table
+
+
 local.py
 
 # ignore for now

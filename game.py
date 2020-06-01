@@ -1,5 +1,6 @@
 import time, random, winsound
-import numpy as np 
+import numpy as np
+import db
 
 class Game:
     def __init__(self):
@@ -9,6 +10,7 @@ class Game:
         self.eol = None
         self.np = np
         self.winsound = winsound
+        self.db = db
         self.render_snapshots = []
 
         # to check this: make replay and store timesteptotal,
@@ -96,7 +98,7 @@ class Game:
             #    self.VIOLET + 'lev completed, time: %.2f, score: %.2f, var finishedTime: %.2f, episode: %d'
             #    % (self.lasttime, self.score, self.kuski_state['finishedTime'], self.episode),
             #    self.WHITE)
-        if self.save_rec or self.level.hiscore and self.score > self.level.hiscore:
+        if self.save_rec or self.level.hiscore and self.score > self.level.db_row.hiscore:
             #self.elmaphys.save_replay("00x%s_%d_%s.rec" % (filenametime, self.score, random.randint(10,99)), self.level.filename) # working
             self.elmaphys.save_replay(self.rec_name(), self.level.filename) # working
             if self.model is not None:
@@ -111,6 +113,9 @@ class Game:
         if self.score > self.hiscore:
             self.winsound.Beep(1231, 123)
             self.hiscore = self.score
+            if self.score > self.level.db_row.hiscore:
+                self.level.db_row.update_record(hiscore=self.score)
+                self.db.db.commit()
             print(self.YELLOW + 'episode %d, hiscore: %.2f, time: %.2f, died: %s, finished: %s' % (self.episode, self.score, self.lasttime, self.died, self.finished) + self.WHITE)
         elif self.score < self.lowscore:
             self.lowscore = self.score
@@ -195,13 +200,13 @@ class Game:
         if self.arg_render and self.pygame is not None:
             self.draw.draw(self)
             if self.arg_render_snapshot and self.frame % 10 == 0:
-                pathfilename = "snapshots/snapshot%03d.png" % self.frame
+                pathfilename = "snapshots\\snapshot%03d.png" % self.frame
                 self.pygame.image.save(self.screen, pathfilename)
                 try:
                     from PIL import Image
                     im = Image.open(pathfilename)
                     self.render_snapshots.append( im )
-                    print('Loaded %s for gif' % (im))
+                    #print('Loaded %s for gif' % (im))
                 except:
                     raise
         #print( elmaphys.next_frame() ) # segmentation fault after pygame.init()
@@ -228,10 +233,10 @@ class Game:
         #    self.restart()
         self.level.reward()
         self.timesteptotal += self.timestep
-        #print(self.score_delta, self.timesteptotal, self.level.maxplaytime)
+        #print(self.score_delta, self.timesteptotal, self.level.db_row.maxplaytime)
         #print("episode: %d, score delta: %.2f, score: %.2f" % (self.episode, self.score_delta, self.score))
         # done is not yet implemented in eol
-        if not self.arg_eol and not self.arg_man and self.level.maxplaytime and self.timesteptotal * self.realtimecoeff > self.level.maxplaytime:
+        if not self.arg_eol and not self.arg_man and self.level.db_row.maxplaytime and self.timesteptotal * self.realtimecoeff > self.level.db_row.maxplaytime:
             #print('max play time over')
             return True
         return False
@@ -356,13 +361,19 @@ class Game:
 
     def init_pygame(self):
         import os, pygame, eventhandler, draw, gui, colors
+        from win32api import GetSystemMetrics
+
+        self.width = int( GetSystemMetrics(0)/2 )
+        self.height = int( GetSystemMetrics(1)/2 )
+        self.size = self.width, self.height
         #os.environ['SDL_VIDEO_CENTERED'] = '1'
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (self.width,0)
         pygame.init()
         pygame.display.set_caption('ElmAI')
         # pygame.event.set_blocked([pygame.KEYDOWN, pygame.KEYUP]) # block keydown that crashes phys? still crashing on keypress
         self.pygame = pygame
-        self.size = 800, 640
-        self.width, self.height = self.size
+        #self.size = 800, 640
+        #self.width, self.height = self.size
         self.screen = pygame.display.set_mode(self.size)
         # initialize font; must be called after 'pygame.init()' to avoid 'Font not Initialized' error
         self.font = pygame.font.SysFont("monospace", 18)
