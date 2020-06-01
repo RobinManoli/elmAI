@@ -98,12 +98,12 @@ class Game:
             #    self.VIOLET + 'lev completed, time: %.2f, score: %.2f, var finishedTime: %.2f, episode: %d'
             #    % (self.lasttime, self.score, self.kuski_state['finishedTime'], self.episode),
             #    self.WHITE)
-        if self.save_rec or self.level.hiscore and self.score > self.level.db_row.hiscore:
+        if self.save_rec or self.hiscore and self.score > self.level.db_row.hiscore:
             #self.elmaphys.save_replay("00x%s_%d_%s.rec" % (filenametime, self.score, random.randint(10,99)), self.level.filename) # working
             self.elmaphys.save_replay(self.rec_name(), self.level.filename) # working
+            self.winsound.Beep(1231, 123)
+            self.winsound.Beep(1231, 123)
             if self.model is not None:
-                self.winsound.Beep(1231, 123)
-                self.winsound.Beep(1231, 123)
                 print('saving keras model: ' + self.model_save_name())
                 self.model.save("keras_models\\" + self.model_save_name())
         #if self.maxplaytime and time.time() - self.starttime > self.maxplaytime:
