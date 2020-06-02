@@ -149,3 +149,57 @@ int main(int argc, char** argv)
     std::cout << "\n\nProgram completed.";
     return 0;
 }
+
+
+/*
+// benchmark code
+#include <chrono> 
+using namespace std::chrono; 
+const int FRAMES = 800; // 80 frames 10 seconds
+int (int argc, char** argv){
+    int frame = 0;
+    int actions[FRAMES];
+
+    int episodes = 1000;
+    if (argc > 1)
+    {
+        episodes = atoi(argv[1]); // exec.exe 2000 // to go 2000 runs
+    }
+
+    double timestep = 0.00546;  // fast play, 80 fps, fastest possible calculated physics according to jon
+    double episodetime = 0;
+    double elmatotaltime = 0;
+ 
+
+    std::vector<phys::InputKeys*> inputKeysArray;
+    phys::InputKeys inputKeysPlayer1 = phys::InputKeys(); // player1 of 2, probably local players
+    inputKeysPlayer1.accelerateKeyState = 1; // gas all the time is smart
+    inputKeysArray.push_back(&inputKeysPlayer1);
+
+    phys::Level lev;
+    // on this level death is assured soon, so there will be multiple episodes
+    lev.loadFromPath("C:\\Users\\Sara\\Desktop\\robin\\elma\\lev\\0lp31.lev");
+    phys::Engine engine;
+
+    std::cout << "Engine and lev loaded...\n";
+
+    auto start = high_resolution_clock::now(); 
+    for(int episode = 0; episode < episodes; episode++){
+        engine.initPhysicsEngine(lev); // restart lev
+        //std::cout << "Episode: " << episode + 1 << "\n";
+        for(frame = 0; frame < FRAMES; frame++){
+            //std::cout << "Frame: " << frame + 1 << "\n";
+            engine.nextFrame(inputKeysArray, timestep, episodetime);
+            if (engine.getPlayer(0).isDead || engine.getPlayer(0).finishedTime) break;
+            episodetime += timestep;
+            elmatotaltime += timestep * 2.2893772893772893772893772893773;
+        }
+     }
+    auto stop = high_resolution_clock::now(); 
+
+    auto duration = duration_cast<milliseconds>(stop - start);
+    double seconds = duration.count() / 1000.0;
+    std::cout << "Time: " << seconds << ", Elma time: " << elmatotaltime << ", Times fster than realtime: " << elmatotaltime/seconds << "X\n";
+    return 0;
+}
+*/

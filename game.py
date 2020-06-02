@@ -43,6 +43,7 @@ class Game:
         self.episode = 0
         self.n_episodes = 1
         self.n_actions = 1 # first action is noop
+        self.n_frames = 0
         # [accelerate, brake, left, right, turn, supervolt]
         # self.actions[0] is elmainputs for noop
         # append full list of elmainputs to send for each available game action
@@ -109,6 +110,11 @@ class Game:
         #if self.maxplaytime and time.time() - self.starttime > self.maxplaytime:
         #    self.running = False
 
+        outcome = ''
+        outcome = 'FINISHED' if self.finished else outcome
+        outcome = 'DIED' if self.died else outcome
+        output = 'episode %d, score: %.2f, time: %.2f, %s' % \
+            (self.episode, self.score, self.lasttime, outcome)
         self.last_score = self.score
         if self.score > self.hiscore:
             self.winsound.Beep(1231, 123)
@@ -116,14 +122,14 @@ class Game:
             if self.score > self.level.db_row.hiscore:
                 self.level.db_row.update_record(hiscore=self.score)
                 self.db.db.commit()
-            print(self.YELLOW + 'episode %d, hiscore: %.2f, time: %.2f, died: %s, finished: %s' % (self.episode, self.score, self.lasttime, self.died, self.finished) + self.WHITE)
+            print(self.YELLOW + output + self.WHITE)
         elif self.score < self.lowscore:
             self.lowscore = self.score
-            print(self.YELLOW + 'episode %d, lowscore: %.2f, time: %.2f, died: %s, finished: %s' % (self.episode, self.score, self.lasttime, self.died, self.finished) + self.WHITE)
+            #print(self.YELLOW + output + self.WHITE)
         if not self.training:
             # print this when periodical test runs happen, ie arg_render are set temporarily
             # or when playing manually
-            print('score: %.2f, time: %.2f, died: %s, finished: %s' % (self.score, self.lasttime, self.died, self.finished))
+            print(output)
         #print('episode %d, score: %.2f, time: %.2f' % (episode, self.score, self.timesteptotal * self.realtimecoeff))
         self.batch_hiscore = max(self.batch_hiscore, self.score)
         self.batch_lowscore = min(self.batch_lowscore, self.score)

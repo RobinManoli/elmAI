@@ -49,7 +49,7 @@ class GUI:
         self.actionsWidget.insert(END, 'right')
         self.actionsWidget.insert(END, 'turn')
         self.actionsWidget.insert(END, 'supervolt')
-        for value in self.setting['actions'].int_values:
+        for value in self.setting['actions'].int_values or [0]:
             self.actionsWidget.select_set(value)
         self.actionsWidget.pack(side=LEFT)
         self.actionsWidget.bind('<Double-Button-1>', self.dblclick)

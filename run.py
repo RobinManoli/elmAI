@@ -63,6 +63,10 @@ try:
     #game.timestep = 0.01 # very fast play, makes elma unstable and wheels going everywhere
     #game.timestep = 0.001 # slow play
 
+    # set n_frames before loading training_mod
+    n_frames = game.level.db_row.maxplaytime / (game.timestep*game.realtimecoeff) # max time * fps
+    game.n_frames = int(n_frames)
+
     training_mod = None
     if game.arg_benchmark:
         sys.path.append("agents\\")

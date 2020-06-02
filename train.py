@@ -36,8 +36,7 @@ def train_model(game):
         buffer = game.level.db_row.maxplaytime * 1000 # time * eol fps
     else:
         # train
-        buffer = game.level.db_row.maxplaytime / (game.timestep*game.realtimecoeff) # max time * fps
-        buffer = int(np.ceil( buffer ))
+        buffer = game.n_frames
     #print(buffer)
 
     game.arg_render = render
@@ -107,7 +106,8 @@ def train_model(game):
                 ep_observations = observations[:game.frame]
                 ep_actions = actions[:game.frame]
                 ep_rewards = rewards[:game.frame]
-                ep_rewards = discount_n_standardise(game, ep_rewards)
+                if game.frame > 0:
+                    ep_rewards = discount_n_standardise(game, ep_rewards)
 
                 #batch_observations[game.episode] = ep_observations
                 #batch_actions[game.episode] = ep_actions
@@ -147,7 +147,7 @@ def train_model(game):
                     avg_reward = np.mean(reward_sums[max(0,game.episode-200):game.episode])
                     avg_loss = np.mean(losses[max(0,game.episode-200):game.episode])
                     avg_steps = np.mean(steps_per_episode[max(0,game.episode-200):game.episode])
-                    acc_ratio = 0.0 + np.count_nonzero(actions == 1)/game.frame
+                    acc_ratio = 0.0 + np.count_nonzero(actions == 1)/game.frame if game.frame > 0 else 0
 
                     elapsed_time, elapsed_elma_time, unit = game.elapsed_time()
 
