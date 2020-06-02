@@ -57,12 +57,14 @@ class Sequence:
             self.prob_dists[frame].fill( noise_fraction ) # set all probabilities to noise
             self.prob_dists[frame][optimal_action] = 1 - noise # set optimal action probability
             #print( self.prob_dists[frame] )
-            selected_action = self.game.np.random.choice( self.game.n_actions, p=self.prob_dists[frame] )
-            self.distorted_actions[frame] = selected_action
+            #selected_action = self.game.np.random.choice( self.game.n_actions, p=self.prob_dists[frame] )
+            #self.distorted_actions[frame] = selected_action
 
     def evolve(self):
+        # not used because train.py only uses probabilities
         "Set distorted actions as optimal actions"
-        self.optimal_actions = self.distorted_actions
+        #self.optimal_actions = self.distorted_actions
+        pass
 
 
 class Agent:
@@ -125,7 +127,9 @@ def fit(game, ep_observations, ep_actions, sample_weight,
     global sequence
     #print(game.score)
     if game.score > game.hiscore:
-        agent.sequence.evolve()
+        #agent.sequence.evolve()
+        #print( agent.sequence.optimal_actions, ep_actions[:,0] )
+        agent.sequence.optimal_actions = ep_actions[:,0]
         """
         # if last one was a hiscore, update it as the optimal sequence
         #print(sequence)

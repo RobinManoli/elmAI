@@ -63,7 +63,7 @@ def train_model(game):
         prev_observation = None
     
         observations = np.zeros(( buffer, ) + observation_shape)
-        actions = np.zeros(( buffer, 1 ))
+        actions = np.zeros(( buffer, 1 ), game.np.int8)
         rewards = np.zeros(( buffer ))
         done = False
         for game.frame in range(buffer):
