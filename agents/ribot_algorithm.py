@@ -24,8 +24,17 @@ print('\33[92m' + "Enter Ribot Algorithm" + '\33[37m')
 
 class Sequence:
     "A sequence of actions to take"
-    def __init__(self, game, ones=True, serial=True):
+    def __init__(self, game, ones=True, serial=True, interval_length=300):
         self.game = game
+        # where the current interval starts (earlier frames are no fixed and no longer experimented with)
+        self.interval_start = 0
+        # number of frames to train at a time
+        # too short interval means a bad earlier action can never be improved
+        # such as a jump that was good at an earlier interval means for sure death at next
+        self.interval_length = interval_length
+        # how many episodes that have passed without improvements
+        self.unevolved_episodes = 0
+
         # ones means that at the start of the algorithm
         # all actions of this sequence is set to 1
         # otherwise they are all set to 0
@@ -46,16 +55,23 @@ class Sequence:
         # x frames, with n_actions per frame
         self.prob_dists = game.np.zeros(( self.game.n_frames, self.game.n_actions ))
 
+    def interval_end(self):
+        return self.interval_start + self.interval_length
+
+
+
+
     def distort_serial(self, noise=0.01):
         """
         Each frame has noise probability to do something else.
         Each action (except optimal one) has a fraction of noise probability to be chosen.
         """
         for frame, optimal_action in enumerate(self.optimal_actions):
+            n = noise if frame >= self.interval_start else 0
             #print(frame, optimal_action)
-            noise_fraction = noise / (self.game.n_actions-1) # distribute noise for all non-chosen actions
+            noise_fraction = n / (self.game.n_actions-1) # distribute noise for all non-chosen actions
             self.prob_dists[frame].fill( noise_fraction ) # set all probabilities to noise
-            self.prob_dists[frame][optimal_action] = 1 - noise # set optimal action probability
+            self.prob_dists[frame][optimal_action] = 1 - n # set optimal action probability
             #print( self.prob_dists[frame] )
             #selected_action = self.game.np.random.choice( self.game.n_actions, p=self.prob_dists[frame] )
             #self.distorted_actions[frame] = selected_action
@@ -90,10 +106,14 @@ def predict(game, observation):
     #global sequence
     #print(agent.sequence.optimal_actions)
     if game.frame == 0:
-        # first episode runs undistorted
+        # first episode and already trained frames act undistorted
         noise = 0 if game.episode == 0 else 0.01
         agent.sequence.distort_serial(noise=noise)
     p = agent.sequence.prob_dists[game.frame]
+
+    if game.frame == agent.sequence.interval_end():
+        game.die_programatically = True
+
     # probabilities need to be returned as first item in array
     return [p]
 
@@ -126,9 +146,12 @@ def fit(game, ep_observations, ep_actions, sample_weight,
         batch_size, epochs=1, verbose=0):
     global sequence
     #print(game.score)
+    agent.sequence.unevolved_episodes += 1
+
     if game.score > game.hiscore:
         #agent.sequence.evolve()
         #print( agent.sequence.optimal_actions, ep_actions[:,0] )
+        agent.sequence.unevolved_episodes = 0
         agent.sequence.optimal_actions = ep_actions[:,0]
         """
         # if last one was a hiscore, update it as the optimal sequence
@@ -139,6 +162,16 @@ def fit(game, ep_observations, ep_actions, sample_weight,
         sequence = list(ep_actions)
         #print("gas ratio after: %f" % (sum(sequence)/len(sequence)))
         """
+    elif agent.sequence.unevolved_episodes > 300:
+        game.winsound.Beep(1637, 123)
+        agent.sequence.unevolved_episodes = 0
+        # move the training interval forward half the interval length
+        agent.sequence.interval_start += int(agent.sequence.interval_length/2)
+        if agent.sequence.interval_start > game.n_frames:
+            print("Evolution complete at episode: %d" % (game.episode))
+            game.episode = game.n_episodes - 2
+        else:
+            print("Finished first %d frames, evolving forward..." % (agent.sequence.interval_start))
     
 
 def evaluate(game, ep_observations, ep_actions, sample_weight,

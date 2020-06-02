@@ -58,6 +58,7 @@ class Game:
         self.training = False
         self.died = False
         self.finished = False
+        self.die_programatically = False
 
     def has_ended(self):
         return self.kuski_state['isDead'] or self.kuski_state['finishedTime'] > 0
@@ -115,7 +116,7 @@ class Game:
         outcome = ''
         outcome = 'FINISHED' if self.finished else outcome
         outcome = 'DIED' if self.died else outcome
-        output = 'episode %d, score: %.2f, time: %.2f, %s' % \
+        output = 'episode %d, score: %.4f, time: %.3f, %s' % \
             (self.episode, self.score, self.lasttime, outcome)
         self.last_score = self.score
         if self.score > self.hiscore:
@@ -156,6 +157,7 @@ class Game:
         if self.arg_eol:
             self.eol.reset(self)
             return self.eol.observation()[:self.n_observations]
+        self.die_programatically = False
         #return self.observation()[:self.n_observations]
         #return self.kuski_state[:self.n_observations]
         return np.array(self.timesteptotal)
@@ -202,7 +204,7 @@ class Game:
         if self.arg_render and self.pygame is not None:
             self.handle_input()
 
-        done = self.act(actions)
+        done = self.act(actions) or self.die_programatically
 
         # see above comment on rendering
         if self.arg_render and self.pygame is not None:
