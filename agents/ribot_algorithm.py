@@ -20,11 +20,20 @@
 # beat some good human players of this battle https://elma.online/battles/152353
 # https://elma.online/r/qvw6j5erj6
 
+# SUCCESS actions=ALL ribotAI0.lev
+# Processing 149.69 times faster than playing in realtime
+# probability 99% to do optimal sequence
+# seed 777986
+# 7.71 after less than 1400 episodes, using actions=A
+# save and switch to actions=ALL
+# 7.44 in less than 5000 new episodes
+
+
 print('\33[92m' + "Enter Ribot Algorithm" + '\33[37m')
 
 class Sequence:
     "A sequence of actions to take"
-    def __init__(self, game, ones=True, serial=True, interval_length=300):
+    def __init__(self, game, ones=True, serial=True, interval_length=800):
         self.game = game
         # where the current interval starts (earlier frames are no fixed and no longer experimented with)
         self.interval_start = 0
@@ -54,6 +63,7 @@ class Sequence:
         # will be distorted on distortions
         # x frames, with n_actions per frame
         self.prob_dists = game.np.zeros(( self.game.n_frames, self.game.n_actions ))
+        self.initialize() # set probabilities
 
     def interval_end(self):
         return self.interval_start + self.interval_length
@@ -76,6 +86,9 @@ class Sequence:
             #selected_action = self.game.np.random.choice( self.game.n_actions, p=self.prob_dists[frame] )
             #self.distorted_actions[frame] = selected_action
 
+    def initialize(self):
+        self.distort_serial(noise=0)
+
     def evolve(self):
         # not used because train.py only uses probabilities
         "Set distorted actions as optimal actions"
@@ -83,12 +96,34 @@ class Sequence:
         pass
 
 
+    def save(self):
+        db = self.game.db.db
+        lev_id = self.game.level.db_row.id
+        query = db.level.id == lev_id
+        query &= db.sequence.seed == self.game.seed
+        row = db(query).select().first()
+        if not row:
+            row_id = db.sequence.insert( hiscore=self.game.score, episodes=self.game.episode+1, seed=self.game.seed, level=lev_id, actions=list(self.optimal_actions) )
+        else:
+            row.sequence.update_record( hiscore=self.game.score, episodes=self.game.episode+1, actions=list(self.optimal_actions) )
+        db.commit()
+
+    def load(self):
+        print("loading sequence: %d" % (self.game.load))
+        db = self.game.db.db
+        self.db_row = db.sequence[self.game.load]
+        self.optimal_actions = self.db_row.actions
+        self.game.episode = self.db_row.episodes
+        self.game.n_episodes += self.db_row.episodes
+        self.initialize() # set probabilities according to loaded actions
+        #print( self.prob_dists )
+
+
 class Agent:
     def __init__(self, game, serial=True):
         self.game = game
         if serial:
             self.sequence = Sequence(self.game, ones=True, serial=True)
-
 
 # todo: create class with different ways to progress, where serial and whole run are still possible
 # make evolutionary and whole runs, where whole is as below
@@ -100,6 +135,8 @@ agent = None
 def init_model(game):
     global agent
     agent = Agent(game, serial=True)
+    if game.load is not None:
+        agent.sequence.load()
 
 
 def predict(game, observation):
@@ -153,6 +190,11 @@ def fit(game, ep_observations, ep_actions, sample_weight,
         #print( agent.sequence.optimal_actions, ep_actions[:,0] )
         agent.sequence.unevolved_episodes = 0
         agent.sequence.optimal_actions = ep_actions[:,0]
+
+        if game.score > game.level.db_row.hiscore * 0.93:
+            # save if at least 93% of hiscore is reached
+            # agent.sequence.save()
+            pass
         """
         # if last one was a hiscore, update it as the optimal sequence
         #print(sequence)
@@ -162,7 +204,7 @@ def fit(game, ep_observations, ep_actions, sample_weight,
         sequence = list(ep_actions)
         #print("gas ratio after: %f" % (sum(sequence)/len(sequence)))
         """
-    elif agent.sequence.unevolved_episodes > 300:
+    elif agent.sequence.unevolved_episodes > 999999:
         game.winsound.Beep(1637, 123)
         agent.sequence.unevolved_episodes = 0
         # move the training interval forward half the interval length

@@ -12,6 +12,15 @@ db.define_table('level',
     Field('created', 'datetime', default=datetime.now()),
 )
 
+db.define_table('sequence',
+    Field('level', 'reference level'),
+    Field('hiscore', 'double'),
+    Field('episodes', 'integer'),
+    Field('seed', 'integer'),
+    Field('actions', 'list:integer'),
+    Field('created', 'datetime', default=datetime.now()),
+)
+
 db.define_table('setting',
     Field('name'),
     Field('str_value'),
@@ -25,14 +34,20 @@ def print_levels():
     for row in db(db.level.id > -1).select():
         print(row)
 
+def print_sequences():
+    for row in db(db.sequence.id > -1).select():
+        print(row)
+
 def print_settings():
     for row in db(db.setting.id > -1).select():
         print(row)
 
 if __name__ == '__main__':
-    print_levels()
-    print()
     print_settings()
+    print()
+    print_sequences()
+    print()
+    print_levels()
 
 """
 def votes( votee=None ):

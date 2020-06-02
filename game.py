@@ -107,9 +107,9 @@ class Game:
             self.elmaphys.save_replay(self.rec_name(), self.level.filename) # working
             self.winsound.Beep(1231, 123)
             self.winsound.Beep(1231, 123)
-            if self.model is not None:
-                print('saving keras model: ' + self.model_save_name())
-                self.model.save("keras_models\\" + self.model_save_name())
+            #if self.model is not None:
+            #    print('saving keras model: ' + self.model_save_name())
+            #    self.model.save("keras_models\\" + self.model_save_name())
         #if self.maxplaytime and time.time() - self.starttime > self.maxplaytime:
         #    self.running = False
 
@@ -367,7 +367,7 @@ class Game:
     def init_db(self):
         self.setting = dict()
         db = self.db.db
-        for setting in ('seed', 'episodes', 'level', 'fps', 'agent', 'actions', 'man', 'render', 'test', 'eol'):
+        for setting in ('seed', 'episodes', 'level', 'fps', 'agent', 'actions', 'man', 'render', 'test', 'eol', 'load'):
             query = db.setting.name == setting
             row = db(query).select().first()
             if not row:

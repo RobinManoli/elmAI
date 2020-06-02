@@ -65,6 +65,7 @@ try:
     # set n_frames before loading training_mod
     n_frames = game.level.db_row.maxplaytime / (game.timestep*game.realtimecoeff) # max time * fps
     game.n_frames = int(n_frames)
+    game.load = game.setting['load'].int_value
 
     print(game.setting['agent'].str_value)
     training_mod = None

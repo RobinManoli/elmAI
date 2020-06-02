@@ -3,6 +3,7 @@ import random, os
 
 class GUI:
     def __init__(self, game):
+        db = game.db.db
         self.game = game
         self.setting = self.game.setting
         self.master = Tk()
@@ -83,11 +84,13 @@ class GUI:
 
         self.loadWidget = Listbox(self.master, exportselection=0, width=100)
         self.loadWidget.insert(END, '')
-        for filename in os.listdir('keras_models'):
-            #self.loadWidget.insert(END, '00x786_194_ribotAI0.rec_seed88148_observations17_actionsA_lr0.010000_gamma0.990000_softmax_rmsprop_sparse_categorical_crossentropy')
-            self.loadWidget.insert(END, filename)
-        self.loadWidget.select_set(0)
-        #self.loadWidget.pack()
+        #for filename in os.listdir('keras_models'):
+        #    #self.loadWidget.insert(END, '00x786_194_ribotAI0.rec_seed88148_observations17_actionsA_lr0.010000_gamma0.990000_softmax_rmsprop_sparse_categorical_crossentropy')
+        #    self.loadWidget.insert(END, filename)
+        for row in db( db.sequence.id > 0).select(orderby=db.sequence.hiscore):
+            self.loadWidget.insert(END, "%.2f, ep: %d, seed: %d" % (row.hiscore, row.episodes, row.seed))
+        self.loadWidget.select_set(self.setting['load'].int_value or 0)
+        self.loadWidget.pack()
         self.loadWidget.bind('<Double-Button-1>', self.dblclick)
 
         self.doneButton = Button(self.master, text="START", height=10, command=self.start)
@@ -131,6 +134,11 @@ class GUI:
         selected_fps_name = self.fpsWidget.get(selected_fps_index)
         self.setting['fps'].update_record( int_value=selected_fps_index, str_value=selected_fps_name )
 
+        selected_load_index = self.loadWidget.curselection()[0]
+        selected_load_name = self.loadWidget.get(selected_load_index)
+        # todo: load properly, as this solution expects the widget id to match db id
+        self.setting['load'].update_record( int_value=selected_load_index, str_value=selected_load_name )
+
         # set before loading
         seed = self.seedEntry.get().strip()
         seed = int(seed) if seed.isnumeric() else 0
@@ -139,7 +147,7 @@ class GUI:
         #    self.game.set_seed( seed )
         self.setting['seed'].update_record( int_value=seed )
 
-        # todo: refactor load, and do not use game.load here
+        """
         # only update db here, and load settings in run
         #self.game.arg_load = True if self.loadWidget.curselection()[0] > 0 else False
         if self.loadWidget.curselection()[0] > 0:
@@ -156,6 +164,7 @@ class GUI:
             #print(seed_str)
             self.game.set_seed( int(seed_str) )
             #print(self.game.load)
+        """
 
         n_episodes = self.episodesEntry.get()
         self.setting['episodes'].update_record( int_value=int(n_episodes) )
