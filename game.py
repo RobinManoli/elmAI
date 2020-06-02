@@ -5,12 +5,14 @@ import db
 class Game:
     def __init__(self):
         self.set_terminal_colors()
-        self.set_seed()
+        self.db = db
+        self.init_db()
+        #self.set_seed()
         self.pygame = None
         self.eol = None
         self.np = np
         self.winsound = winsound
-        self.db = db
+        self.arg_render_snapshot = False
         self.render_snapshots = []
 
         # to check this: make replay and store timesteptotal,
@@ -358,6 +360,22 @@ class Game:
         self.GREEN2  = '\33[92m'
         self.BLUE2   = '\33[94m'
         self.WHITE2  = '\33[97m'
+
+
+    def init_db(self):
+        self.setting = dict()
+        db = self.db.db
+        for setting in ('seed', 'episodes', 'level', 'fps', 'agent', 'actions', 'man', 'render', 'test', 'eol'):
+            query = db.setting.name == setting
+            row = db(query).select().first()
+            if not row:
+                value = input("Value for %s (index for list value): " % (setting))
+                int_value = int(value) if value.isnumeric() else None
+                str_value = value if not value.isnumeric() else None
+                row_id = db.setting.insert( name=setting, str_value=str_value, int_value=int_value )
+                row = db.setting[row_id]
+                db.commit()
+            self.setting[setting] = row
 
 
     def init_eol(self):

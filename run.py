@@ -6,45 +6,44 @@ try:
     game = game.Game()
     game.args = sys.argv
 
-
-    # todo: bug or feature? with enough args number can be omitted and train forever
-    # todo: actions=ABLRTS?
-
-    if len(game.args) < 3:
+    if len(game.args) < 2:
         # the commandline args have been discontinued for now
         # as developing both them and a tkinter gui seems counter productive
-        #print("usage: %s 0lp31.lev 100 render man test fps30|fps500|fps1000 rltf|cem|ddpg" % (os.path.basename(__file__)))
-        #print("for running level 0lp31.lev, 100 episodes with chosen flags")
-        #print("order of flags dont matter")
-        #print("shortcut: %s 0lp31 <-- will play manually if no other flags" % (os.path.basename(__file__)))
-        #print("default flags: fps80")
+        print("Start GUI: %s" % (os.path.basename(__file__)))
+        print("Same settings as last time, but randomize seed: %s seed" % (os.path.basename(__file__)))
+        print("Same settings as last time, set n_episodes (todo: should continue if new seed not set): %s 1000" % (os.path.basename(__file__)))
         import config
         config.GUI(game)
-    else:
-        game.arg_man = True if 'man' in game.args else False # play manually
-        game.arg_render = True if 'render' in game.args or game.arg_man else False # render gfx with pygame
-        game.arg_test = True if 'test' in game.args else False # play manually
-        #game.arg_load = True if 'load' in game.args else False # play manually
-        game.arg_fps1000 = True if 'fps1000' in game.args else False
-        game.arg_fps500 = True if 'fps500' in game.args else False
-        game.arg_fps30 = True if 'fps30' in game.args else False
-        # in case of more cem implementations, they can here be called cem1, cem2, etc
-        game.arg_cem = True if 'cem' in game.args else False
-        game.arg_ddpg = True if 'ddpg' in game.args else False #
-        game.arg_rltf = True if 'rltf' in game.args else False # reinforcement learning tensorflow
+    game.arg_man = True if game.setting['man'].int_value == 1 else False # play manually
+    game.arg_render = True if game.setting['render'].int_value == 1 else False # render gfx with pygame
+    game.arg_test = True if game.setting['test'].int_value == 1 else False
+    game.arg_eol = True if game.setting['eol'].int_value == 1 else False
 
-    game.arg_render_snapshot = False
+    seed = None if 'seed' in game.args else game.setting['seed'].int_value
+    game.set_seed(seed)
+    game.setting['seed'].update_record( int_value=game.seed )
 
-    levfilename = game.args[1]
+    # [accelerate, brake, left, right, turn, supervolt]
+    for selected_action in game.setting['actions'].int_values:
+        game.n_actions += 1
+        elmainputs = [0, 0, 0, 0, 0, 0]
+        elmainputs[selected_action] = 1
+        game.actions.append(elmainputs)
+        action_names = 'ABLRTS'
+        game.actions_str += action_names[selected_action]
+    print("actions: %s" % (game.actions_str))
+
+    levfilename = game.setting['level'].str_value
     game.level = level.Level(local.levpath, levfilename, game)
     #game.maxplaytime = int(game.args[2]) if game.args[2].isnumeric() else 0 # quit script after last run has exceeded this many seconds
-    game.n_episodes = int(game.args[2]) if game.args[2].isnumeric() else 0 # quit script after last run has exceeded this many seconds
+    game.n_episodes = int(game.args[1]) if len(game.args) > 1 and game.args[1].isnumeric() else game.setting['episodes'].int_value
+    game.setting['episodes'].update_record( int_value=game.n_episodes )
 
-    if game.arg_fps30:
+    if '30' in game.setting['fps'].str_value.split(' '):
         game.timestep = 0.01456 # 30 fps, lowest eol framerate but too unstable here to use
-    elif game.arg_fps500:
+    elif '500' in game.setting['fps'].str_value.split(' '):
         game.timestep = 0.0008736 # 500 fps, okeol second candidate
-    elif game.arg_fps1000:
+    elif '1000' in game.setting['fps'].str_value.split(' '):
         game.timestep = 0.0004368 # 1000 fps, ultra slow motion, okeol first candidate
     elif game.arg_man:
         game.timestep = 0.002 # oke speed for playing manually, also this computer (Zazza) renders the game almost with same elma time as real time
@@ -67,24 +66,27 @@ try:
     n_frames = game.level.db_row.maxplaytime / (game.timestep*game.realtimecoeff) # max time * fps
     game.n_frames = int(n_frames)
 
+    print(game.setting['agent'].str_value)
     training_mod = None
-    if game.arg_benchmark:
+    if game.arg_man:
+        pass
+    elif 'benchmark' in game.setting['agent'].str_value.lower().split():
         sys.path.append("agents\\")
         #import cem_strange_rewards as training_mod
         import benchmark as training_mod
         training_mod.init_model(game)
-    elif game.arg_cem:
+    elif 'cem' in game.setting['agent'].str_value.lower().split():
         sys.path.append("agents\\cem\\")
         #import cem_strange_rewards as training_mod
         import cem_keras as training_mod
         training_mod.init_model(game)
-    elif game.arg_ddpg:
+    elif 'ddpg' in game.setting['agent'].str_value.lower().split():
         sys.path.append("agents\\ddpg_torch\\")
         import train as training_mod
-    elif game.arg_rltf:
+    elif 'rl_tf' in game.setting['agent'].str_value.lower().split():
         sys.path.append("agents\\")
         import rl_tf as training_mod
-    elif game.arg_ribot:
+    elif 'ribot' in game.setting['agent'].str_value.lower().split():
         sys.path.append("agents\\")
         import ribot_algorithm as training_mod
         training_mod.init_model(game)
@@ -106,6 +108,7 @@ try:
     game.elmaphys = elmaphys
     print('kuski state: ' + str(game.kuski_state))
 
+    game.db.db.commit()
     game.running = True
     game.starttime = time.time()
     if game.training_mod is not None:

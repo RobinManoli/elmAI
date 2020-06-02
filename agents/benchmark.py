@@ -3,6 +3,8 @@
 # without using any real model
 import numpy as np
 
+print('\33[92m' + "Enter Benchmark" + '\33[37m')
+
 def init_model(game):
     return
 

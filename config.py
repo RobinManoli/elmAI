@@ -4,7 +4,7 @@ import random, os
 class GUI:
     def __init__(self, game):
         self.game = game
-        self.db_init()
+        self.setting = self.game.setting
         self.master = Tk()
         self.master.title('Elma AI Config')
         self.master.bind("<KeyRelease>", self.keyup)
@@ -87,7 +87,7 @@ class GUI:
             #self.loadWidget.insert(END, '00x786_194_ribotAI0.rec_seed88148_observations17_actionsA_lr0.010000_gamma0.990000_softmax_rmsprop_sparse_categorical_crossentropy')
             self.loadWidget.insert(END, filename)
         self.loadWidget.select_set(0)
-        self.loadWidget.pack()
+        #self.loadWidget.pack()
         self.loadWidget.bind('<Double-Button-1>', self.dblclick)
 
         self.doneButton = Button(self.master, text="START", height=10, command=self.start)
@@ -125,22 +125,22 @@ class GUI:
         # this setup of vars might contain some legacy of old command line usage
         selected_level_index = self.levWidget.curselection()[0]
         selected_level_name = self.levWidget.get(selected_level_index)
-        self.game.args.append(selected_level_name)
-        self.setting['level'].update_record( int_value=selected_level_index )
+        self.setting['level'].update_record( int_value=selected_level_index, str_value=selected_level_name )
 
-        self.game.arg_fps30 = True if self.fpsWidget.curselection()[0] == 0 else False
-        # default fps 80 not handled here as it is default
-        self.game.arg_fps500 = True if self.fpsWidget.curselection()[0] == 2 else False
-        self.game.arg_fps1000 = True if self.fpsWidget.curselection()[0] == 3 else False
-        self.setting['fps'].update_record( int_value=self.fpsWidget.curselection()[0] )
+        selected_fps_index = self.fpsWidget.curselection()[0]
+        selected_fps_name = self.fpsWidget.get(selected_fps_index)
+        self.setting['fps'].update_record( int_value=selected_fps_index, str_value=selected_fps_name )
 
         # set before loading
         seed = self.seedEntry.get().strip()
         seed = int(seed) if seed.isnumeric() else 0
-        if seed != self.game.seed:
-            self.game.set_seed( seed )
+        # set seed in run.py
+        #if seed != self.game.seed:
+        #    self.game.set_seed( seed )
         self.setting['seed'].update_record( int_value=seed )
 
+        # todo: refactor load, and do not use game.load here
+        # only update db here, and load settings in run
         #self.game.arg_load = True if self.loadWidget.curselection()[0] > 0 else False
         if self.loadWidget.curselection()[0] > 0:
             selected_model_index = self.loadWidget.curselection()[0]
@@ -161,51 +161,21 @@ class GUI:
         self.setting['episodes'].update_record( int_value=int(n_episodes) )
         #self.game.n_episodes = self.episodesEntry.get() # set below
         self.game.args.append( self.episodesEntry.get() )
-        self.game.arg_man = self.arg_man.get() == 1
-        self.game.arg_render = self.arg_render.get() == 1 or self.game.arg_man
-        self.game.arg_test = self.arg_test.get() == 1
-        self.game.arg_eol = self.arg_eol.get() == 1
         #print(self.game.args)
         self.setting['man'].update_record( int_value=self.arg_man.get() )
         self.setting['render'].update_record( int_value=self.arg_render.get() )
         self.setting['test'].update_record( int_value=self.arg_test.get() )
         self.setting['eol'].update_record( int_value=self.arg_eol.get() )
 
-        self.game.arg_cem = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 2 else False
-        self.game.arg_ribot = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 0 else False
-        self.game.arg_benchmark = True if not self.game.arg_man and self.agentWidget.curselection()[0] == 1 else False
-        self.game.arg_ddpg = False
-        self.game.arg_rltf = False
-        self.setting['agent'].update_record( int_value=self.agentWidget.curselection()[0] )
+        selected_agent_index = self.agentWidget.curselection()[0]
+        selected_agent_name = self.agentWidget.get(selected_agent_index)
+        #print("agent: %d % s" % (selected_agent_index, selected_agent_name))
+        self.setting['agent'].update_record( int_value=selected_agent_index, str_value=selected_agent_name )
 
-        # [accelerate, brake, left, right, turn, supervolt]
-        for selected_action in self.actionsWidget.curselection():
-            self.game.n_actions += 1
-            elmainputs = [0, 0, 0, 0, 0, 0]
-            elmainputs[selected_action] = 1
-            self.game.actions.append(elmainputs)
-            action_name = self.actionsWidget.get(selected_action)
-            self.game.actions_str += action_name[0].upper()
-        print("actions: %s, %s" % (self.game.actions_str, self.actionsWidget.curselection()))
         self.setting['actions'].update_record( int_value=None, int_values=self.actionsWidget.curselection() )
 
         self.game.db.db.commit()
         self.master.destroy()
-
-    def db_init(self):
-        self.setting = dict()
-        db = self.game.db.db
-        for setting in ('seed', 'episodes', 'level', 'fps', 'agent', 'actions', 'man', 'render', 'test', 'eol'):
-            query = db.setting.name == setting
-            row = db(query).select().first()
-            if not row:
-                value = input("Value for %s (index for list value): " % (setting))
-                int_value = int(value) if value.isnumeric() else None
-                str_value = value if not value.isnumeric() else None
-                row_id = db.setting.insert( name=setting, str_value=str_value, int_value=int_value )
-                row = db.setting[row_id]
-                db.commit()
-            self.setting[setting] = row
 
 
 if __name__ == "__main__":
