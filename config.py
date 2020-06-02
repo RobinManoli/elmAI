@@ -20,6 +20,7 @@ class GUI:
         self.levWidget = Listbox(self.top, exportselection=0)
         self.levWidget.insert(END, 'ribotAI0.lev')
         self.levWidget.insert(END, 'ribotAI1.lev')
+        self.levWidget.insert(END, 'wu.lev')
         self.levWidget.insert(END, 'ft.lev')
         self.levWidget.insert(END, 'ai.lev')
         self.levWidget.select_set(self.setting['level'].int_value or 0)
@@ -137,6 +138,7 @@ class GUI:
         selected_load_index = self.loadWidget.curselection()[0]
         selected_load_name = self.loadWidget.get(selected_load_index)
         # todo: load properly, as this solution expects the widget id to match db id
+        # also load the seed of the sequence
         self.setting['load'].update_record( int_value=selected_load_index, str_value=selected_load_name )
 
         # set before loading

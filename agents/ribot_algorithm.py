@@ -28,11 +28,17 @@
 # save and switch to actions=ALL
 # 7.44 in less than 5000 new episodes
 
+# considering it would take incredibly long time to find good styles for recs
+# without a very precise scoring system
+# using recs for score is now attempted
+
 
 print('\33[92m' + "Enter Ribot Algorithm" + '\33[37m')
 
 class Sequence:
     "A sequence of actions to take"
+    # todo: paralel, to make multiple actions allowed at once
+    # todo: shuffle, which randomly moves actions forward or backward
     def __init__(self, game, ones=True, serial=True, interval_length=800):
         self.game = game
         # where the current interval starts (earlier frames are no fixed and no longer experimented with)
@@ -191,9 +197,9 @@ def fit(game, ep_observations, ep_actions, sample_weight,
         agent.sequence.unevolved_episodes = 0
         agent.sequence.optimal_actions = ep_actions[:,0]
 
-        if game.score > game.level.db_row.hiscore * 0.93:
+        if game.score > game.level.db_row.hiscore: # * 0.93:
             # save if at least 93% of hiscore is reached
-            # agent.sequence.save()
+            agent.sequence.save()
             pass
         """
         # if last one was a hiscore, update it as the optimal sequence

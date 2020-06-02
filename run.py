@@ -1,5 +1,5 @@
 import sys, time, os
-import game, level, local, train
+import game, level, local, train, rec
 
 try:
     os.system('color') # init colors early in script
@@ -15,7 +15,7 @@ try:
         import config
         config.GUI(game)
     game.arg_man = True if game.setting['man'].int_value == 1 else False # play manually
-    game.arg_render = True if game.setting['render'].int_value == 1 else False # render gfx with pygame
+    game.arg_render = True if game.setting['render'].int_value == 1 or game.arg_man else False # render gfx with pygame
     game.arg_test = True if game.setting['test'].int_value == 1 else False
     game.arg_eol = True if game.setting['eol'].int_value == 1 else False
 
@@ -35,6 +35,7 @@ try:
 
     levfilename = game.setting['level'].str_value
     game.level = level.Level(local.levpath, levfilename, game)
+    game.rec = rec.Rec(local.recpath, levfilename.replace('.lev', '.rec'), game)
     #game.maxplaytime = int(game.args[2]) if game.args[2].isnumeric() else 0 # quit script after last run has exceeded this many seconds
     game.n_episodes = int(game.args[1]) if len(game.args) > 1 and game.args[1].isnumeric() else game.setting['episodes'].int_value
     game.setting['episodes'].update_record( int_value=game.n_episodes )
