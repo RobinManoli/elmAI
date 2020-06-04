@@ -89,6 +89,10 @@ class Game:
         return filename
 
     def restart(self):
+        if self.arg_eol:
+            # as eol doesn't have kuski_state as dict() implemented
+            return
+
         self.lasttime = self.timesteptotal * self.realtimecoeff
         #print('time: %.2f, score: %.2f, timesteptotal: %.2f' % (self.lasttime, self.score, self.timesteptotal))
         self.elmatimetotal += self.lasttime
@@ -157,20 +161,21 @@ class Game:
     # emulate openai env.method
     def reset(self):
         # check if game has progressed (don't restart if resetting as first action in agent)
+        #print("game.reset, ep: %d, frame: %d" % (self.episode, self.frame))
+        self.die_programatically = False # before return
         if self.timesteptotal > 0:
             self.restart()
         if self.arg_eol:
             self.eol.reset(self)
             return self.eol.observation()[:self.n_observations]
-        self.die_programatically = False
         #return self.observation()[:self.n_observations]
         #return self.kuski_state[:self.n_observations]
         return np.array(self.timesteptotal)
 
     # emulated openai env.method
     def step(self, action):
-        elmainputs = self.actions[action] # [0, 0, ...]
-        #print(elmainputs)
+        elmainputs = self.actions[action][:] # [0, 0, ...]
+        #print(self.episode, self.frame, action, elmainputs)
         done = self.loop(elmainputs)
         if self.arg_eol:
             observation = self.eol.observation()[:self.n_observations] # after action taken
@@ -251,13 +256,17 @@ class Game:
         if actions is None:
             actions = self.input
 
+        #print(self.episode, self.frame, actions)
         # self.input = [0, 0, 0, 0, 0, 0]
         # [accelerate, brake, left, right, turn, supervolt]
         # start right automatically, even if turn button is not included in agent actions
-        if not self.arg_man and self.frame == 0 and self.level.db_row.start_right:
+        if self.rec is None and not self.arg_man and self.frame == 0 and self.level.db_row.start_right:
             actions[4] = 1
+            #print(self.episode, self.frame, actions)
+            pass
 
         params = actions + [self.timestep, self.timesteptotal]
+        #print(self.frame, params)
         if self.arg_eol:
             self.kuski_state = self.eol.next_frame( self, *params )
         else:

@@ -212,6 +212,13 @@ class Level:
         # and keep a time limit so that speed becomes a reward too
         #score = -0.1 # reduce score every frame, to penalize time # skip this because it could make gas only seem good
         #score = -0.0001 # slight score reduction every frame
+        if self.game.arg_eol:
+            # as eol doesn't have kuski_state as dict() implemented, and doesn't train anyway
+            # return some values to not cause calculation errors in train.py
+            import random
+            self.game.score_delta = random.random()
+            self.game.score += self.game.score_delta
+            return self.game.score_delta
 
         # score should not be 0 to avoid std errors: RuntimeWarning: invalid value encountered in true_divide
 

@@ -33,7 +33,7 @@ def train_model(game):
     #buffer = 1600 # 80 fps * 20 seconds = 1600 game frames maximum
     #print(game.level.db_row.maxplaytime, game.timestep, game.realtimecoeff)
     if game.arg_eol:
-        buffer = game.level.db_row.maxplaytime * 1000 # time * eol fps
+        buffer = game.level.db_row.maxplaytime * game.fps # time * eol fps
         buffer = int(buffer)
     else:
         # train
@@ -59,6 +59,7 @@ def train_model(game):
     print( "first observation: %s" % (observation))
 
     for game.episode in range(game.n_episodes):
+        #print("starting episode: %d, frame: %d" % (game.episode, game.frame))
         reward_sum = 0
         #im_shape = (80, 80, 1)
         prev_observation = None
@@ -146,21 +147,22 @@ def train_model(game):
                 if not game.arg_eol and game.episode % 100 == 0: # game.episode % ( game.n_episodes // 20 ) == 0:
                     # not (yet?) implemented in eol
                     game.arg_render = True
-                    avg_reward = np.mean(reward_sums[max(0,game.episode-200):game.episode])
-                    avg_loss = np.mean(losses[max(0,game.episode-200):game.episode])
-                    avg_steps = np.mean(steps_per_episode[max(0,game.episode-200):game.episode])
-                    acc_ratio = 0.0 + np.count_nonzero(actions == 1)/game.frame if game.frame > 0 else 0
+                    if game.episode > 0:
+                        avg_reward = np.mean(reward_sums[max(0,game.episode-200):game.episode])
+                        avg_loss = np.mean(losses[max(0,game.episode-200):game.episode])
+                        avg_steps = np.mean(steps_per_episode[max(0,game.episode-200):game.episode])
+                        acc_ratio = 0.0 + np.count_nonzero(actions == 1)/game.frame if game.frame > 0 else 0
 
-                    elapsed_time, elapsed_elma_time, unit = game.elapsed_time()
+                        elapsed_time, elapsed_elma_time, unit = game.elapsed_time()
 
 
-                    print(game.GREEN + 'Episode: {0:d}/{1:d}, Average Loss: {2:.4f}, Average Reward: {3:.2f}, Average steps: {4:.0f}'
-                        .format(game.episode, game.n_episodes, avg_loss, avg_reward, avg_steps))
-                    print('Acc ratio: %.2f' % acc_ratio
-                        + ', Real time: %.02f %s' % (elapsed_time, unit)
-                        + ', Elma time: %.02f %s' % (elapsed_elma_time, unit)
-                        + ', seed: %d' % (game.seed)
-                        + game.WHITE)
+                        print(game.GREEN + 'Episode: {0:d}/{1:d}, Average Loss: {2:.4f}, Average Reward: {3:.2f}, Average steps: {4:.0f}'
+                            .format(game.episode, game.n_episodes, avg_loss, avg_reward, avg_steps))
+                        print('Acc ratio: %.2f' % acc_ratio
+                            + ', Real time: %.02f %s' % (elapsed_time, unit)
+                            + ', Elma time: %.02f %s' % (elapsed_elma_time, unit)
+                            + ', seed: %d' % (game.seed)
+                            + game.WHITE)
                 else:
                     if not game.arg_test:
                         game.arg_render = False

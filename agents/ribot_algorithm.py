@@ -163,13 +163,17 @@ class Sequence:
         from elma.models import TurnEvent
         print("loading sequence from rec: %s" % (self.game.rec))
         for event in self.game.rec.events:
-            frame = math.ceil(event.time * 80)
-            #print(event, frame)
+            frame = math.ceil(event.time * self.game.fps)
+            if type(event) in (LeftVoltEvent, RightVoltEvent, TurnEvent):
+                #print(event, frame)
+                pass
             # [accelerate, brake, left, right, turn, supervolt]
             self.optimal_actions[frame] = 3 if type(event) == LeftVoltEvent and self.optimal_actions[frame] == 1 else self.optimal_actions[frame]
             self.optimal_actions[frame] = 4 if type(event) == RightVoltEvent else self.optimal_actions[frame]
             self.optimal_actions[frame] = 5 if type(event) == TurnEvent else self.optimal_actions[frame]
             self.optimal_actions[frame] = 6 if type(event) == LeftVoltEvent and self.optimal_actions[frame] == RightVoltEvent else self.optimal_actions[frame]
+            #print( "set action %d for frame %d" % (self.optimal_actions[frame], frame) )
+        self.initialize()
 
 class Agent:
     def __init__(self, game, serial=True, interval_length=800, patience=2500):
@@ -186,7 +190,8 @@ class Agent:
 agent = None
 def init_model(game):
     global agent
-    agent = Agent(game, serial=True, interval_length=800, patience=100)
+    # set interval to huge to turn interval training off
+    agent = Agent(game, serial=True, interval_length=800, patience=2500)
     if game.rec is not None:
         agent.sequence.load_from_rec()
     if game.load is not None:

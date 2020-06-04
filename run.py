@@ -67,7 +67,10 @@ try:
         # default timestep
         game.timestep = 0.00546 # fast play, 80 fps, fastest possible calculated physics according to jon, as slower than this does double or more physics iteration per step
 
-    print("fps: %f" % ( 1/(game.timestep*game.realtimecoeff) ))
+    game.realtimestep = game.timestep * game.realtimecoeff
+    game.fps = 1 / (game.timestep * game.realtimecoeff)
+    game.fps = int( game.fps )
+    print("fps: %d" % ( 1/(game.timestep*game.realtimecoeff) ))
 
     # calc timestep for fps
     # 1/30/2,2893772893772893772893772893773 = 0,01456

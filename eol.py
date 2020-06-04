@@ -275,8 +275,11 @@ def observation():
 
 def reset(game):
     # check if game has progressed (don't restart if resetting as first action in agent)
+    #print("eol reset")
     if game.timesteptotal > 0:
         Key(DIK_ESCAPE, 0.1) # restart
+    # elma probably has 1 second wait after death, so put game on hold, and proceed AFTER that
+    time.sleep(1)
     Key(DIK_RETURN) # start
     return observation()
 
@@ -310,7 +313,10 @@ def next_frame(game, accelerate, brake, left, right, turn, supervolt, timestep, 
     # time to hold down keys, to make sure eol receives them
     # maybe supervolt was buggy because not holding down keys enough?
     # ( happened during sleep(0) )
-    time.sleep(0.01)
+    #time.sleep(0.01)
+    min_sleep = 0.01 # minimum sleep for keypresses to register
+    sleep = game.realtimestep - 0.001 # avg fix for K53s
+    time.sleep(max( min_sleep, sleep ))
     toggle_keys(ReleaseKey, accelerate, brake, left, right, turn, supervolt)
     game.timestep = time.time() - starttime
     #print(game.timestep)
