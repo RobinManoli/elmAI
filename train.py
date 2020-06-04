@@ -34,6 +34,7 @@ def train_model(game):
     #print(game.level.db_row.maxplaytime, game.timestep, game.realtimecoeff)
     if game.arg_eol:
         buffer = game.level.db_row.maxplaytime * 1000 # time * eol fps
+        buffer = int(buffer)
     else:
         # train
         buffer = game.n_frames
@@ -123,6 +124,7 @@ def train_model(game):
                     #if game.training and not game.arg_eol and game.episode % 100 == 99:
                     # train every 100 episodes (0, 1, 2, ..., 99)
                     #print("training %d..." % (game.episode))
+                    #print( "body x: %f, body y: %f" % (game.kuski_state['body']['location']['x'], game.kuski_state['body']['location']['y']))
                     game.training_mod.fit(game, ep_observations, ep_actions,
                         sample_weight=ep_rewards, batch_size=buffer,
                         epochs=1, verbose=0)
@@ -141,7 +143,7 @@ def train_model(game):
                 #print(losses[game.episode])
 
                 # Print out metrics like rewards, how long each episode lasted etc.
-                if not game.arg_eol and game.episode > 0 and game.episode % 100 == 0: # game.episode % ( game.n_episodes // 20 ) == 0:
+                if not game.arg_eol and game.episode % 100 == 0: # game.episode % ( game.n_episodes // 20 ) == 0:
                     # not (yet?) implemented in eol
                     game.arg_render = True
                     avg_reward = np.mean(reward_sums[max(0,game.episode-200):game.episode])

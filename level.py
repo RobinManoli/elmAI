@@ -1,4 +1,4 @@
-import sys, os.path, struct, math
+import sys, os.path, struct#, math
 
 class Vertex:
     def __init__( self, x, y ):
@@ -67,8 +67,8 @@ class Level:
         self.filename = None
         self.name = ""
         self.reclink = None
-        self.maxplaytime = None
-        self.hiscore = None # save recs and progress when this hiscore is beaten
+        #self.maxplaytime = None
+        #self.hiscore = None # save recs and progress when this hiscore is beaten
 
         if path and filename:
             self.read(path, filename)
@@ -191,14 +191,12 @@ class Level:
                 db.commit()
         self.db_row = lev_row
 
-
-
-
     def distance(self, obj, x, y):
         dx = obj.x - x
         dy = obj.y - y
-        return math.sqrt( dx*dx + dy*dy )
-
+        #return math.sqrt( dx*dx + dy*dy )
+        # faster than sqrt and correct
+        return dx*dx + dy*dy
 
     def flower_distance(self, kuski_state):
         body_x = kuski_state['body']['location']['x']
@@ -209,10 +207,22 @@ class Level:
         return self.distance(self.flowers[0], body_x, body_y)
 
     def reward(self):
+        # todo: as this reward is per frame, create also a function that is at the end of episode
         # keep reward function simple, which means any progress near flower is the reward
         # and keep a time limit so that speed becomes a reward too
         #score = -0.1 # reduce score every frame, to penalize time # skip this because it could make gas only seem good
-        score = 0
+        #score = -0.0001 # slight score reduction every frame
+
+        # score should not be 0 to avoid std errors: RuntimeWarning: invalid value encountered in true_divide
+
+        # slight positive score that will value survival
+        # since otherwise dying instantly causes less negative points than following rec
+        score = 0.002
+        if self.game.kuski_state['numTakenApples'] > self.game.num_taken_apples:
+            # note that it can be more than one apple taken in a frame
+            self.game.num_taken_apples += self.game.kuski_state['numTakenApples'] - self.game.num_taken_apples
+            score += 20
+
         #if self.game.kuski_state[11] > 0:
         if self.game.kuski_state['finishedTime']:
             score += 40
@@ -224,16 +234,49 @@ class Level:
         #elif self.game.kuski_state[10] > 0:
         elif self.game.kuski_state['isDead']:
             #print("isDead: %f" % (self.game.kuski_state[10]))
-            score -= 10
+            if self.game.rec is None:
+                # punish death unless following a rec
+                # this punishment might cause passivity, following rec or not
+                #score -= 10
+                pass
+        elif self.game.rec is not None:
+            # body distance from rec
+            # it's very complicated to balance distance per frame, and avoid death and not be passive
+            # don't reward here, instead reward distance after whole sequence
+            """
+            x = self.game.rec.frames[ self.game.recframe ].position.x
+            y = self.game.rec.frames[ self.game.recframe ].position.y
+            X = self.game.kuski_state['body']['location']['x']
+            Y = self.game.kuski_state['body']['location']['y']
+            distance = (x-X) * (x-X) + (y-Y) * (y- Y)
+            if distance < 1:
+                score += 0.05
+            elif distance > 2:
+                score -= 0.05
+            #print(distance)
+            #distance = distance if distance < 10 else 10
+            #score -= distance*distance"""
+            pass
 
-        distance = self.flower_distance(self.game.kuski_state)
-        prev_distance = self.flower_distance(self.game.prev_kuski_state)
-        #distance = self.game.kuski_state[12]
-        #prev_distance = self.game.prev_kuski_state[12]
-        score -= distance - prev_distance
+        # this is the old, slow reward type
+        # todo: replace it without using sqrt
+        #elif self.db_row.reward_type == "flowerDistance":
+        else:
+            if len(self.apples) > self.game.kuski_state['numTakenApples']:
+                distance = self.distance(self.apples[0], self.game.kuski_state['body']['location']['x'], self.game.kuski_state['body']['location']['y'])
+                prev_distance = self.distance(self.apples[0], self.game.prev_kuski_state['body']['location']['x'], self.game.prev_kuski_state['body']['location']['y'])
+            else:
+                distance = self.flower_distance(self.game.kuski_state)
+                prev_distance = self.flower_distance(self.game.prev_kuski_state)
+            #distance = self.game.kuski_state[12]
+            #prev_distance = self.game.prev_kuski_state[12]
+            score -= (distance - prev_distance)/300
 
         self.game.score += score
         self.game.score_delta = score
+        if self.game.arg_framebyframe:
+            print("episode: %d, frame: %d, recframe: %d, score_delta: %f, score: %f" \
+                % (self.game.episode, self.game.frame, self.game.recframe, score, self.game.score))
         return score
 
             # todo: last_distance

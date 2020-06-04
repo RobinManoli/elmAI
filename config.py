@@ -22,6 +22,7 @@ class GUI:
         self.levWidget.insert(END, 'ribotAI1.lev')
         self.levWidget.insert(END, 'wu.lev')
         self.levWidget.insert(END, 'ft.lev')
+        self.levWidget.insert(END, 'ub.lev')
         self.levWidget.insert(END, 'ai.lev')
         self.levWidget.select_set(self.setting['level'].int_value or 0)
         self.levWidget.pack(side=LEFT)
@@ -72,14 +73,17 @@ class GUI:
 
         self.arg_man = IntVar( self.rightFrame, self.setting['man'].int_value )
         self.arg_render = IntVar( self.rightFrame, self.setting['render'].int_value )
+        self.arg_framebyframe = IntVar( self.rightFrame, self.setting['framebyframe'].int_value )
         self.arg_test = IntVar( self.rightFrame, self.setting['test'].int_value )
         self.arg_eol = IntVar( self.rightFrame, self.setting['eol'].int_value )
         self.manCheckbutton = Checkbutton(self.rightFrame, text="Play Manually", variable=self.arg_man)
         self.renderCheckbutton = Checkbutton(self.rightFrame, text="Render", variable=self.arg_render)
+        self.framebyframeCheckbutton = Checkbutton(self.rightFrame, text="Frame by Frame", variable=self.arg_framebyframe)
         self.testCheckbutton = Checkbutton(self.rightFrame, text="Test (don't train)", variable=self.arg_test)
         self.eolCheckbutton = Checkbutton(self.rightFrame, text="Play EOL", variable=self.arg_eol)
         self.manCheckbutton.pack(anchor="w")
         self.renderCheckbutton.pack(anchor="w")
+        self.framebyframeCheckbutton.pack(anchor="w")
         self.testCheckbutton.pack(anchor="w")
         self.eolCheckbutton.pack(anchor="w")
 
@@ -88,13 +92,18 @@ class GUI:
         #for filename in os.listdir('keras_models'):
         #    #self.loadWidget.insert(END, '00x786_194_ribotAI0.rec_seed88148_observations17_actionsA_lr0.010000_gamma0.990000_softmax_rmsprop_sparse_categorical_crossentropy')
         #    self.loadWidget.insert(END, filename)
-        for row in db( db.sequence.id > 0).select(orderby=db.sequence.hiscore):
-            self.loadWidget.insert(END, "%.2f, ep: %d, seed: %d" % (row.hiscore, row.episodes, row.seed))
+        self.loadWidgetRows = db( db.sequence.id > 0).select(orderby=db.sequence.hiscore)
+        for row in self.loadWidgetRows:
+            self.loadWidget.insert(END, "%s - score: %.2f, ep: %d, seed: %d" % (row.level.filename, row.hiscore, row.episodes, row.seed))
         self.loadWidget.select_set(self.setting['load'].int_value or 0)
         self.loadWidget.pack()
         self.loadWidget.bind('<Double-Button-1>', self.dblclick)
+        #self.loadWidget.bind("<<ListboxSelect>>", self.on_loadWidget_select)
 
-        self.doneButton = Button(self.master, text="START", height=10, command=self.start)
+        self.infoText = Message(self.master, text="Double click an action to deselect all other actions. Double click another list to automatically START.")
+        self.infoText.pack(fill=BOTH)
+
+        self.doneButton = Button(self.master, text="START", height=10, command=self.start, background="#999")
         self.doneButton.pack(fill=BOTH)
 
         # handle closing window so that game will not proceed if closing (rather than pressing start button)
@@ -118,9 +127,21 @@ class GUI:
             self.on_close()
 
     def dblclick(self, e):
-        #print(e)
+        #print(e, e.widget)
         # <ButtonPress event state=Mod1 num=1 x=39 y=91>
-        self.start()
+        if e.widget == self.actionsWidget:
+        # [accelerate, brake, left, right, turn, supervolt]
+            #for action in self.game.input:
+            #for value in self.setting['actions'].int_values or [0]:
+            #    self.actionsWidget.select_set(value)
+            self.actionsWidget.selection_clear(0, END)
+            self.actionsWidget.selection_set(ACTIVE)
+        else:
+            self.start()
+
+    def rclick(self, e):
+        # self.actionsWidget.bind('<Button-3>', self.rclick)
+        print(e)
 
     def noop(self, e):
         pass
@@ -135,11 +156,13 @@ class GUI:
         selected_fps_name = self.fpsWidget.get(selected_fps_index)
         self.setting['fps'].update_record( int_value=selected_fps_index, str_value=selected_fps_name )
 
+        # load_ids are the row ids to select from in the load widget
+        # including 0 which means no selection
+        # whereas the selected index references which of those load_ids to load
         selected_load_index = self.loadWidget.curselection()[0]
         selected_load_name = self.loadWidget.get(selected_load_index)
-        # todo: load properly, as this solution expects the widget id to match db id
-        # also load the seed of the sequence
-        self.setting['load'].update_record( int_value=selected_load_index, str_value=selected_load_name )
+        load_ids = [0] + [row.id for row in self.loadWidgetRows]
+        self.setting['load'].update_record( int_value=selected_load_index, str_value=selected_load_name, int_values=load_ids )
 
         # set before loading
         seed = self.seedEntry.get().strip()
@@ -175,6 +198,7 @@ class GUI:
         #print(self.game.args)
         self.setting['man'].update_record( int_value=self.arg_man.get() )
         self.setting['render'].update_record( int_value=self.arg_render.get() )
+        self.setting['framebyframe'].update_record( int_value=self.arg_framebyframe.get() )
         self.setting['test'].update_record( int_value=self.arg_test.get() )
         self.setting['eol'].update_record( int_value=self.arg_eol.get() )
 

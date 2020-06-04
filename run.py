@@ -1,5 +1,5 @@
 import sys, time, os
-import game, level, local, train, rec
+import game, level, local, train#, rec
 
 try:
     os.system('color') # init colors early in script
@@ -12,10 +12,12 @@ try:
         print("Start GUI: %s" % (os.path.basename(__file__)))
         print("Same settings as last time, but randomize seed: %s seed" % (os.path.basename(__file__)))
         print("Same settings as last time, set n_episodes (todo: should continue if new seed not set): %s 1000" % (os.path.basename(__file__)))
+        print("Rec file is loaded if it has same filename as level. (Both of them should be in normal elma path and setup in local.py)")
         import config
         config.GUI(game)
     game.arg_man = True if game.setting['man'].int_value == 1 else False # play manually
-    game.arg_render = True if game.setting['render'].int_value == 1 or game.arg_man else False # render gfx with pygame
+    game.arg_render = True if game.setting['render'].int_value == 1 else False # render gfx with pygame
+    game.arg_framebyframe = True if game.setting['framebyframe'].int_value == 1 else False # render gfx with pygame
     game.arg_test = True if game.setting['test'].int_value == 1 else False
     game.arg_eol = True if game.setting['eol'].int_value == 1 else False
 
@@ -35,7 +37,20 @@ try:
 
     levfilename = game.setting['level'].str_value
     game.level = level.Level(local.levpath, levfilename, game)
-    game.rec = rec.Rec(local.recpath, levfilename.replace('.lev', '.rec'), game)
+    #print(game.setting['load'].int_values, game.setting['load'].int_value)
+    game.load = game.setting['load'].int_values[game.setting['load'].int_value] if game.setting['load'].int_value != 0 else None
+    #game.rec = rec.Rec(local.recpath, levfilename.replace('.lev', '.rec'), game)
+    if game.load is None:
+        try:
+            with open(local.recpath + '\\' + levfilename.replace('.lev', '.rec'), 'rb') as f:
+                sys.path.append("elma_python\\")
+                from elma.packing import unpack_replay
+                print( local.recpath + '\\' + levfilename.replace('.lev', '.rec') )
+                game.rec = unpack_replay(f.read())
+                #print( game.rec.events )
+        except FileNotFoundError:
+            pass
+
     #game.maxplaytime = int(game.args[2]) if game.args[2].isnumeric() else 0 # quit script after last run has exceeded this many seconds
     game.n_episodes = int(game.args[1]) if len(game.args) > 1 and game.args[1].isnumeric() else game.setting['episodes'].int_value
     game.setting['episodes'].update_record( int_value=game.n_episodes )
@@ -66,7 +81,6 @@ try:
     # set n_frames before loading training_mod
     n_frames = game.level.db_row.maxplaytime / (game.timestep*game.realtimecoeff) # max time * fps
     game.n_frames = int(n_frames)
-    game.load = game.setting['load'].int_value
 
     print(game.setting['agent'].str_value)
     training_mod = None
@@ -98,7 +112,7 @@ try:
 
     if game.arg_eol:
         game.init_eol()
-    elif game.arg_render:
+    elif game.arg_render or game.arg_man or game.arg_framebyframe:
         game.init_pygame()
 
     # after pygame.init()
@@ -157,6 +171,8 @@ try:
         from PIL import Image
         game.render_snapshots[0].save('snapshots\\00.gif', save_all=True, append_images=game.render_snapshots[1:], duration=40)
 
+    if game.pygame is not None:
+        game.pygame.quit()
     # make terminal output visible before automatically closing
     input("Press return to exit")
 
@@ -164,10 +180,16 @@ except KeyboardInterrupt:
     if game.eol is not None:
         # def toggle_keys(press_or_release_func, accelerate, brake, left, right, turn, supervolt):
         game.eol.toggle_keys(game.eol.ReleaseKey, True, True, True, True, True, True)
+    if game.pygame is not None:
+        game.pygame.quit()
 
 except Exception as e:
     import traceback
     print( traceback.format_exc() )
     print(e)
+
+    if game.pygame is not None:
+        game.pygame.quit()
+
     # make terminal output visible before automatically closing
     input("Press return to exit")

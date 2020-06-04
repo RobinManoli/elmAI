@@ -30,7 +30,24 @@
 
 # considering it would take incredibly long time to find good styles for recs
 # without a very precise scoring system
-# using recs for score is now attempted
+# using recs for keypress events was attempted:
+# could not finish
+# using recs for score
+# could not progress
+
+# SUCCESS - new scoring system - seed 308117 - actions A - flat track
+# episode 853, score: 284.0752, time: 22.262, apples: 0, FINISHED
+# Processing 129.13 times faster than playing in realtime
+
+# Intervals for the first time made sense when using ALL actions and intervals of 800 frames
+# Making longer levels into 10 second segments.
+# Since it takes forever to get anywhere with all actions, intervals might actually help.
+# They do make sense intuitively, practicing the early part of the level first,
+# and then stop experimenting with the earlier parts.
+# It still should take perhaps 10k episodes at least for the first interval to complete.
+# After this the realization came that intervals could be started with actions A
+# as that has been a successful strategy for easy 800 frame levels.
+
 
 
 print('\33[92m' + "Enter Ribot Algorithm" + '\33[37m')
@@ -38,8 +55,7 @@ print('\33[92m' + "Enter Ribot Algorithm" + '\33[37m')
 class Sequence:
     "A sequence of actions to take"
     # todo: paralel, to make multiple actions allowed at once
-    # todo: shuffle, which randomly moves actions forward or backward
-    def __init__(self, game, ones=True, serial=True, interval_length=800):
+    def __init__(self, game, ones=True, serial=True, interval_length=800, patience=2500):
         self.game = game
         # where the current interval starts (earlier frames are no fixed and no longer experimented with)
         self.interval_start = 0
@@ -47,6 +63,7 @@ class Sequence:
         # too short interval means a bad earlier action can never be improved
         # such as a jump that was good at an earlier interval means for sure death at next
         self.interval_length = interval_length
+        self.patience = patience
         # how many episodes that have passed without improvements
         self.unevolved_episodes = 0
 
@@ -74,9 +91,6 @@ class Sequence:
     def interval_end(self):
         return self.interval_start + self.interval_length
 
-
-
-
     def distort_serial(self, noise=0.01):
         """
         Each frame has noise probability to do something else.
@@ -91,6 +105,23 @@ class Sequence:
             #print( self.prob_dists[frame] )
             #selected_action = self.game.np.random.choice( self.game.n_actions, p=self.prob_dists[frame] )
             #self.distorted_actions[frame] = selected_action
+
+    def shuffle_serial(self, noise=0.01):
+        """
+        Change one action's place with another previous or following action
+        """
+        # todo: only shuffle within interval
+        # shuffle noise of the frames
+        for _ in range( int(len(self.optimal_actions)*noise) ):
+            index = self.game.np.random.choice( range(len(self.optimal_actions)) )
+            action = self.optimal_actions[index]
+            diff = self.game.np.random.choice((-1, 1))
+            diff = 1 if index == 0 else diff
+            diff = -1 if index == len(self.optimal_actions) - 1 else diff
+            old_action = self.optimal_actions[index+diff]
+            self.optimal_actions[index+diff] = action
+            self.optimal_actions[index] = old_action
+        self.distort_serial(noise=0)
 
     def initialize(self):
         self.distort_serial(noise=0)
@@ -121,15 +152,30 @@ class Sequence:
         self.optimal_actions = self.db_row.actions
         self.game.episode = self.db_row.episodes
         self.game.n_episodes += self.db_row.episodes
+        self.game.set_seed( self.db_row.seed )
         self.initialize() # set probabilities according to loaded actions
         #print( self.prob_dists )
 
+    def load_from_rec(self):
+        import math
+        from elma.models import LeftVoltEvent
+        from elma.models import RightVoltEvent
+        from elma.models import TurnEvent
+        print("loading sequence from rec: %s" % (self.game.rec))
+        for event in self.game.rec.events:
+            frame = math.ceil(event.time * 80)
+            #print(event, frame)
+            # [accelerate, brake, left, right, turn, supervolt]
+            self.optimal_actions[frame] = 3 if type(event) == LeftVoltEvent and self.optimal_actions[frame] == 1 else self.optimal_actions[frame]
+            self.optimal_actions[frame] = 4 if type(event) == RightVoltEvent else self.optimal_actions[frame]
+            self.optimal_actions[frame] = 5 if type(event) == TurnEvent else self.optimal_actions[frame]
+            self.optimal_actions[frame] = 6 if type(event) == LeftVoltEvent and self.optimal_actions[frame] == RightVoltEvent else self.optimal_actions[frame]
 
 class Agent:
-    def __init__(self, game, serial=True):
+    def __init__(self, game, serial=True, interval_length=800, patience=2500):
         self.game = game
         if serial:
-            self.sequence = Sequence(self.game, ones=True, serial=True)
+            self.sequence = Sequence(self.game, ones=True, serial=True, interval_length=interval_length, patience=patience)
 
 # todo: create class with different ways to progress, where serial and whole run are still possible
 # make evolutionary and whole runs, where whole is as below
@@ -140,9 +186,13 @@ class Agent:
 agent = None
 def init_model(game):
     global agent
-    agent = Agent(game, serial=True)
+    agent = Agent(game, serial=True, interval_length=800, patience=100)
+    if game.rec is not None:
+        agent.sequence.load_from_rec()
     if game.load is not None:
         agent.sequence.load()
+    #print( agent.sequence.optimal_actions )
+
 
 
 def predict(game, observation):
@@ -150,8 +200,13 @@ def predict(game, observation):
     #print(agent.sequence.optimal_actions)
     if game.frame == 0:
         # first episode and already trained frames act undistorted
-        noise = 0 if game.episode == 0 else 0.01
+        # the best results have been using noise = 0.01, but that doesn't choose difficult styles
+        n = 0.01 if game.hiscore < 300 else 0.01
+        noise = 0 if game.episode == 0 or game.arg_test else n
+        #if game.frame % 2 == 0:
         agent.sequence.distort_serial(noise=noise)
+        #else:
+        #agent.sequence.shuffle_serial(noise=0)
     p = agent.sequence.prob_dists[game.frame]
 
     if game.frame == agent.sequence.interval_end():
@@ -191,6 +246,34 @@ def fit(game, ep_observations, ep_actions, sample_weight,
     #print(game.score)
     agent.sequence.unevolved_episodes += 1
 
+    """
+    # below is test code to measure distance from rec after whole ride
+    # which had no success
+    # get distance after whole ride
+    x = game.rec.frames[ game.recframe ].position.x
+    y = game.rec.frames[ game.recframe ].position.y
+    X = game.kuski_state['body']['location']['x']
+    Y = game.kuski_state['body']['location']['y']
+    # distance from rec position
+    distance = (x-X) * (x-X) + (y-Y) * (y- Y)
+
+    # warmup specifics
+    if game.timesteptotal * game.realtimecoeff > 7.58 and game.kuski_state['numTakenApples'] == 0:
+        #print('apples not taken, punished with distance')
+        x2 = game.level.apples[0].x
+        y2 = game.level.apples[0].y
+        # not exactly correct distance, because not considering if rec has passed bike or not
+        # but at least a clear sign it's off
+        distance += 2 * ((x2-X) * (x2-X) + (y2-Y) * (y2- Y))
+
+    #print("episode: %d, frame: %d, recframe: %d, score_delta: %f, score: %f, distance: %f, x: %f, X: %f, y: %f, Y:%f, seed: %d, elmatime: %f" \
+    #    % (game.episode, game.frame, game.recframe, game.score_delta, game.score, distance, x, X, y, Y, game.seed, game.timesteptotal))
+    # distance after first ride of sequence (actions from rec, died after 2.463)
+    # 7.312168
+    # so give big bonus for any ride better than that, more bonus for more distance
+    if distance < 8:
+        game.score += (10-distance) * 5 * game.timesteptotal"""
+
     if game.score > game.hiscore:
         #agent.sequence.evolve()
         #print( agent.sequence.optimal_actions, ep_actions[:,0] )
@@ -200,7 +283,7 @@ def fit(game, ep_observations, ep_actions, sample_weight,
         if game.score > game.level.db_row.hiscore: # * 0.93:
             # save if at least 93% of hiscore is reached
             agent.sequence.save()
-            pass
+            #pass
         """
         # if last one was a hiscore, update it as the optimal sequence
         #print(sequence)
@@ -210,16 +293,21 @@ def fit(game, ep_observations, ep_actions, sample_weight,
         sequence = list(ep_actions)
         #print("gas ratio after: %f" % (sum(sequence)/len(sequence)))
         """
-    elif agent.sequence.unevolved_episodes > 999999:
+    elif agent.sequence.unevolved_episodes > agent.sequence.patience \
+            and agent.sequence.interval_end() < game.n_frames:
         game.winsound.Beep(1637, 123)
+        game.winsound.Beep(1765, 123)
         agent.sequence.unevolved_episodes = 0
         # move the training interval forward half the interval length
         agent.sequence.interval_start += int(agent.sequence.interval_length/2)
-        if agent.sequence.interval_start > game.n_frames:
-            print("Evolution complete at episode: %d" % (game.episode))
-            game.episode = game.n_episodes - 2
-        else:
-            print("Finished first %d frames, evolving forward..." % (agent.sequence.interval_start))
+        if agent.sequence.interval_end() > game.n_frames:
+            agent.sequence.interval_start = game.n_frames - agent.sequence.interval_length
+        #if agent.sequence.interval_start > game.n_frames:
+        ##    print("Evolution complete at episode: %d" % (game.episode))
+        #    game.episode = game.n_episodes - 2
+        #else:
+        print("Finished first %d frames, now practicing %d-%d, best ride length: %d" \
+        % (agent.sequence.interval_start, agent.sequence.interval_start, agent.sequence.interval_end(), len(agent.sequence.optimal_actions)))
     
 
 def evaluate(game, ep_observations, ep_actions, sample_weight,

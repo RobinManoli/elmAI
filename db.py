@@ -9,6 +9,8 @@ db.define_table('level',
     Field('reclink'),
     Field('hiscore', 'double', default=0),
     Field('maxplaytime', 'double'),
+    Field('reward_type'),
+    Field('start_right', 'boolean'),
     Field('created', 'datetime', default=datetime.now()),
 )
 
@@ -30,17 +32,21 @@ db.define_table('setting',
 )
 
 
-def print_levels():
+def levels():
     for row in db(db.level.id > -1).select():
         print(row)
 
-def print_sequences():
-    for row in db(db.sequence.id > -1).select():
+def sequences():
+    for row in db(db.sequence.id > -1).select(db.level.id, db.level.filename, db.sequence.id, db.sequence.hiscore, db.sequence.seed):
         print(row)
 
-def print_settings():
+def settings():
     for row in db(db.setting.id > -1).select():
         print(row)
+
+def commit():
+    # when import db and forgetting db.db.commit()
+    db.commit()
 
 if __name__ == '__main__':
     print_settings()

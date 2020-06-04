@@ -1,4 +1,5 @@
 import sys, os.path, struct, math
+# https://github.com/elmadev/elma-python
 
 class BodyPart:
     def __init__( self, x, y, rotation ):
@@ -48,39 +49,40 @@ class Rec:
         print('Rec Frames: %d' % self.n_frames)
         print('Rec Time: ~%.2f' % (self.n_frames * 0.0333333333 ))
         #print('Levhash: ' + str(self.reclink))
-        #print('Levname: ' + self.levfilename)
+        print('Levname: ' + self.levfilename)
 
-        self.body_xs = []
-        self.body_ys = []
-        self.lwxs = []
-        self.lwys = []
-        self.rwxs = []
-        self.rwys = []
-        self.head_xs = []
-        self.head_ys = []
-        self.body_rotations = []
-        self.lw_rotations = []
-        self.rw_rotations = []
-        self.turns = []
+        def munch(f, n):
+            return f.read(n)
 
-        # read rec as recedit by ribot from 2006
-        for i, arr in enumerate((self.body_xs, self.body_ys, self.lwxs, self.lwys,
-            self.rwxs, self.rwys, self.head_xs, self.head_ys, self.body_rotations,
-            self.lw_rotations, self.rw_rotations, self.turns)):
-            #print(i, arr)
-            for frame in range(0, self.n_frames):
-                # self.body_xs, self.body_ys
-                if i < 2:
-                    val = struct.unpack('f', f.read(4) )
-                # self.lwxs, self.lwys, self.rwxs, self.rwys, self.head_xs, self.head_ys, self.body_rotations
-                elif i < 9:
-                    val = struct.unpack('h', f.read(2) )
-                # self.lw_rotations, self.rw_rotations, self.turns
-                else:
-                    val = struct.unpack('b', f.read(1) )
-                arr.append( val )
-        #print("body xs: %d, frames: %d, body xs 0: %s, body xs -1: %s, body ys 0: %s" \
-        #    % (len(self.body_xs), self.n_frames, self.body_xs[0], self.body_xs[-1], self.body_ys[0]))
+        def read_float(f):
+            return struct.unpack('f', munch(f, 4))[0]
+
+        def read_int16(f):
+            return struct.unpack('h', munch(f, 2))[0]
+
+        def read_uint8(f):
+            return struct.unpack('B', munch(f, 1))[0]
+
+        self.body_xs = [read_float(f) for _ in range(self.n_frames)]
+        self.body_ys = [read_float(f) for _ in range(self.n_frames)]
+        self.lwxs = [read_int16(f) for _ in range(self.n_frames)]
+        self.lwys = [read_int16(f) for _ in range(self.n_frames)]
+        self.rwxs = [read_int16(f) for _ in range(self.n_frames)]
+        self.rwys = [read_int16(f) for _ in range(self.n_frames)]
+        self.head_xs = [read_int16(f) for _ in range(self.n_frames)]
+        self.head_ys = [read_int16(f) for _ in range(self.n_frames)]
+        self.body_rotations = [read_int16(f) for _ in range(self.n_frames)]
+        self.lw_rotations = [read_uint8(f) for _ in range(self.n_frames)]
+        self.rw_rotations = [read_uint8(f) for _ in range(self.n_frames)]
+        self.turns = [read_uint8(f) for _ in range(self.n_frames)]
+        sound_effect_volumes = [read_int16(f) for _ in range(self.n_frames)]
+
+        #print("body xs: %d, frames: %d, lwxs -1: %s, lwxs 0: %s" \
+        #    % (len(self.body_xs), self.n_frames, self.lwxs[-1], self.lwxs[0]))#
+        #print(self.lwys)
+        print(self.body_xs[0], self.body_ys[0], self.lwxs[0], self.lwys[0],
+            self.rwxs[0], self.rwys[0], self.head_xs[0], self.head_ys[0], self.body_rotations[0],
+            self.lw_rotations[0], self.rw_rotations[0], self.turns[0])
 
         """db = self.game.db.db
         query = db.level.reclink == self.reclink
@@ -101,4 +103,4 @@ class Rec:
 
 if __name__ == '__main__':
     import local
-    rec = Rec(local.recpath, filename='warmup.rec')
+    rec = Rec(local.recpath, filename='wu.rec')

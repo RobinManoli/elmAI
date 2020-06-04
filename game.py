@@ -28,20 +28,23 @@ class Game:
         self.score_delta = 0 # score of last frame
         self.score = 0 # total score gathered this run
         self.last_score = 0 # total score gathered last run
-        self.hiscore = 0 # highest score this session
-        self.lowscore = 0 # lowest score this session
+        self.hiscore = -20 # highest score this session, should be lower than death, so that bad rides also register
+        self.lowscore = -20 # lowest score this session, should be same as or lower than hiscore
         self.batch_hiscore = 0 # highest score this batch
         self.batch_lowscore = 0 # lowest score this batch
+        self.num_taken_apples = 0
 
         self.training = False
         self.noise = True
         self.model = None
         self.load = None
+        self.rec = None
         self.activation = 'softmax'
         self.optimizer = 'rmsprop'
         self.loss = 'sparse_categorical_crossentropy'
         self.batch = 0
         self.frame = 0
+        self.recframe = 0
         self.episode = 0
         self.n_episodes = 1
         self.n_actions = 1 # first action is noop
@@ -116,8 +119,8 @@ class Game:
         outcome = ''
         outcome = 'FINISHED' if self.finished else outcome
         outcome = 'DIED' if self.died else outcome
-        output = 'episode %d, score: %.4f, time: %.3f, %s' % \
-            (self.episode, self.score, self.lasttime, outcome)
+        output = 'episode %d, score: %.4f, time: %.3f, apples: %d, %s' % \
+            (self.episode, self.score, self.lasttime, self.kuski_state['numTakenApples'], outcome)
         self.last_score = self.score
         if self.score > self.hiscore:
             self.winsound.Beep(1231, 123)
@@ -129,6 +132,8 @@ class Game:
         elif self.score < self.lowscore:
             self.lowscore = self.score
             #print(self.YELLOW + output + self.WHITE)
+        if self.episode == 0:
+            print(self.YELLOW + output + self.WHITE)
         if not self.training:
             # print this when periodical test runs happen, ie arg_render are set temporarily
             # or when playing manually
@@ -201,14 +206,26 @@ class Game:
 
         # render can be temporarily set to true to display periodical runs
         # but only do render if pygame is initiated
-        if self.arg_render and self.pygame is not None:
+        if (self.arg_render or self.arg_man or self.arg_framebyframe) and self.pygame is not None:
             self.handle_input()
 
         done = self.act(actions) or self.die_programatically
+        if self.rec is not None:
+            self.recframe = int(self.timesteptotal * self.realtimecoeff * 30)
+            if self.recframe >= len( self.rec.frames ):
+                # don't go beyond last frame of rec
+                self.recframe = len( self.rec.frames ) - 1
 
         # see above comment on rendering
-        if self.arg_render and self.pygame is not None:
+        if (self.arg_render or self.arg_man or self.arg_framebyframe) and self.pygame is not None:
+            if self.arg_framebyframe:
+                input('>')
             self.draw.draw(self)
+            if self.arg_man:
+                self.frame += 1
+            elif self.arg_test:
+                time.sleep(0.01)
+
             if self.arg_render_snapshot and self.frame % 10 == 0:
                 pathfilename = "snapshots\\snapshot%03d.png" % self.frame
                 self.pygame.image.save(self.screen, pathfilename)
@@ -233,6 +250,13 @@ class Game:
         "perform actions with elma physics, return true if done"
         if actions is None:
             actions = self.input
+
+        # self.input = [0, 0, 0, 0, 0, 0]
+        # [accelerate, brake, left, right, turn, supervolt]
+        # start right automatically, even if turn button is not included in agent actions
+        if not self.arg_man and self.frame == 0 and self.level.db_row.start_right:
+            actions[4] = 1
+
         params = actions + [self.timestep, self.timesteptotal]
         if self.arg_eol:
             self.kuski_state = self.eol.next_frame( self, *params )
@@ -367,7 +391,7 @@ class Game:
     def init_db(self):
         self.setting = dict()
         db = self.db.db
-        for setting in ('seed', 'episodes', 'level', 'fps', 'agent', 'actions', 'man', 'render', 'test', 'eol', 'load'):
+        for setting in ('seed', 'episodes', 'level', 'fps', 'agent', 'actions', 'man', 'render', 'test', 'eol', 'load', 'framebyframe'):
             query = db.setting.name == setting
             row = db(query).select().first()
             if not row:

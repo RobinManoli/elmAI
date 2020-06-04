@@ -28,24 +28,45 @@ def drawbike(game):
     #print( game.kuski_state ) # segmentation fault after pygame.init()
     headx = game.kuski_state['headLocation']['x'] * zoom + xoffset
     heady = -game.kuski_state['headLocation']['y'] * zoom + yoffset
-    bodyx = game.kuski_state['body']['location']['x'] * zoom + xoffset
-    bodyy = -game.kuski_state['body']['location']['y'] * zoom + yoffset
+    # headCenterLocation is more like neck or heart location
+    headcx = game.kuski_state['headCenterLocation']['x'] * zoom + xoffset
+    headcy = -game.kuski_state['headCenterLocation']['y'] * zoom + yoffset
+    #bodyx = game.kuski_state['body']['location']['x'] * zoom + xoffset
+    #bodyy = -game.kuski_state['body']['location']['y'] * zoom + yoffset
     lwx = game.kuski_state['leftWheel']['location']['x'] * zoom + xoffset
     lwy = -game.kuski_state['leftWheel']['location']['y'] * zoom + yoffset
     rwx = game.kuski_state['rightWheel']['location']['x'] * zoom + xoffset
     rwy = -game.kuski_state['rightWheel']['location']['y'] * zoom + yoffset
-
     #body_rot = self.kuski_state['body']['rotation']
 
-    body_thickness = 2
+    # recs can be drawn, but coordinates make no sense at all, other than body coords
+    # using elmadev
+    if game.rec is not None and game.recframe < len(game.rec.frames):
+        frame = game.rec.frames[game.recframe]
+        rec_body_x = frame.position.x * zoom + xoffset
+        rec_body_y = -frame.position.y * zoom + yoffset
+        game.pygame.draw.circle(game.screen, game.colors.violet, (int(rec_body_x), int(rec_body_y)), 6, 4)
+
+    #body_thickness = 2
+    #if game.kuski_state['direction'] == 0:
+    #    #body_polygon = (bodyx - 8, bodyy), (bodyx + 8, bodyy + 4), (bodyx + 8, bodyy - 4)
+    #    body_polygon = (headx, heady), (lwx, lwy), (rwx, rwy)
+    #    body_color = game.colors.yellow
+    #else:
+    #    #body_polygon = (bodyx + 8, bodyy), (bodyx - 8, bodyy + 4), (bodyx - 8, bodyy - 4)
+    #    body_polygon = (headx, heady), (lwx, lwy), (rwx, rwy)
+    #    body_color = game.colors.blue
+    game.pygame.draw.line( game.screen, game.colors.white, (int(headcx), int(headcy)), (int(headx), int(heady)) )
+    game.pygame.draw.line( game.screen, game.colors.black, (int(headcx), int(headcy)), (int(lwx), int(lwy)) )
+    game.pygame.draw.line( game.screen, game.colors.black, (int(headcx), int(headcy)), (int(rwx), int(rwy)) )
+    #game.pygame.draw.line( game.screen, game.colors.white, (int(rwx), int(rwy)), (int(lwx), int(lwy)) )
     if game.kuski_state['direction'] == 0:
-        body_polygon = (bodyx - 8, bodyy), (bodyx + 8, bodyy + 4), (bodyx + 8, bodyy - 4)
-        body_color = game.colors.yellow
+        game.pygame.draw.line( game.screen, game.colors.black, (int(headx), int(heady)), (int(rwx), int(rwy)) )
+        pass
     else:
-        body_polygon = (bodyx + 8, bodyy), (bodyx - 8, bodyy + 4), (bodyx - 8, bodyy - 4)
-        body_color = game.colors.blue
+        game.pygame.draw.line( game.screen, game.colors.black, (int(headx), int(heady)), (int(lwx), int(lwy)) )
     game.pygame.draw.circle(game.screen, game.colors.yellow, (int(headx), int(heady)), 4)
-    game.pygame.draw.polygon(game.screen, body_color, body_polygon, body_thickness)
+    #game.pygame.draw.polygon(game.screen, body_color, body_polygon, body_thickness)
     game.pygame.draw.circle(game.screen, game.colors.green, (int(lwx), int(lwy)), 5)
     game.pygame.draw.circle(game.screen, game.colors.green, (int(rwx), int(rwy)), 5)
 
@@ -100,4 +121,17 @@ def drawlev(game):
         thickness = 1
         #print("drawing %s" % str(polygon.vertexes))
         game.pygame.draw.polygon(game.screen, game.colors.black, polygon, thickness)
-        
+
+
+# using rec.py
+"""if game.recframe < game.rec.n_frames:
+    rec_body_x = game.rec.body_xs[game.recframe] * zoom + xoffset
+    rec_body_y = -game.rec.body_ys[game.recframe] * zoom + yoffset
+    rec_lwx = rec_body_x + game.rec.lwxs[game.recframe]/100 * zoom + xoffset
+    rec_lwy = -game.rec.lwys[game.recframe]/100 * zoom + yoffset
+    rec_rwx = game.rec.rwxs[game.recframe] * zoom + xoffset
+    rec_rwy = -game.rec.rwys[game.recframe] * zoom + yoffset
+    print(rec_body_x, rec_lwx)
+    game.pygame.draw.circle(game.screen, game.colors.yellow, (int(rec_body_x), int(rec_body_y)), 4, 2)
+    game.pygame.draw.circle(game.screen, game.colors.green, (int(rec_lwx), int(rec_body_y)), 4, 1)
+    game.pygame.draw.circle(game.screen, game.colors.green, (int(rec_rwx), int(rec_rwy)), 4, 1)"""
