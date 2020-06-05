@@ -48,14 +48,27 @@
 # After this the realization came that intervals could be started with actions A
 # as that has been a successful strategy for easy 800 frame levels.
 
+# SUCCESS - seed 308117 - actions ALL - flat track
+# interval_length=800, patience=25
+# episode 1055 (starting with 854), score: 97.5694, time: 23.837, apples: 0, FINISHED
+# continuing from above success (853 episodes, actions A)
+# this result is indicating a short patience along with new rule of not allowing optimal sequence shorter than interval
+# is a very fast way to finish a lev with all keys
+# probably can't be recreated because had setting 0.02 in score every frame
 
+# SUCCESS - seed 308117 - actions ALL - warm up
+# episode 2032, score: 113.0984/30.0000, time: 18.738, apples: 1, FINISHED
+# Processing 109.71 times faster than playing in realtime
+# probably can't be recreated because created possibility to move interval_start backwards
+
+# still not able to finish upbhill battle easily, so created possibility to backtrack interval
 
 print('\33[92m' + "Enter Ribot Algorithm" + '\33[37m')
 
 class Sequence:
     "A sequence of actions to take"
     # todo: paralel, to make multiple actions allowed at once
-    def __init__(self, game, ones=True, serial=True, interval_length=800, patience=2500):
+    def __init__(self, game, ones=True, serial=True, interval_length=800, patience=2500, noise=0.01):
         self.game = game
         # where the current interval starts (earlier frames are no fixed and no longer experimented with)
         self.interval_start = 0
@@ -66,6 +79,10 @@ class Sequence:
         self.patience = patience
         # how many episodes that have passed without improvements
         self.unevolved_episodes = 0
+        self.db_row = None
+        self.max_frames = self.game.n_frames
+        self.noise = noise
+        self.temp_noise = None
 
         # ones means that at the start of the algorithm
         # all actions of this sequence is set to 1
@@ -77,25 +94,27 @@ class Sequence:
         # optimal_actions is the sequence of optimal actions discovered so far
         # distorted_actions is the whole sequence of optimal_actions distorted
         if serial or ones:
-            self.optimal_actions = game.np.ones( self.game.n_frames, game.np.int8 )
-            self.distorted_actions = game.np.ones( self.game.n_frames, game.np.int8 )
+            self.optimal_actions = game.np.ones( self.max_frames, game.np.int8 )
+            self.distorted_actions = game.np.ones( self.max_frames, game.np.int8 )
         else:
-            self.optimal_actions = game.np.zeros( self.game.n_frames, game.np.int8 )
-            self.distorted_actions = game.np.zeros( self.game.n_frames, game.np.int8 )
+            self.optimal_actions = game.np.zeros( self.max_frames, game.np.int8 )
+            self.distorted_actions = game.np.zeros( self.max_frames, game.np.int8 )
         # probabilities to take any action
         # will be distorted on distortions
         # x frames, with n_actions per frame
-        self.prob_dists = game.np.zeros(( self.game.n_frames, self.game.n_actions ))
+        self.prob_dists = game.np.zeros(( self.max_frames, self.game.n_actions ))
         self.initialize() # set probabilities
 
     def interval_end(self):
         return self.interval_start + self.interval_length
 
-    def distort_serial(self, noise=0.01):
+    def distort_serial(self, noise=None):
         """
         Each frame has noise probability to do something else.
         Each action (except optimal one) has a fraction of noise probability to be chosen.
         """
+        if noise is None:
+            noise = self.noise if self.temp_noise is None else self.temp_noise
         for frame, optimal_action in enumerate(self.optimal_actions):
             n = noise if frame >= self.interval_start else 0
             #print(frame, optimal_action)
@@ -126,11 +145,70 @@ class Sequence:
     def initialize(self):
         self.distort_serial(noise=0)
 
-    def evolve(self):
-        # not used because train.py only uses probabilities
-        "Set distorted actions as optimal actions"
-        #self.optimal_actions = self.distorted_actions
-        pass
+    def truncate(self):
+        if self.interval_end() > self.max_frames:
+            self.interval_start = self.max_frames - self.interval_length
+
+    def evolve(self, ep_actions):
+        self.unevolved_episodes += 1
+
+        if self.game.score > self.game.hiscore:
+            #print( "updating sequence %d %d" % (len(self.optimal_actions), len(ep_actions[:,0]) ))
+            self.unevolved_episodes = 0
+            self.temp_noise = None
+            self.optimal_actions = ep_actions[:,0]
+
+        if self.game.score > self.game.level.db_row.hiscore:
+            self.save()
+
+        if self.game.kuski_state['finishedTime'] > 0:
+            # when an lev is finished, longer rides are not necessary to try, so crop the buffer
+            self.max_frames = len( self.optimal_actions )
+            self.truncate()
+
+        if self.unevolved_episodes > self.patience:
+            if len( self.optimal_actions ) < self.interval_end():
+                # evolution so far has a shorter sequence than the interval
+                # which probably means that the sequence has a death
+                # so start again (and perhaps again), until this problem is solved
+                if self.temp_noise is None:
+                    self.temp_noise = self.noise
+                # double noise
+                if self.temp_noise < 0.4:
+                    self.temp_noise *= 1.5
+                    print('patience ended too soon, so far survived %d/%d frames, temp noise now: %s' % ( len(self.optimal_actions), self.interval_end(), self.temp_noise ))
+                elif self.interval_start > 0:
+                    interval_end = self.interval_end()
+                    # move start a bit backwards
+                    self.interval_start -= int(self.interval_length/3)
+                    self.interval_start = max(self.interval_start, 0)
+                    # keep end at the same place
+                    self.interval_length = interval_end - self.interval_start
+                    self.temp_noise = None
+                    print("couldn't progress, moving back and increasing interval, now training %d - %d" % (self.interval_start, self.interval_end()))
+                self.unevolved_episodes = 0
+            elif self.interval_end() < self.max_frames:
+                #print("patience ended, %d" % (len(self.optimal_actions)))
+                self.game.winsound.Beep(1637, 123)
+                self.game.winsound.Beep(1765, 123)
+                self.unevolved_episodes = 0
+                # move the training interval forward half the interval length
+                self.interval_start += int(self.interval_length/2)
+                self.truncate()
+                #if self.interval_start > self.max_frames:
+                ##    print("Evolution complete at episode: %d" % (self.game.episode))
+                #    self.game.episode = self.game.n_episodes - 2
+                #else:
+                print("Finished first %d frames, now practicing %d-%d, best ride length: %d" \
+                % (self.interval_start, self.interval_start, self.interval_end(), len(self.optimal_actions)))
+            elif self.interval_length < self.max_frames:
+                # patience ended after last interval
+                # so now noise should be throughout the whole sequence
+                print("patience lost after last interval, now experimenting on whole level, max frames: %d" % (self.max_frames))
+                self.interval_start = 0
+                self.interval_length = self.max_frames
+                self.game.winsound.Beep(1637, 123)
+                self.game.winsound.Beep(1765, 123)
 
 
     def save(self):
@@ -146,9 +224,9 @@ class Sequence:
         db.commit()
 
     def load(self):
-        print("loading sequence: %d" % (self.game.load))
         db = self.game.db.db
         self.db_row = db.sequence[self.game.load]
+        #print("loading sequence: %d, %s" % (self.game.load, self.db_row))
         self.optimal_actions = self.db_row.actions
         self.game.episode = self.db_row.episodes
         self.game.n_episodes += self.db_row.episodes
@@ -181,17 +259,17 @@ class Agent:
         if serial:
             self.sequence = Sequence(self.game, ones=True, serial=True, interval_length=interval_length, patience=patience)
 
-# todo: create class with different ways to progress, where serial and whole run are still possible
-# make evolutionary and whole runs, where whole is as below
-# and evolutionary hoyls 2.5 seconds from start, then after 1000 episodes without improvements keeps first second intact and hoyls from 1-3.5 seconds
 # todo: create one sequence per action (paralel)
+# todo: improve ride from end? so that when patience ended for training end, backtrack to improve earlier? this should already be implemented
+# todo: make progress phases, such as gas only, or add actions if changing noise didn't help?
 # optimal (serial) sequence of actions to take
 
 agent = None
 def init_model(game):
     global agent
     # set interval to huge to turn interval training off
-    agent = Agent(game, serial=True, interval_length=800, patience=2500)
+    #agent = Agent(game, serial=True, interval_length=500, patience=25) # for easy levels
+    agent = Agent(game, serial=True, interval_length=500, patience=100)
     if game.rec is not None:
         agent.sequence.load_from_rec()
     if game.load is not None:
@@ -207,7 +285,7 @@ def predict(game, observation):
         # first episode and already trained frames act undistorted
         # the best results have been using noise = 0.01, but that doesn't choose difficult styles
         n = 0.01 if game.hiscore < 300 else 0.01
-        noise = 0 if game.episode == 0 or game.arg_test else n
+        noise = 0 if game.episode == 0 or (agent.sequence.db_row is not None and game.episode == agent.sequence.db_row.episodes) or game.arg_test else n
         #if game.frame % 2 == 0:
         agent.sequence.distort_serial(noise=noise)
         #else:
@@ -249,9 +327,9 @@ def fit(game, ep_observations, ep_actions, sample_weight,
         batch_size, epochs=1, verbose=0):
     global sequence
     #print(game.score)
-    agent.sequence.unevolved_episodes += 1
+    agent.sequence.evolve(ep_actions)
 
-    """
+    '''
     # below is test code to measure distance from rec after whole ride
     # which had no success
     # get distance after whole ride
@@ -278,17 +356,6 @@ def fit(game, ep_observations, ep_actions, sample_weight,
     # so give big bonus for any ride better than that, more bonus for more distance
     if distance < 8:
         game.score += (10-distance) * 5 * game.timesteptotal"""
-
-    if game.score > game.hiscore:
-        #agent.sequence.evolve()
-        #print( agent.sequence.optimal_actions, ep_actions[:,0] )
-        agent.sequence.unevolved_episodes = 0
-        agent.sequence.optimal_actions = ep_actions[:,0]
-
-        if game.score > game.level.db_row.hiscore: # * 0.93:
-            # save if at least 93% of hiscore is reached
-            agent.sequence.save()
-            #pass
         """
         # if last one was a hiscore, update it as the optimal sequence
         #print(sequence)
@@ -297,23 +364,8 @@ def fit(game, ep_observations, ep_actions, sample_weight,
         #        end=", ")
         sequence = list(ep_actions)
         #print("gas ratio after: %f" % (sum(sequence)/len(sequence)))
-        """
-    elif agent.sequence.unevolved_episodes > agent.sequence.patience \
-            and agent.sequence.interval_end() < game.n_frames:
-        game.winsound.Beep(1637, 123)
-        game.winsound.Beep(1765, 123)
-        agent.sequence.unevolved_episodes = 0
-        # move the training interval forward half the interval length
-        agent.sequence.interval_start += int(agent.sequence.interval_length/2)
-        if agent.sequence.interval_end() > game.n_frames:
-            agent.sequence.interval_start = game.n_frames - agent.sequence.interval_length
-        #if agent.sequence.interval_start > game.n_frames:
-        ##    print("Evolution complete at episode: %d" % (game.episode))
-        #    game.episode = game.n_episodes - 2
-        #else:
-        print("Finished first %d frames, now practicing %d-%d, best ride length: %d" \
-        % (agent.sequence.interval_start, agent.sequence.interval_start, agent.sequence.interval_end(), len(agent.sequence.optimal_actions)))
-    
+        '''
+
 
 def evaluate(game, ep_observations, ep_actions, sample_weight,
             batch_size, verbose=0):

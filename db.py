@@ -37,8 +37,9 @@ def levels():
         print(row)
 
 def sequences():
-    for row in db(db.sequence.id > -1).select(db.level.id, db.level.filename, db.sequence.id, db.sequence.hiscore, db.sequence.seed):
-        print(row)
+    #for row in db(db.sequence.id > -1).select(db.level.id, db.level.filename, db.sequence.id, db.sequence.hiscore, db.sequence.seed):
+    for row in db(db.sequence.id > -1).select():
+        print("Sequence:", row.id, row.hiscore, row.episodes, row.seed, row.level.filename)
 
 def settings():
     for row in db(db.setting.id > -1).select():
@@ -49,11 +50,11 @@ def commit():
     db.commit()
 
 if __name__ == '__main__':
-    print_settings()
+    settings()
     print()
-    print_sequences()
+    sequences()
     print()
-    print_levels()
+    levels()
 
 """
 def votes( votee=None ):

@@ -33,6 +33,7 @@ class Game:
         self.batch_hiscore = 0 # highest score this batch
         self.batch_lowscore = 0 # lowest score this batch
         self.num_taken_apples = 0
+        self.keydown_this_frame = True
 
         self.training = False
         self.noise = True
@@ -123,8 +124,8 @@ class Game:
         outcome = ''
         outcome = 'FINISHED' if self.finished else outcome
         outcome = 'DIED' if self.died else outcome
-        output = 'episode %d, score: %.4f, time: %.3f, apples: %d, %s' % \
-            (self.episode, self.score, self.lasttime, self.kuski_state['numTakenApples'], outcome)
+        output = 'episode %d, score: %.4f/%.4f, time: %.3f, apples: %d, %s' % \
+            (self.episode, self.score, self.level.db_row.hiscore, self.lasttime, self.kuski_state['numTakenApples'], outcome)
         self.last_score = self.score
         if self.score > self.hiscore:
             self.winsound.Beep(1231, 123)
@@ -146,6 +147,7 @@ class Game:
         self.batch_hiscore = max(self.batch_hiscore, self.score)
         self.batch_lowscore = min(self.batch_lowscore, self.score)
 
+        self.num_taken_apples = 0
         self.score_delta = 0
         self.score = 0
         self.kuski_state = self.initial_kuski_state
@@ -202,6 +204,11 @@ class Game:
             # input starts on mouse down and ends on mouseup; sustain input in between
             elif event.type in (self.pygame.MOUSEBUTTONDOWN, self.pygame.MOUSEBUTTONUP, self.pygame.KEYDOWN, self.pygame.KEYUP):
                 self.input = self.eventhandler.elmainput(self, event)
+
+                if event.type == self.pygame.KEYDOWN:
+                    self.keydown_this_frame = True
+                elif event.type == self.pygame.KEYUP:
+                    self.keydown_this_frame = False
                 #self.draw.draw(game, event, self.input, elmaphys) # draw only on self.input
             #self.draw.draw(game, event, elmaphys) # proceed drawing only on events, eg when mouse moves
 
@@ -214,6 +221,10 @@ class Game:
         if (self.arg_render or self.arg_man or self.arg_framebyframe) and self.pygame is not None:
             self.handle_input()
 
+        if self.arg_framebyframe and self.arg_man and not self.keydown_this_frame:
+            #print("not looping")
+            return
+
         done = self.act(actions) or self.die_programatically
         if self.rec is not None:
             self.recframe = int(self.timesteptotal * self.realtimecoeff * 30)
@@ -223,7 +234,7 @@ class Game:
 
         # see above comment on rendering
         if (self.arg_render or self.arg_man or self.arg_framebyframe) and self.pygame is not None:
-            if self.arg_framebyframe:
+            if self.arg_framebyframe and not self.arg_man:
                 input('>')
             self.draw.draw(self)
             if self.arg_man:
@@ -426,7 +437,7 @@ class Game:
         self.height = int( GetSystemMetrics(1)/2 )
         self.size = self.width, self.height
         #os.environ['SDL_VIDEO_CENTERED'] = '1'
-        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (self.width,0)
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (self.width, 35)
         pygame.init()
         pygame.display.set_caption('ElmAI')
         # pygame.event.set_blocked([pygame.KEYDOWN, pygame.KEYUP]) # block keydown that crashes phys? still crashing on keypress

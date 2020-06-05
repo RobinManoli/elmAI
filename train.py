@@ -58,8 +58,8 @@ def train_model(game):
     observation = game.reset()
     print( "first observation: %s" % (observation))
 
-    for game.episode in range(game.n_episodes):
-        #print("starting episode: %d, frame: %d" % (game.episode, game.frame))
+    for game.episode in range(game.episode, game.n_episodes):
+        #print("starting episode: %d/%d, frame: %d" % (game.episode, game.n_episodes, game.frame))
         reward_sum = 0
         #im_shape = (80, 80, 1)
         prev_observation = None
@@ -175,7 +175,7 @@ def train_model(game):
             # respond to exiting (after run complete)
             break
     game.episode += 1
-    print("leaving train_model, episode: %d/%d, done:%s, " % (game.episode, game.n_episodes, done))
+    print("leaving train_model, episode: %d/%d" % (game.episode, game.n_episodes))
     """if game.training:
         # perform a run based on current training
         print("performing a batch run without noise...")

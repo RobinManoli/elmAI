@@ -220,11 +220,11 @@ class Level:
             self.game.score += self.game.score_delta
             return self.game.score_delta
 
-        # score should not be 0 to avoid std errors: RuntimeWarning: invalid value encountered in true_divide
+        # score should not be 0 to avoid std errors? RuntimeWarning: invalid value encountered in true_divide
 
         # slight positive score that will value survival
         # since otherwise dying instantly causes less negative points than following rec
-        score = 0.002
+        score = 0.0
         if self.game.kuski_state['numTakenApples'] > self.game.num_taken_apples:
             # note that it can be more than one apple taken in a frame
             self.game.num_taken_apples += self.game.kuski_state['numTakenApples'] - self.game.num_taken_apples
@@ -282,8 +282,8 @@ class Level:
         self.game.score += score
         self.game.score_delta = score
         if self.game.arg_framebyframe:
-            print("episode: %d, frame: %d, recframe: %d, score_delta: %f, score: %f" \
-                % (self.game.episode, self.game.frame, self.game.recframe, score, self.game.score))
+            print("episode: %d, frame: %d, recframe: %d, score_delta: %f, score: %f, apples: %d" \
+                % (self.game.episode, self.game.frame, self.game.recframe, score, self.game.score, self.game.num_taken_apples))
         return score
 
             # todo: last_distance

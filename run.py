@@ -164,7 +164,7 @@ try:
     if game.training_mod and hasattr(game.training_mod, 'sequence'):
         print("Ribot Sequence: %s" % (game.training_mod.sequence))
 
-    if game.training_mod is not None and game.pygame is not None:
+    if game.training_mod is not None and game.pygame is not None and len(game.render_snapshots) > 1:
         print("storing snapshot...")
         game.arg_render = True
         game.arg_render_snapshot = True

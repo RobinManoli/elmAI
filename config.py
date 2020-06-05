@@ -22,6 +22,7 @@ class GUI:
         self.levWidget.insert(END, 'ribotAI1.lev')
         self.levWidget.insert(END, 'wu.lev')
         self.levWidget.insert(END, 'ft.lev')
+        self.levWidget.insert(END, 'ou.lev')
         self.levWidget.insert(END, 'ub.lev')
         self.levWidget.insert(END, 'ai.lev')
         self.levWidget.select_set(self.setting['level'].int_value or 0)
@@ -56,6 +57,7 @@ class GUI:
             self.actionsWidget.select_set(value)
         self.actionsWidget.pack(side=LEFT)
         self.actionsWidget.bind('<Double-Button-1>', self.dblclick)
+        self.actionsWidget.bind('<Button-3>', self.rclick)
 
         self.episodesLabel = Label(self.rightFrame, text="Episodes")
         self.episodesLabel.pack(anchor="w")
@@ -100,7 +102,7 @@ class GUI:
         self.loadWidget.bind('<Double-Button-1>', self.dblclick)
         #self.loadWidget.bind("<<ListboxSelect>>", self.on_loadWidget_select)
 
-        self.infoText = Message(self.master, text="Double click an action to deselect all other actions. Double click another list to automatically START.")
+        self.infoText = Message(self.master, text="Right click an action to select all actions. Double click an action to deselect all other actions. Double click another list to automatically START.")
         self.infoText.pack(fill=BOTH)
 
         self.doneButton = Button(self.master, text="START", height=10, command=self.start, background="#999")
@@ -141,7 +143,9 @@ class GUI:
 
     def rclick(self, e):
         # self.actionsWidget.bind('<Button-3>', self.rclick)
-        print(e)
+        if e.widget == self.actionsWidget:
+            self.actionsWidget.selection_set(0, END)
+        #print(e)
 
     def noop(self, e):
         pass
