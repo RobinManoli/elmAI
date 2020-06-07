@@ -1,3 +1,5 @@
+# https://stackoverflow.com/questions/19746552/pygame-camera-follow-in-a-2d-tile-game
+
 def draw(game):
     game.screen.fill(game.colors.skyblue)
     drawlev(game)

@@ -57,11 +57,29 @@
 # probably can't be recreated because had setting 0.02 in score every frame
 
 # SUCCESS - seed 308117 - actions ALL - warm up
+# interval_length=500, patience=25
 # episode 2032, score: 113.0984/30.0000, time: 18.738, apples: 1, FINISHED
 # Processing 109.71 times faster than playing in realtime
 # probably can't be recreated because created possibility to move interval_start backwards
+# after backtracking:
+# episode 8096, score: 77.4957/125.2934, time: 19.350, apples: 1, fps: 80 FINISHED
+# episode 8781, score: 117.9096/125.2934, time: 18.675, apples: 1, fps: 80 FINISHED
 
 # still not able to finish upbhill battle easily, so created possibility to backtrack interval
+
+# SUCCESS - actions ALL
+# interval_length=500, patience=25
+# without backtracking:
+# int04: episode 1437, score: 135.0718/135.0718, time: 58.825, apples: 1, fps: 80 FINISHED, seed 308117 
+# int03: episode 13836, score: 543.4605/100.0000, time: 36.112, apples: 2, fps: 80 FINISHED, seed: 621836
+# int05: increasing death pentalty from 0 (above) to 2, made first bump easier
+
+# all above are without negated y-value (since bike y values are opposite of level)
+
+# how to proceed?
+# probably the best would be to cut up levels to training level chunks
+# make ai perform well a few seconds until rec is good
+# then when 100% completed, load that sequence without noise, and proceed with new training lev
 
 print('\33[92m' + "Enter Ribot Algorithm" + '\33[37m')
 
@@ -179,13 +197,15 @@ class Sequence:
                     print('patience ended too soon, so far survived %d/%d frames, temp noise now: %s' % ( len(self.optimal_actions), self.interval_end(), self.temp_noise ))
                 elif self.interval_start > 0:
                     interval_end = self.interval_end()
+                    # backtracking, canceled because worse performance
+                    # but could try to move 100 frames at the time instead
                     # move start a bit backwards
-                    self.interval_start -= int(self.interval_length/3)
-                    self.interval_start = max(self.interval_start, 0)
+                    #self.interval_start -= int(self.interval_length/3)
+                    #self.interval_start = max(self.interval_start, 0) # minimum 0
                     # keep end at the same place
-                    self.interval_length = interval_end - self.interval_start
-                    self.temp_noise = None
-                    print("couldn't progress, moving back and increasing interval, now training %d - %d" % (self.interval_start, self.interval_end()))
+                    #self.interval_length = interval_end - self.interval_start
+                    #self.temp_noise = None
+                    #print("couldn't progress, moving back and increasing interval, now training %d - %d" % (self.interval_start, self.interval_end()))
                 self.unevolved_episodes = 0
             elif self.interval_end() < self.max_frames:
                 #print("patience ended, %d" % (len(self.optimal_actions)))
@@ -194,6 +214,10 @@ class Sequence:
                 self.unevolved_episodes = 0
                 # move the training interval forward half the interval length
                 self.interval_start += int(self.interval_length/2)
+                # decrease interval length, because it might increase in other places
+                # cancelled because worse performance
+                #self.interval_length = int(self.interval_length * 0.75) # no longer able to finish int 01 or 04
+                #self.interval_length = max(100, self.interval_length) # minimum 100
                 self.truncate()
                 #if self.interval_start > self.max_frames:
                 ##    print("Evolution complete at episode: %d" % (self.game.episode))
@@ -202,13 +226,15 @@ class Sequence:
                 print("Finished first %d frames, now practicing %d-%d, best ride length: %d" \
                 % (self.interval_start, self.interval_start, self.interval_end(), len(self.optimal_actions)))
             elif self.interval_length < self.max_frames:
+                # working, but better to practice intervals increasing from end to improve time?
+                pass
                 # patience ended after last interval
                 # so now noise should be throughout the whole sequence
-                print("patience lost after last interval, now experimenting on whole level, max frames: %d" % (self.max_frames))
-                self.interval_start = 0
-                self.interval_length = self.max_frames
-                self.game.winsound.Beep(1637, 123)
-                self.game.winsound.Beep(1765, 123)
+                #print("patience lost after last interval, now experimenting on whole level, max frames: %d" % (self.max_frames))
+                #self.interval_start = 0
+                #self.interval_length = self.max_frames
+                #self.game.winsound.Beep(1637, 123)
+                #self.game.winsound.Beep(1765, 123)
 
 
     def save(self):
@@ -260,7 +286,8 @@ class Agent:
             self.sequence = Sequence(self.game, ones=True, serial=True, interval_length=interval_length, patience=patience)
 
 # todo: create one sequence per action (paralel)
-# todo: improve ride from end? so that when patience ended for training end, backtrack to improve earlier? this should already be implemented
+# todo: adjust noise according to fps
+# todo: improve ride from end? so that when patience ended for training end, backtrack to improve earlier? 
 # todo: make progress phases, such as gas only, or add actions if changing noise didn't help?
 # optimal (serial) sequence of actions to take
 
@@ -268,8 +295,11 @@ agent = None
 def init_model(game):
     global agent
     # set interval to huge to turn interval training off
-    #agent = Agent(game, serial=True, interval_length=500, patience=25) # for easy levels
-    agent = Agent(game, serial=True, interval_length=500, patience=100)
+    # interval of 500-800 and patience 25 makes it possible to progress quickly
+    # but not so quick so that the level is never completed
+    # good for completing int 01, 03 and 04
+    #agent = Agent(game, serial=True, interval_length=800, patience=25)
+    agent = Agent(game, serial=True, interval_length=5000, patience=25)
     if game.rec is not None:
         agent.sequence.load_from_rec()
     if game.load is not None:

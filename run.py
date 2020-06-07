@@ -57,6 +57,8 @@ try:
 
     if '30' in game.setting['fps'].str_value.split(' '):
         game.timestep = 0.01456 # 30 fps, lowest eol framerate but too unstable here to use
+    elif '120' in game.setting['fps'].str_value.split(' '):
+        game.timestep = 0.00364
     elif '500' in game.setting['fps'].str_value.split(' '):
         game.timestep = 0.0008736 # 500 fps, okeol second candidate
     elif '1000' in game.setting['fps'].str_value.split(' '):
@@ -73,6 +75,7 @@ try:
     print("fps: %d" % ( 1/(game.timestep*game.realtimecoeff) ))
 
     # calc timestep for fps
+    # 2,289377289377289 for pasting into some calculators
     # 1/30/2,2893772893772893772893772893773 = 0,01456
     # 1/80/2,2893772893772893772893772893773 = 0,00546
     # 1/1000/2,2893772893772893772893772893773 = 0,0004368

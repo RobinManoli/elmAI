@@ -165,6 +165,10 @@ def train_model(game):
                             + game.WHITE)
                 else:
                     if not game.arg_test:
+                        if game.arg_render:
+                            # save each render as rec, for video production
+                            #self.elmaphys.save_replay("zz%04d-%s % (game.episode, game.rec_name()), game.level.filename) # working
+                            pass
                         game.arg_render = False
                 steps_per_episode[game.episode] = game.frame
                 prev_observation = None

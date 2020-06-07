@@ -75,7 +75,8 @@ class Game:
     def rec_name(self):
         filenametime = "%.02f" % self.lasttime
         filenametime = filenametime.replace('.', '') # remove dot from filename, because elma can't handle it
-        filename = "00x%s_%d_%s.rec" % (filenametime, self.score, self.level.filename_wo_ext())
+        #filename = "00x%s_%d_%s.rec" % (filenametime, self.score, self.level.filename_wo_ext()) # old format
+        filename = "%sx%sribot-ai.rec" % (self.level.filename_wo_ext(), filenametime) #02x2226ribot-ai
         return filename
     
     def model_save_name(self):
@@ -124,13 +125,14 @@ class Game:
         outcome = ''
         outcome = 'FINISHED' if self.finished else outcome
         outcome = 'DIED' if self.died else outcome
-        output = 'episode %d, score: %.4f/%.4f, time: %.3f, apples: %d, %s' % \
-            (self.episode, self.score, self.level.db_row.hiscore, self.lasttime, self.kuski_state['numTakenApples'], outcome)
+        output = 'episode %d, score: %.4f/%.4f, time: %.3f, apples: %d, fps: %d, seed: %d, %s' % \
+            (self.episode, self.score, self.level.db_row.hiscore, self.lasttime,
+            self.kuski_state['numTakenApples'], self.fps, self.seed, outcome)
         self.last_score = self.score
         if self.score > self.hiscore:
             self.winsound.Beep(1231, 123)
             self.hiscore = self.score
-            if self.score > self.level.db_row.hiscore:
+            if self.score > self.level.db_row.hiscore and not self.arg_man:
                 self.level.db_row.update_record(hiscore=self.score)
                 self.db.db.commit()
             print(self.YELLOW + output + self.WHITE)
@@ -437,7 +439,7 @@ class Game:
         self.height = int( GetSystemMetrics(1)/2 )
         self.size = self.width, self.height
         #os.environ['SDL_VIDEO_CENTERED'] = '1'
-        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (self.width, 35)
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (self.width, 31)
         pygame.init()
         pygame.display.set_caption('ElmAI')
         # pygame.event.set_blocked([pygame.KEYDOWN, pygame.KEYUP]) # block keydown that crashes phys? still crashing on keypress

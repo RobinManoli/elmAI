@@ -178,7 +178,8 @@ class Level:
         print('first flower: %.02f, %.02f' % (self.flowers[0].x, self.flowers[0].y))
         print('reclink: %d' % (self.reclink))
         db = self.game.db.db
-        query = db.level.reclink == self.reclink
+        #query = db.level.reclink == self.reclink # don't do this to be able to edit levels in editor
+        query = db.level.filename == self.filename
         lev_row = db(query).select().first()
         if not lev_row:
             maxplaytime = input("Max play time for %s: " % (self.filename))
@@ -192,6 +193,7 @@ class Level:
         self.db_row = lev_row
 
     def distance(self, obj, x, y):
+        # remember to flip the y-axis, as lev y is negated compared to bike y
         dx = obj.x - x
         dy = obj.y - y
         #return math.sqrt( dx*dx + dy*dy )
@@ -201,7 +203,7 @@ class Level:
     def flower_distance(self, kuski_state):
         body_x = kuski_state['body']['location']['x']
         #body_x = kuski_state[0]
-        body_y = kuski_state['body']['location']['y']
+        body_y = -kuski_state['body']['location']['y']
         #body_y = kuski_state[1]
         #print("flower distance, flower x: %f, flower y: %f, body_x: %f, body_y: %f" % (self.flowers[0].x, self.flowers[0].y, body_x, body_y))
         return self.distance(self.flowers[0], body_x, body_y)
@@ -221,8 +223,7 @@ class Level:
             return self.game.score_delta
 
         # score should not be 0 to avoid std errors? RuntimeWarning: invalid value encountered in true_divide
-
-        # slight positive score that will value survival
+        # slight positive score that will value survival?
         # since otherwise dying instantly causes less negative points than following rec
         score = 0.0
         if self.game.kuski_state['numTakenApples'] > self.game.num_taken_apples:
@@ -242,10 +243,11 @@ class Level:
         elif self.game.kuski_state['isDead']:
             #print("isDead: %f" % (self.game.kuski_state[10]))
             if self.game.rec is None:
-                # punish death unless following a rec
-                # this punishment might cause passivity, following rec or not
-                #score -= 10
-                pass
+                # punish death (unless following a rec?)
+                # too much punishment might cause passivity,
+                # but might be needed to reward survival in tough spots
+                score -= 2
+                #pass
         elif self.game.rec is not None:
             # body distance from rec
             # it's very complicated to balance distance per frame, and avoid death and not be passive
@@ -265,13 +267,15 @@ class Level:
             #score -= distance*distance"""
             pass
 
-        # this is the old, slow reward type
-        # todo: replace it without using sqrt
         #elif self.db_row.reward_type == "flowerDistance":
         else:
+            # todo: select order of apples to move towards first
+            # note that all apples might not have to be added, such as first apple in internal 04
+            # also note that imaginary apples or killers (or training lev) might have to be added, such as for int 05
             if len(self.apples) > self.game.kuski_state['numTakenApples']:
-                distance = self.distance(self.apples[0], self.game.kuski_state['body']['location']['x'], self.game.kuski_state['body']['location']['y'])
-                prev_distance = self.distance(self.apples[0], self.game.prev_kuski_state['body']['location']['x'], self.game.prev_kuski_state['body']['location']['y'])
+                apple_index = 0 if self.db_row.apples is None else self.db_row.apples[self.game.kuski_state['numTakenApples']]
+                distance = self.distance(self.apples[apple_index], self.game.kuski_state['body']['location']['x'], -self.game.kuski_state['body']['location']['y'])
+                prev_distance = self.distance(self.apples[apple_index], self.game.prev_kuski_state['body']['location']['x'], -self.game.prev_kuski_state['body']['location']['y'])
             else:
                 distance = self.flower_distance(self.game.kuski_state)
                 prev_distance = self.flower_distance(self.game.prev_kuski_state)

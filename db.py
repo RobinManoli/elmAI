@@ -11,6 +11,10 @@ db.define_table('level',
     Field('maxplaytime', 'double'),
     Field('reward_type'),
     Field('start_right', 'boolean'),
+    # order of apples to take,
+    # so that if level apple with index 1 in level is to be taken first
+    # set apples = [1,...]
+    Field('apples', 'list:integer'),
     Field('created', 'datetime', default=datetime.now()),
 )
 
