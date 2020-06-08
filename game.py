@@ -15,6 +15,12 @@ class Game:
         self.arg_render_snapshot = False
         self.render_snapshots = []
 
+        # man framebyframe vars
+        self.inputs = []
+        self.kuski_states = []
+        self.rewind = 0
+        self.do_next_frame = False
+
         # to check this: make replay and store timesteptotal,
         # then check rec time in elma 12.53 28.67
         # for example timestep = 0.002 with timesteptotal of 12.53 makes a rec of 28.67 seconds
@@ -33,7 +39,6 @@ class Game:
         self.batch_hiscore = 0 # highest score this batch
         self.batch_lowscore = 0 # lowest score this batch
         self.num_taken_apples = 0
-        self.keydown_this_frame = True
 
         self.training = False
         self.noise = True
@@ -198,21 +203,9 @@ class Game:
 
 
 
-    def handle_input(self):
-        for event in self.pygame.event.get():
-            if event.type == self.pygame.QUIT:
-                self.running = False
-            # pygame often crashes after keydown, if elmaphys is called any time after
-            # input starts on mouse down and ends on mouseup; sustain input in between
-            elif event.type in (self.pygame.MOUSEBUTTONDOWN, self.pygame.MOUSEBUTTONUP, self.pygame.KEYDOWN, self.pygame.KEYUP):
-                self.input = self.eventhandler.elmainput(self, event)
-
-                if event.type == self.pygame.KEYDOWN:
-                    self.keydown_this_frame = True
-                elif event.type == self.pygame.KEYUP:
-                    self.keydown_this_frame = False
-                #self.draw.draw(game, event, self.input, elmaphys) # draw only on self.input
-            #self.draw.draw(game, event, elmaphys) # proceed drawing only on events, eg when mouse moves
+    # moved to eventhandler
+    #def handle_input(self):
+    #    pass
 
     def loop(self, actions=None):
         "run the game loop, return true if done"
@@ -221,25 +214,29 @@ class Game:
         # render can be temporarily set to true to display periodical runs
         # but only do render if pygame is initiated
         if (self.arg_render or self.arg_man or self.arg_framebyframe) and self.pygame is not None:
-            self.handle_input()
+            self.eventhandler.loop(self)
 
-        if self.arg_framebyframe and self.arg_man and not self.keydown_this_frame:
-            #print("not looping")
-            return
-
-        done = self.act(actions) or self.die_programatically
+        # after eventhandler but before return in framebyframe
         if self.rec is not None:
             self.recframe = int(self.timesteptotal * self.realtimecoeff * 30)
             if self.recframe >= len( self.rec.frames ):
                 # don't go beyond last frame of rec
                 self.recframe = len( self.rec.frames ) - 1
 
+        if self.arg_framebyframe and self.arg_man and not self.do_next_frame:
+            #print("not looping")
+            # draw screen before any keypress
+            self.draw.draw(self)
+            return
+
+        done = self.act(actions) or self.die_programatically
+
         # see above comment on rendering
         if (self.arg_render or self.arg_man or self.arg_framebyframe) and self.pygame is not None:
             if self.arg_framebyframe and not self.arg_man:
                 input('>')
             self.draw.draw(self)
-            if self.arg_man:
+            if self.arg_man and self.do_next_frame:
                 self.frame += 1
             elif self.arg_test:
                 time.sleep(0.01)
@@ -446,7 +443,9 @@ class Game:
         self.pygame = pygame
         #self.size = 800, 640
         #self.width, self.height = self.size
-        self.screen = pygame.display.set_mode(self.size)
+        self.screen = pygame.display.set_mode(self.size, pygame.RESIZABLE)
+        self.redraw = True
+        self.zoom_mode = 0
         # initialize font; must be called after 'pygame.init()' to avoid 'Font not Initialized' error
         self.font = pygame.font.SysFont("monospace", 18)
         self.eventhandler = eventhandler

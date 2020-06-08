@@ -285,9 +285,9 @@ class Level:
 
         self.game.score += score
         self.game.score_delta = score
-        if self.game.arg_framebyframe:
-            print("episode: %d, frame: %d, recframe: %d, score_delta: %f, score: %f, apples: %d" \
-                % (self.game.episode, self.game.frame, self.game.recframe, score, self.game.score, self.game.num_taken_apples))
+        #if self.game.arg_framebyframe:
+        #    print("episode: %d, frame: %d, recframe: %d, score_delta: %f, score: %f, apples: %d" \
+        #        % (self.game.episode, self.game.frame, self.game.recframe, score, self.game.score, self.game.num_taken_apples))
         return score
 
             # todo: last_distance
