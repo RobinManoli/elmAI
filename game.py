@@ -116,7 +116,7 @@ class Game:
             #    self.VIOLET + 'lev completed, time: %.2f, score: %.2f, var finishedTime: %.2f, episode: %d'
             #    % (self.lasttime, self.score, self.kuski_state['finishedTime'], self.episode),
             #    self.WHITE)
-        if self.save_rec or self.hiscore and self.score > self.level.db_row.hiscore:
+        if self.save_rec or self.hiscore and self.score > self.level.db_row.hiscore and not self.arg_man:
             #self.elmaphys.save_replay("00x%s_%d_%s.rec" % (filenametime, self.score, random.randint(10,99)), self.level.filename) # working
             self.elmaphys.save_replay(self.rec_name(), self.level.filename) # working
             self.winsound.Beep(1231, 123)
@@ -454,4 +454,11 @@ class Game:
         self.colors = colors
         #gui.game = self
         #draw.game = self
+        self.image_head = pygame.image.load('gfx\\q1head.png').convert_alpha()
+        self.image_bike = pygame.image.load('gfx\\q1bike.png').convert_alpha()
+        self.image_wheel = pygame.image.load('gfx\\q1wheel.png').convert_alpha()
 
+        if self.rec is not None:
+            self.rec_image_head = pygame.image.load('gfx\\q1head_outline.png').convert_alpha()
+            self.rec_image_bike = pygame.image.load('gfx\\q1bike_outline.png').convert_alpha()
+            self.rec_image_wheel = pygame.image.load('gfx\\q1wheel_outline.png').convert_alpha()

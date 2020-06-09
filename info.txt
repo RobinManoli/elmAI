@@ -2,6 +2,7 @@ local files:
     compile in anaconda for compiling cython
     run in anaconda for accessing keras model save
     # old: run Developer Command Prompt for VS 2019, then "code ." - for accessing c compiler in vscode
+    good internal recs: https://mopolauta.moposite.com/viewtopic.php?t=9327
 
 About implementing machine learning:
     phase 1:
