@@ -54,25 +54,7 @@ try:
     #game.maxplaytime = int(game.args[2]) if game.args[2].isnumeric() else 0 # quit script after last run has exceeded this many seconds
     game.n_episodes = int(game.args[1]) if len(game.args) > 1 and game.args[1].isnumeric() else game.setting['episodes'].int_value
     game.setting['episodes'].update_record( int_value=game.n_episodes )
-
-    if '30' in game.setting['fps'].str_value.split(' '):
-        game.timestep = 0.01456 # 30 fps, lowest eol framerate but too unstable here to use
-    elif '120' in game.setting['fps'].str_value.split(' '):
-        game.timestep = 0.00364
-    elif '500' in game.setting['fps'].str_value.split(' '):
-        game.timestep = 0.0008736 # 500 fps, okeol second candidate
-    elif '1000' in game.setting['fps'].str_value.split(' '):
-        game.timestep = 0.0004368 # 1000 fps, ultra slow motion, okeol first candidate
-    elif game.arg_man:
-        game.timestep = 0.002 # oke speed for playing manually, also this computer (Zazza) renders the game almost with same elma time as real time
-    else:
-        # default timestep
-        game.timestep = 0.00546 # fast play, 80 fps, fastest possible calculated physics according to jon, as slower than this does double or more physics iteration per step
-
-    game.realtimestep = game.timestep * game.realtimecoeff
-    game.fps = 1 / (game.timestep * game.realtimecoeff)
-    game.fps = int( game.fps )
-    print("fps: %d" % ( 1/(game.timestep*game.realtimecoeff) ))
+    game.set_fps( game.setting['fps'].int_value )
 
     # calc timestep for fps
     # 2,289377289377289 for pasting into some calculators
@@ -120,6 +102,10 @@ try:
         game.init_eol()
     elif game.arg_render or game.arg_man or game.arg_framebyframe:
         game.init_pygame()
+    
+    if game.arg_framebyframe:
+        game.eventhandler.toggle_maximize()
+        game.zoom_mode = 7
 
     # after pygame.init()
     import elmaphys # must be imported after pygame.init()

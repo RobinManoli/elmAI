@@ -18,6 +18,7 @@ class Game:
         # man framebyframe vars
         self.inputs = []
         self.kuski_states = []
+        self.timesteps = []
         self.rewind = 0
         self.do_next_frame = False
 
@@ -25,7 +26,7 @@ class Game:
         # then check rec time in elma 12.53 28.67
         # for example timestep = 0.002 with timesteptotal of 12.53 makes a rec of 28.67 seconds
         # so 28.67 / 12.53 ~ 2,29, which is pretty much jon's constant 
-        self.realtimecoeff = 2.2893772893772893772893772893773 # exact number provided by jon
+        self.realtimecoeff = 2.289377289377289681482352534658275544643402099609375 # provided by PlayerData.h 2.2893772893772893772893772893773 # exact number provided by jon
         self.timesteptotal = 0.0 # total timesteps current run
         self.lasttime = None # how much time in seconds last run will be in the .rec file
         self.elmatimetotal = 0 # how much elma time that would have been spent if this session would have been play in real time in elma
@@ -51,6 +52,7 @@ class Game:
         self.batch = 0
         self.frame = 0
         self.recframe = 0
+        self.recframe_offset = 0
         self.episode = 0
         self.n_episodes = 1
         self.n_actions = 1 # first action is noop
@@ -77,11 +79,11 @@ class Game:
         #print("Ended level programatically")
         self.elmaphys.restart_level()
 
-    def rec_name(self):
-        filenametime = "%.02f" % self.lasttime
+    def rec_name(self, suffix='ai'):
+        filenametime = "%.02f" % (self.timesteptotal * self.realtimecoeff)
         filenametime = filenametime.replace('.', '') # remove dot from filename, because elma can't handle it
         #filename = "00x%s_%d_%s.rec" % (filenametime, self.score, self.level.filename_wo_ext()) # old format
-        filename = "%sx%sribot-ai.rec" % (self.level.filename_wo_ext(), filenametime) #02x2226ribot-ai
+        filename = "%s_%sribot-%s.rec" % (self.level.filename_wo_ext(), filenametime, suffix) #02x2226ribot-ai
         return filename
     
     def model_save_name(self):
@@ -94,6 +96,19 @@ class Game:
         filename += "gamma%f_" % (self.gamma)
         filename += "%s_%s_%s" % (self.activation, self.optimizer, self.loss)
         return filename
+
+    def set_fps(self, fps=80, timestep=None):
+        if timestep is None:
+            # set fps by fps value
+            fps = max(fps, 30) # min 30 which is way too unstable anyway
+            self.timestep = (1 / fps) / self.realtimecoeff
+            self.fps = fps
+        else:
+            # set fps by timestpe value
+            self.timestep = timestep
+            self.fps = int( 1/(self.timestep * self.realtimecoeff) )
+        self.realtimestep = 1 / self.fps
+        print("fps: %d, timestep: %.4f, realtimestep: %.4f" % ( self.fps, self.timestep, self.realtimestep ))
 
     def restart(self):
         if self.arg_eol:
@@ -257,7 +272,7 @@ class Game:
         if not done:
             # if game hasn't quit level by max playtime, check if died/finished
             done = self.has_ended()
-        if self.has_ended() and self.arg_man:
+        if self.has_ended() and self.arg_man and not self.arg_framebyframe:
             self.restart()
         return done
 
@@ -277,7 +292,7 @@ class Game:
 
         params = actions + [self.timestep, self.timesteptotal]
         #print(self.frame, params)
-        if self.arg_eol:
+        if self.arg_eol and not self.has_ended():
             self.kuski_state = self.eol.next_frame( self, *params )
         else:
             self.kuski_state = self.elmaphys.next_frame( *params )
@@ -445,7 +460,7 @@ class Game:
         #self.width, self.height = self.size
         self.screen = pygame.display.set_mode(self.size, pygame.RESIZABLE)
         self.redraw = True
-        self.zoom_mode = 0
+        self.zoom_mode = 3
         # initialize font; must be called after 'pygame.init()' to avoid 'Font not Initialized' error
         self.font = pygame.font.SysFont("monospace", 18)
         self.eventhandler = eventhandler

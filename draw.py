@@ -7,12 +7,19 @@ def draw(game):
     drawbody(game)
 
     #game.gui.label(game, 'Welcome to LassElma AI', 10, 10)
-    game.gui.label(game, 'score: %.2f' % (game.score), 10, 10)
-    game.gui.label(game, 'prev score: %.2f' % (game.last_score), 150, 10)
-    game.gui.label(game, 'time: %.2f' % (game.timesteptotal * game.realtimecoeff), game.width-120, 10)
+    game.gui.label(game, 'score: %.3f   prev score: %.2f' % (game.score, game.last_score), 10, 10)
+    game.gui.label(game, 'time: %.3f' % (game.timesteptotal * game.realtimecoeff), game.width-130, 10)
     if game.lasttime:
-        game.gui.label(game, 'prev time: %.2f' % game.lasttime, game.width-320, 10)
+        game.gui.label(game, 'prev time: %.2f' % game.lasttime, game.width-330, 10)
         #game.gui.label(game, 'total: %.2f' % game.elmatimetotal, game.width-350, 10)
+
+    # display events one second back and forth in time
+    if game.rec is not None:
+        displayed_events = ["%.3f %s" % (event.time*game.realtimecoeff, type(event).__name__[:-5]) for event in game.rec.events if abs(event.time*game.realtimecoeff - game.timesteptotal*game.realtimecoeff) < 1]
+        displayed_events = ', '.join(displayed_events)
+        game.gui.label(game, '%s' % (displayed_events), 10, 50)
+    game.gui.label(game, 'frame: %d   fps: %d   apples: %d   finish: %.2f   rotation time: %.3f' % \
+        (game.frame, game.fps, game.kuski_state['numTakenApples'], game.kuski_state['finishedTime']/100, game.timesteptotal-game.kuski_state['lastRotationTime']), 10, 30)
 
     # draw lev coords
     mx, my = game.pygame.mouse.get_pos()
@@ -83,8 +90,8 @@ def drawbody(game):
 
     # rec coords taken from smibu_phys/PlayerData.cpp
     # using elmadev
-    if game.rec is not None and game.recframe < len(game.rec.frames):
-        frame = game.rec.frames[game.recframe]
+    if game.rec is not None and game.recframe + game.recframe_offset < len(game.rec.frames) and game.recframe + game.recframe_offset >= 0:
+        frame = game.rec.frames[game.recframe + game.recframe_offset]
         # head position seems to be headCenterLocation, which is 0.6299999999999999 under headLocation
         draw_bodypart(game, frame.head_position.x / 1000.0 + frame.position.x, frame.head_position.y / 1000.0 + frame.position.y + 0.6299999999999999,
             frame.rotation/rec_body_rotation_factor, radius=0.238, image=game.rec_image_head, is_turned_right=frame.is_turned_right)
@@ -139,7 +146,7 @@ def drawlev(game):
         game.redraw = True
         zoomed_polygons = []
         zoomed_objects = []
-        zoom_mode = game.zoom_mode % 5
+        zoom_mode = game.zoom_mode % 8
         if zoom_mode == 0:
             zoomlev(game)
             follow_bike = False

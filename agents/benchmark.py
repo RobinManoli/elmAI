@@ -103,16 +103,17 @@ def elmaphys_ribot_algorithm(episodes=1000, seed=None):
     import time, sys, level
     sys.path.append("..")
     import elmaphys, local, game
-    print( elmaphys.init(local.levpath + '\\ribotAI0.lev') )
+    levname = "ribotAI2.lev"
+    print( elmaphys.init(local.levpath + '\\%s' % levname) )
     game = game.Game()
-    lev = level.Level(local.levpath, 'ribotAI0.lev', game)
+    lev = level.Level(local.levpath, levname, game)
     seed = seed if seed is not None else np.random.randint(9999999)
     np.random.seed(seed)
     shortest_distance = 999999.9
     timestep = 0.00546 # fast play, 80 fps, fastest possible calculated physics according to jon, as slower than this does double or more physics iteration per step
     elmatimestep = timestep * 2.2893772893772893772893772893773
     elmatime = 0.0
-    n_actions = 2
+    n_actions = 7 # max 7
     maxplaytime = 7.5 # seconds
     frames = int(maxplaytime / elmatimestep)
     best_ride_frames = frames
@@ -167,8 +168,8 @@ def elmaphys_ribot_algorithm(episodes=1000, seed=None):
             best_ride_frames = frame
             shortest_distance = distance
             best_sequence[:] = sequence
-            if kuski_state['finishedTime'] > 0:
-                elmaphys.save_replay("bench%06d.rec" % (kuski_state['finishedTime']), "ribotAI0.lev")
+            if kuski_state['finishedTime'] > 0: #todo: add rec saving score in argv #
+                elmaphys.save_replay("bench%06d.rec" % (kuski_state['finishedTime']), levname)
             print("episode: %d, distance: %f, survived %d frames, x: %f, time: %f, seed: %d" % (episode, lev.flower_distance(kuski_state), frame, kuski_state['body']['location']['x'], episode_time*2.2893772893772893772893772893773, seed))
         else:
             unimproved_episodes += 1

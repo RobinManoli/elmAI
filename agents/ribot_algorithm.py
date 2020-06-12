@@ -76,6 +76,11 @@
 
 # all above are without negated y-value (since bike y values are opposite of level)
 
+# SUCCESS - actions all
+# benchmark
+# short ribotAI2 first version pipe almost completed:
+# episodes: 1730, time: 4.59 seconds, elmatime: 5972.76 seconds; inception speed 1299X
+
 # how to proceed?
 # probably the best would be to cut up levels to training level chunks
 # make ai perform well a few seconds until rec is good

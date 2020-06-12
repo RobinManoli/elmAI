@@ -20,25 +20,17 @@ class GUI:
         self.levWidget = Listbox(self.top, exportselection=0)
         self.levWidget.insert(END, 'ribotAI0.lev')
         self.levWidget.insert(END, 'ribotAI1.lev')
+        self.levWidget.insert(END, 'ribotAI2.lev')
         self.levWidget.insert(END, 'wu.lev')
         self.levWidget.insert(END, 'ft.lev')
         self.levWidget.insert(END, 'tp.lev')
         self.levWidget.insert(END, 'ou.lev')
         self.levWidget.insert(END, 'ub.lev')
+        self.levWidget.insert(END, 'ml.lev')
         self.levWidget.insert(END, 'ai.lev')
         self.levWidget.select_set(self.setting['level'].int_value or 0)
         self.levWidget.pack(side=LEFT)
         self.levWidget.bind('<Double-Button-1>', self.dblclick)
-
-        self.fpsWidget = Listbox(self.top, exportselection=0)
-        self.fpsWidget.insert(END, '30 fps')
-        self.fpsWidget.insert(END, '80 fps')
-        self.fpsWidget.insert(END, '120 fps')
-        self.fpsWidget.insert(END, '500 fps')
-        self.fpsWidget.insert(END, '1000 fps')
-        self.fpsWidget.select_set(self.setting['fps'].int_value or 0)
-        self.fpsWidget.pack(side=LEFT)
-        self.fpsWidget.bind('<Double-Button-1>', self.dblclick)
 
         self.agentWidget = Listbox(self.top, exportselection=0)
         self.agentWidget.insert(END, 'ribot algorithm')
@@ -66,6 +58,12 @@ class GUI:
         self.episodesEntry = Entry(self.rightFrame)
         self.episodesEntry.insert(0, self.setting['episodes'].int_value or 5000 )
         self.episodesEntry.pack(anchor="w")
+
+        self.fpsLabel = Label(self.rightFrame, text="FPS")
+        self.fpsLabel.pack(anchor="w")
+        self.fpsEntry = Entry(self.rightFrame)
+        self.fpsEntry.insert(0, self.setting['fps'].int_value or 80)
+        self.fpsEntry.pack(anchor="w")
 
         self.seedLabel = Label(self.rightFrame, text="Seed")
         self.seedLabel.pack(anchor="w")
@@ -158,10 +156,6 @@ class GUI:
         selected_level_name = self.levWidget.get(selected_level_index)
         self.setting['level'].update_record( int_value=selected_level_index, str_value=selected_level_name )
 
-        selected_fps_index = self.fpsWidget.curselection()[0]
-        selected_fps_name = self.fpsWidget.get(selected_fps_index)
-        self.setting['fps'].update_record( int_value=selected_fps_index, str_value=selected_fps_name )
-
         # load_ids are the row ids to select from in the load widget
         # including 0 which means no selection
         # whereas the selected index references which of those load_ids to load
@@ -199,6 +193,12 @@ class GUI:
 
         n_episodes = self.episodesEntry.get()
         self.setting['episodes'].update_record( int_value=int(n_episodes) )
+
+        fps = self.fpsEntry.get()
+        fps = int(fps) if fps.isnumeric() and int(fps) >= 30 else 80
+        self.setting['fps'].update_record( int_value=fps )
+
+
         #self.game.n_episodes = self.episodesEntry.get() # set below
         self.game.args.append( self.episodesEntry.get() )
         #print(self.game.args)
